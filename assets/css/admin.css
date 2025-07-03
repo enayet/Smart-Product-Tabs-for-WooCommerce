@@ -1,5 +1,5 @@
 /**
- * Admin Styles for Smart Product Tabs (Updated)
+ * Admin Styles for Smart Product Tabs (Updated & Simplified)
  */
 
 /* ===== GENERAL ADMIN STYLES ===== */
@@ -60,6 +60,12 @@
 
 .spt-notice.notice-error {
     border-left-color: #dc3232;
+}
+
+/* Required field indicator */
+.required {
+    color: #dc3232;
+    font-weight: bold;
 }
 
 /* ===== NAVIGATION TABS ===== */
@@ -183,6 +189,7 @@
 
 .regular-text {
     width: 400px;
+    max-width: 100%;
 }
 
 .large-text {
@@ -197,28 +204,150 @@
     font-size: 13px;
 }
 
-.merge-tags-help {
-    margin-top: 10px;
-    padding: 10px;
-    background: #f7f7f7;
-    border-left: 4px solid #0073aa;
-    font-size: 13px;
-}
+/* ===== ENHANCED FORM ELEMENTS ===== */
 
-.merge-tags-help code {
+.enhanced-select {
+    min-width: 250px;
+    padding: 8px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
     background: #fff;
-    padding: 2px 4px;
-    border-radius: 2px;
-    margin: 0 2px;
+    font-size: 14px;
 }
 
-/* Condition Fields */
-.condition-field {
+.enhanced-select:focus {
+    border-color: #0073aa;
+    outline: none;
+    box-shadow: 0 0 0 1px #0073aa;
+}
+
+/* Content Type Selector */
+.content-type-selector {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.content-type-option {
+    display: block;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.content-type-option:hover {
+    border-color: #0073aa;
+    background: #f8f9ff;
+}
+
+.content-type-option input[type="radio"] {
+    margin-right: 10px;
+}
+
+.option-title {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.option-description {
+    font-size: 13px;
+    color: #666;
+    display: block;
+}
+
+/* User Role Selector */
+.role-selector {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
     margin-top: 10px;
+}
+
+.role-option {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.role-option:hover {
+    background: #e8f4fd;
+}
+
+.role-option input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.role-name {
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+.role-key {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Display Settings Grid */
+.display-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.setting-group {
     padding: 15px;
     background: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 4px;
+}
+
+.setting-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.setting-checkbox input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+/* ===== CONDITION FIELDS ===== */
+
+.condition-row {
+    background: #f8f9fa;
+    border-left: 4px solid #0073aa;
+}
+
+.condition-row th,
+.condition-row td {
+    padding: 20px 15px;
+}
+
+.condition-field {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    border-left: 4px solid #0073aa;
     display: none;
 }
 
@@ -226,43 +355,239 @@
     display: block;
 }
 
-.condition-field select,
-.condition-field input {
-    margin-right: 10px;
+.condition-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #23282d;
 }
 
-.condition-field label {
+.condition-field select,
+.condition-field input[type="text"],
+.condition-field input[type="number"] {
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.condition-field select:focus,
+.condition-field input[type="text"]:focus,
+.condition-field input[type="number"]:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 1px #0073aa;
+    outline: none;
+}
+
+/* Category Hierarchy Styles */
+.condition-field select[name="condition_category[]"] {
+    font-family: monospace;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    min-height: 120px;
+}
+
+.condition-field select[name="condition_category[]"] option {
+    padding: 3px 0;
+    line-height: 1.4;
+}
+
+/* Multi-select styling */
+.condition-field select[multiple] {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Condition Preview */
+.condition-preview {
+    margin-top: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.condition-preview::before {
+    content: "Preview: ";
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Condition Display in Rules List */
+.condition-all {
     display: inline-block;
-    margin-right: 15px;
+    padding: 2px 8px;
+    background: #e7f7ff;
+    color: #0073aa;
+    border-radius: 3px;
+    font-size: 12px;
     font-weight: 500;
 }
 
-/* User Role Selector */
-#role_selector {
-    margin-top: 10px;
+.condition-category {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fff2e7;
+    color: #a0522d;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-attribute {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #f0f8ff;
+    color: #4682b4;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-price {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #f0fff0;
+    color: #228b22;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-stock {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fff8dc;
+    color: #b8860b;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-custom {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #f5f5dc;
+    color: #8b4513;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-type {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #e6e6fa;
+    color: #6a5acd;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-tags {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #ffefd5;
+    color: #cd853f;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-featured {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #f0f8ff;
+    color: #1e90ff;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-sale {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #ffe4e1;
+    color: #dc143c;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.condition-invalid,
+.condition-unknown {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #ffebee;
+    color: #c62828;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* ===== MERGE TAGS HELP ===== */
+
+.merge-tags-help {
+    background: #e7f3ff;
+    border: 1px solid #bee5eb;
+    border-left: 4px solid #0073aa;
     padding: 15px;
-    background: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-#role_selector label {
-    display: block;
-    margin: 8px 0;
-    padding: 5px 0;
-    font-weight: normal;
-}
-
-#role_selector input[type="checkbox"] {
-    margin-right: 8px;
-}
-
-/* Content Type Toggle */
-#rich_editor_container,
-#plain_text_container {
     margin-top: 15px;
+    border-radius: 0 4px 4px 0;
+}
+
+.merge-tags-help strong {
+    color: #0073aa;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.merge-tags-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.tag-group strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #0073aa;
+}
+
+.tag-group code {
+    background: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    margin: 0 3px 3px 0;
+    border: 1px solid #ddd;
+    display: inline-block;
+}
+
+.tag-group small {
+    display: block;
+    margin-top: 5px;
+    font-style: italic;
+    color: #666;
+}
+
+/* ===== FORM ACTIONS ===== */
+
+.form-actions {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #ddd;
+    text-align: right;
+}
+
+.form-actions .button {
+    margin-left: 10px;
 }
 
 /* Form Validation */
@@ -687,28 +1012,6 @@
     color: #23282d;
 }
 
-/* ===== BREADCRUMB NAVIGATION ===== */
-
-.spt-breadcrumb {
-    margin-bottom: 20px;
-    font-size: 13px;
-    color: #666;
-}
-
-.spt-breadcrumb a {
-    color: #0073aa;
-    text-decoration: none;
-}
-
-.spt-breadcrumb a:hover {
-    text-decoration: underline;
-}
-
-.spt-breadcrumb .separator {
-    margin: 0 8px;
-    color: #999;
-}
-
 /* ===== RESPONSIVE DESIGN ===== */
 
 @media screen and (max-width: 1200px) {
@@ -772,6 +1075,25 @@
     .form-table th {
         font-weight: 600;
         margin-bottom: 5px;
+    }
+    
+    .merge-tags-grid,
+    .display-settings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .role-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        text-align: center;
+    }
+    
+    .form-actions .button {
+        margin: 5px;
+        display: block;
+        width: 100%;
     }
 }
 

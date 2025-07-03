@@ -252,28 +252,32 @@ class SPT_Admin {
                 <!-- Basic Info -->
                 <tr>
                     <th scope="row">
-                        <label for="rule_name"><?php _e('Rule Name', 'smart-product-tabs'); ?></label>
+                        <label for="rule_name"><?php _e('Rule Name', 'smart-product-tabs'); ?> <span class="required">*</span></label>
                     </th>
                     <td>
                         <input type="text" id="rule_name" name="rule_name" class="regular-text" 
                                value="<?php echo $is_edit ? esc_attr($rule->rule_name) : ''; ?>" required>
-                        <p class="description"><?php _e('Internal name for this rule', 'smart-product-tabs'); ?></p>
+                        <p class="description"><?php _e('Internal name for this rule (only visible in admin)', 'smart-product-tabs'); ?></p>
                     </td>
                 </tr>
                 
                 <tr>
                     <th scope="row">
-                        <label for="tab_title"><?php _e('Tab Title', 'smart-product-tabs'); ?></label>
+                        <label for="tab_title"><?php _e('Tab Title', 'smart-product-tabs'); ?> <span class="required">*</span></label>
                     </th>
                     <td>
                         <input type="text" id="tab_title" name="tab_title" class="regular-text" 
                                value="<?php echo $is_edit ? esc_attr($rule->tab_title) : ''; ?>" required>
-                        <p class="description"><?php _e('Use {product_name} for dynamic titles', 'smart-product-tabs'); ?></p>
+                        <p class="description">
+                            <?php _e('Title displayed on the tab. Use merge tags like {product_name} for dynamic content.', 'smart-product-tabs'); ?><br>
+                            <strong><?php _e('Available merge tags:', 'smart-product-tabs'); ?></strong>
+                            <code>{product_name}</code>, <code>{product_category}</code>, <code>{product_price}</code>
+                        </p>
                     </td>
                 </tr>
                 
                 <!-- Display Conditions -->
-                <tr>
+                <tr class="condition-row">
                     <th scope="row">
                         <label for="condition_type"><?php _e('Show Tab When', 'smart-product-tabs'); ?></label>
                     </th>
@@ -282,15 +286,27 @@ class SPT_Admin {
                         $conditions = $is_edit ? json_decode($rule->conditions, true) : array();
                         $condition_type = isset($conditions['type']) ? $conditions['type'] : 'all';
                         ?>
-                        <select name="condition_type" id="condition_type">
+                        <select id="condition_type" name="condition_type" class="enhanced-select">
                             <option value="all" <?php selected($condition_type, 'all'); ?>><?php _e('All Products', 'smart-product-tabs'); ?></option>
-                            <option value="category" <?php selected($condition_type, 'category'); ?>><?php _e('Product Category', 'smart-product-tabs'); ?></option>
-                            <option value="attribute" <?php selected($condition_type, 'attribute'); ?>><?php _e('Product Attribute', 'smart-product-tabs'); ?></option>
-                            <option value="price_range" <?php selected($condition_type, 'price_range'); ?>><?php _e('Price Range', 'smart-product-tabs'); ?></option>
-                            <option value="stock_status" <?php selected($condition_type, 'stock_status'); ?>><?php _e('Stock Status', 'smart-product-tabs'); ?></option>
-                            <option value="custom_field" <?php selected($condition_type, 'custom_field'); ?>><?php _e('Custom Field', 'smart-product-tabs'); ?></option>
+                            <optgroup label="<?php _e('Product Properties', 'smart-product-tabs'); ?>">
+                                <option value="category" <?php selected($condition_type, 'category'); ?>><?php _e('Product Category', 'smart-product-tabs'); ?></option>
+                                <option value="attribute" <?php selected($condition_type, 'attribute'); ?>><?php _e('Product Attribute', 'smart-product-tabs'); ?></option>
+                                <option value="tags" <?php selected($condition_type, 'tags'); ?>><?php _e('Product Tags', 'smart-product-tabs'); ?></option>
+                                <option value="product_type" <?php selected($condition_type, 'product_type'); ?>><?php _e('Product Type', 'smart-product-tabs'); ?></option>
+                            </optgroup>
+                            <optgroup label="<?php _e('Pricing & Stock', 'smart-product-tabs'); ?>">
+                                <option value="price_range" <?php selected($condition_type, 'price_range'); ?>><?php _e('Price Range', 'smart-product-tabs'); ?></option>
+                                <option value="stock_status" <?php selected($condition_type, 'stock_status'); ?>><?php _e('Stock Status', 'smart-product-tabs'); ?></option>
+                                <option value="sale" <?php selected($condition_type, 'sale'); ?>><?php _e('On Sale Status', 'smart-product-tabs'); ?></option>
+                            </optgroup>
+                            <optgroup label="<?php _e('Special Properties', 'smart-product-tabs'); ?>">
+                                <option value="featured" <?php selected($condition_type, 'featured'); ?>><?php _e('Featured Product', 'smart-product-tabs'); ?></option>
+                                <option value="custom_field" <?php selected($condition_type, 'custom_field'); ?>><?php _e('Custom Field', 'smart-product-tabs'); ?></option>
+                            </optgroup>
                         </select>
-                        <div id="condition_details" style="margin-top:10px;">
+                        <p class="description"><?php _e('Choose when this tab should appear on product pages', 'smart-product-tabs'); ?></p>
+                        
+                        <div id="condition_details" style="margin-top:15px;">
                             <?php $this->render_condition_fields($conditions); ?>
                         </div>
                     </td>
@@ -304,23 +320,29 @@ class SPT_Admin {
                     <td>
                         <?php $user_role_condition = $is_edit ? $rule->user_role_condition : 'all'; ?>
                         <select id="user_role_condition" name="user_role_condition">
-                            <option value="all" <?php selected($user_role_condition, 'all'); ?>><?php _e('All Users', 'smart-product-tabs'); ?></option>
+                            <option value="all" <?php selected($user_role_condition, 'all'); ?>><?php _e('All Users (including guests)', 'smart-product-tabs'); ?></option>
                             <option value="logged_in" <?php selected($user_role_condition, 'logged_in'); ?>><?php _e('Logged-in Users Only', 'smart-product-tabs'); ?></option>
-                            <option value="specific_role" <?php selected($user_role_condition, 'specific_role'); ?>><?php _e('Specific Role(s)', 'smart-product-tabs'); ?></option>
+                            <option value="specific_role" <?php selected($user_role_condition, 'specific_role'); ?>><?php _e('Specific User Role(s)', 'smart-product-tabs'); ?></option>
                         </select>
-                        <div id="role_selector" style="<?php echo $user_role_condition !== 'specific_role' ? 'display:none;' : ''; ?> margin-top:10px;">
-                            <?php 
-                            $selected_roles = $is_edit ? json_decode($rule->user_roles, true) : array();
-                            if (!is_array($selected_roles)) $selected_roles = array();
-                            
-                            foreach (wp_roles()->roles as $role => $details): 
-                            ?>
-                            <label style="display: block; margin: 5px 0;">
-                                <input type="checkbox" name="user_roles[]" value="<?php echo esc_attr($role); ?>" 
-                                       <?php checked(in_array($role, $selected_roles)); ?>>
-                                <?php echo esc_html($details['name']); ?>
-                            </label>
-                            <?php endforeach; ?>
+                        <p class="description"><?php _e('Control which users can see this tab', 'smart-product-tabs'); ?></p>
+                        
+                        <div id="role_selector" style="<?php echo $user_role_condition !== 'specific_role' ? 'display:none;' : ''; ?> margin-top:10px;" class="role-selector">
+                            <p><strong><?php _e('Select allowed roles:', 'smart-product-tabs'); ?></strong></p>
+                            <div class="role-grid">
+                                <?php 
+                                $selected_roles = $is_edit ? json_decode($rule->user_roles, true) : array();
+                                if (!is_array($selected_roles)) $selected_roles = array();
+                                
+                                foreach (wp_roles()->roles as $role => $details): 
+                                ?>
+                                <label class="role-option">
+                                    <input type="checkbox" name="user_roles[]" value="<?php echo esc_attr($role); ?>" 
+                                           <?php checked(in_array($role, $selected_roles)); ?>>
+                                    <span class="role-name"><?php echo esc_html($details['name']); ?></span>
+                                    <span class="role-key">(<?php echo esc_html($role); ?>)</span>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -330,21 +352,26 @@ class SPT_Admin {
                     <th scope="row"><?php _e('Content Type', 'smart-product-tabs'); ?></th>
                     <td>
                         <?php $content_type = $is_edit ? $rule->content_type : 'rich_editor'; ?>
-                        <label>
-                            <input type="radio" name="content_type" value="rich_editor" <?php checked($content_type, 'rich_editor'); ?>>
-                            <?php _e('Rich Editor', 'smart-product-tabs'); ?>
-                        </label>
-                        <label style="margin-left: 20px;">
-                            <input type="radio" name="content_type" value="plain_text" <?php checked($content_type, 'plain_text'); ?>>
-                            <?php _e('Plain Text', 'smart-product-tabs'); ?>
-                        </label>
+                        <fieldset class="content-type-selector">
+                            <legend class="screen-reader-text"><?php _e('Content Type', 'smart-product-tabs'); ?></legend>
+                            <label class="content-type-option">
+                                <input type="radio" name="content_type" value="rich_editor" <?php checked($content_type, 'rich_editor'); ?>>
+                                <span class="option-title"><?php _e('Rich Editor', 'smart-product-tabs'); ?></span>
+                                <span class="option-description"><?php _e('WYSIWYG editor with formatting options', 'smart-product-tabs'); ?></span>
+                            </label>
+                            <label class="content-type-option">
+                                <input type="radio" name="content_type" value="plain_text" <?php checked($content_type, 'plain_text'); ?>>
+                                <span class="option-title"><?php _e('Plain Text', 'smart-product-tabs'); ?></span>
+                                <span class="option-description"><?php _e('Simple text area without formatting', 'smart-product-tabs'); ?></span>
+                            </label>
+                        </fieldset>
                     </td>
                 </tr>
                 
                 <!-- Content Editor -->
                 <tr>
                     <th scope="row">
-                        <label for="tab_content"><?php _e('Tab Content', 'smart-product-tabs'); ?></label>
+                        <label for="tab_content"><?php _e('Tab Content', 'smart-product-tabs'); ?> <span class="required">*</span></label>
                     </th>
                     <td>
                         <div id="rich_editor_container" style="<?php echo $content_type === 'plain_text' ? 'display:none;' : ''; ?>">
@@ -352,18 +379,42 @@ class SPT_Admin {
                             $content = $is_edit ? $rule->tab_content : '';
                             wp_editor($content, 'tab_content', array(
                                 'media_buttons' => true,
-                                'textarea_rows' => 10,
-                                'teeny' => false
+                                'textarea_rows' => 12,
+                                'teeny' => false,
+                                'tinymce' => array(
+                                    'toolbar1' => 'bold,italic,underline,strikethrough,|,bullist,numlist,|,link,unlink,|,spellchecker,fullscreen',
+                                    'toolbar2' => 'formatselect,|,forecolor,backcolor,|,alignleft,aligncenter,alignright,alignjustify,|,outdent,indent,|,undo,redo'
+                                )
                             )); 
                             ?>
                         </div>
                         <div id="plain_text_container" style="<?php echo $content_type === 'rich_editor' ? 'display:none;' : ''; ?>">
-                            <textarea id="tab_content_plain" name="tab_content_plain" rows="10" cols="50" class="large-text"><?php echo $is_edit && $content_type === 'plain_text' ? esc_textarea($rule->tab_content) : ''; ?></textarea>
+                            <textarea id="tab_content_plain" name="tab_content_plain" rows="12" cols="50" class="large-text" placeholder="<?php _e('Enter your tab content here...', 'smart-product-tabs'); ?>"><?php echo $is_edit && $content_type === 'plain_text' ? esc_textarea($rule->tab_content) : ''; ?></textarea>
                         </div>
-                        <div class="merge-tags-help" style="margin-top: 10px;">
+                        
+                        <div class="merge-tags-help">
                             <strong><?php _e('Available merge tags:', 'smart-product-tabs'); ?></strong><br>
-                            <code>{product_name}</code>, <code>{product_category}</code>, <code>{product_price}</code>, 
-                            <code>{product_sku}</code>, <code>{custom_field_[key]}</code>
+                            <div class="merge-tags-grid">
+                                <div class="tag-group">
+                                    <strong><?php _e('Product Info:', 'smart-product-tabs'); ?></strong>
+                                    <code>{product_name}</code>
+                                    <code>{product_category}</code>
+                                    <code>{product_price}</code>
+                                    <code>{product_sku}</code>
+                                </div>
+                                <div class="tag-group">
+                                    <strong><?php _e('Product Details:', 'smart-product-tabs'); ?></strong>
+                                    <code>{product_weight}</code>
+                                    <code>{product_dimensions}</code>
+                                    <code>{product_stock_status}</code>
+                                    <code>{product_stock_quantity}</code>
+                                </div>
+                                <div class="tag-group">
+                                    <strong><?php _e('Custom Fields:', 'smart-product-tabs'); ?></strong>
+                                    <code>{custom_field_[key]}</code>
+                                    <small><?php _e('Replace [key] with actual field name', 'smart-product-tabs'); ?></small>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -372,31 +423,43 @@ class SPT_Admin {
                 <tr>
                     <th scope="row"><?php _e('Display Settings', 'smart-product-tabs'); ?></th>
                     <td>
-                        <label>
-                            <?php _e('Priority:', 'smart-product-tabs'); ?>
-                            <input type="number" name="priority" value="<?php echo $is_edit ? esc_attr($rule->priority) : '10'; ?>" 
-                                   min="1" max="100" style="width: 80px;">
-                        </label><br><br>
-                        
-                        <label>
-                            <input type="checkbox" name="mobile_hidden" value="1" <?php echo $is_edit ? checked($rule->mobile_hidden, 1) : ''; ?>>
-                            <?php _e('Hide on mobile', 'smart-product-tabs'); ?>
-                        </label><br><br>
-                        
-                        <label>
-                            <input type="checkbox" name="is_active" value="1" <?php echo $is_edit ? checked($rule->is_active, 1) : 'checked'; ?>>
-                            <?php _e('Active', 'smart-product-tabs'); ?>
-                        </label>
+                        <div class="display-settings-grid">
+                            <div class="setting-group">
+                                <label for="priority">
+                                    <strong><?php _e('Priority:', 'smart-product-tabs'); ?></strong>
+                                    <input type="number" id="priority" name="priority" value="<?php echo $is_edit ? esc_attr($rule->priority) : '10'; ?>" min="1" max="100" style="width: 80px;">
+                                </label>
+                                <p class="description"><?php _e('Lower numbers appear first (1-100)', 'smart-product-tabs'); ?></p>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label class="setting-checkbox">
+                                    <input type="checkbox" name="mobile_hidden" id="mobile_hidden" value="1" <?php echo $is_edit ? checked($rule->mobile_hidden, 1) : ''; ?>>
+                                    <span class="checkmark"></span>
+                                    <strong><?php _e('Hide on mobile devices', 'smart-product-tabs'); ?></strong>
+                                </label>
+                                <p class="description"><?php _e('Tab will not appear on mobile/tablet devices', 'smart-product-tabs'); ?></p>
+                            </div>
+                            
+                            <div class="setting-group">
+                                <label class="setting-checkbox">
+                                    <input type="checkbox" name="is_active" id="is_active" value="1" <?php echo $is_edit ? checked($rule->is_active, 1) : 'checked'; ?>>
+                                    <span class="checkmark"></span>
+                                    <strong><?php _e('Active', 'smart-product-tabs'); ?></strong>
+                                </label>
+                                <p class="description"><?php _e('Uncheck to temporarily disable this tab', 'smart-product-tabs'); ?></p>
+                            </div>
+                        </div>
                     </td>
                 </tr>
             </table>
             
-            <p class="submit">
+            <div class="form-actions">
                 <input type="submit" class="button-primary" value="<?php echo $is_edit ? __('Update Rule', 'smart-product-tabs') : __('Save Rule', 'smart-product-tabs'); ?>">
                 <a href="<?php echo admin_url('admin.php?page=smart-product-tabs'); ?>" class="button">
                     <?php _e('Cancel', 'smart-product-tabs'); ?>
                 </a>
-            </p>
+            </div>
         </form>
         
         <script>
@@ -433,59 +496,163 @@ class SPT_Admin {
     }
     
     /**
-     * Render condition fields
+     * Render condition fields with proper category hierarchy
      */
     private function render_condition_fields($conditions = array()) {
         ?>
         <div class="condition-field" data-condition="category" style="display:none;">
-            <select name="condition_category[]" multiple style="width: 300px;">
+            <label for="condition_category"><?php _e('Select Categories:', 'smart-product-tabs'); ?></label>
+            <select name="condition_category[]" id="condition_category" multiple style="width: 300px; height: 150px;">
+                <?php echo $this->get_hierarchical_category_options($conditions); ?>
+            </select>
+            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple categories', 'smart-product-tabs'); ?></p>
+        </div>
+        
+        <div class="condition-field" data-condition="attribute" style="display:none;">
+            <label for="condition_attribute"><?php _e('Attribute:', 'smart-product-tabs'); ?></label>
+            <select name="condition_attribute" id="condition_attribute" style="width: 200px;">
+                <option value=""><?php _e('Select Attribute', 'smart-product-tabs'); ?></option>
                 <?php
-                $categories = get_terms(array('taxonomy' => 'product_cat', 'hide_empty' => false));
-                $selected_categories = isset($conditions['value']) ? (array) $conditions['value'] : array();
-                foreach ($categories as $category) {
-                    echo '<option value="' . esc_attr($category->term_id) . '" ' . 
-                         (in_array($category->term_id, $selected_categories) ? 'selected' : '') . '>' . 
-                         esc_html($category->name) . '</option>';
+                $attributes = wc_get_attribute_taxonomies();
+                foreach ($attributes as $attribute) {
+                    $selected = isset($conditions['attribute']) ? selected($conditions['attribute'], $attribute->attribute_name, false) : '';
+                    echo '<option value="' . esc_attr($attribute->attribute_name) . '" ' . $selected . '>' . esc_html($attribute->attribute_label) . '</option>';
                 }
                 ?>
             </select>
+            <br><br>
+            <label for="condition_attribute_value"><?php _e('Value:', 'smart-product-tabs'); ?></label>
+            <input type="text" name="condition_attribute_value" id="condition_attribute_value" style="width: 200px;" 
+                   value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>" 
+                   placeholder="<?php _e('Attribute value', 'smart-product-tabs'); ?>">
         </div>
         
         <div class="condition-field" data-condition="price_range" style="display:none;">
             <label><?php _e('Min Price:', 'smart-product-tabs'); ?></label>
             <input type="number" name="condition_price_min" step="0.01" style="width: 100px;" 
-                   value="<?php echo isset($conditions['min']) ? esc_attr($conditions['min']) : ''; ?>">
+                   value="<?php echo isset($conditions['min']) ? esc_attr($conditions['min']) : ''; ?>" 
+                   placeholder="0.00">
             <label style="margin-left: 20px;"><?php _e('Max Price:', 'smart-product-tabs'); ?></label>
             <input type="number" name="condition_price_max" step="0.01" style="width: 100px;" 
-                   value="<?php echo isset($conditions['max']) ? esc_attr($conditions['max']) : ''; ?>">
+                   value="<?php echo isset($conditions['max']) ? esc_attr($conditions['max']) : ''; ?>" 
+                   placeholder="999999">
+            <p class="description"><?php _e('Leave empty for no limit', 'smart-product-tabs'); ?></p>
         </div>
         
         <div class="condition-field" data-condition="stock_status" style="display:none;">
             <select name="condition_stock_status">
-                <option value="instock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'instock') : ''; ?>><?php _e('In Stock', 'smart-product-tabs'); ?></option>
-                <option value="outofstock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'outofstock') : ''; ?>><?php _e('Out of Stock', 'smart-product-tabs'); ?></option>
-                <option value="onbackorder" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'onbackorder') : ''; ?>><?php _e('On Backorder', 'smart-product-tabs'); ?></option>
+                <option value="instock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'instock', false) : ''; ?>><?php _e('In Stock', 'smart-product-tabs'); ?></option>
+                <option value="outofstock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'outofstock', false) : ''; ?>><?php _e('Out of Stock', 'smart-product-tabs'); ?></option>
+                <option value="onbackorder" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'onbackorder', false) : ''; ?>><?php _e('On Backorder', 'smart-product-tabs'); ?></option>
             </select>
         </div>
         
         <div class="condition-field" data-condition="custom_field" style="display:none;">
-            <label><?php _e('Field Key:', 'smart-product-tabs'); ?></label>
-            <input type="text" name="condition_custom_key" style="width: 150px;" 
-                   value="<?php echo isset($conditions['key']) ? esc_attr($conditions['key']) : ''; ?>">
-            <label style="margin-left: 20px;"><?php _e('Field Value:', 'smart-product-tabs'); ?></label>
-            <input type="text" name="condition_custom_value" style="width: 150px;" 
-                   value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>">
+            <label for="condition_custom_field_key"><?php _e('Field Key:', 'smart-product-tabs'); ?></label>
+            <input type="text" name="condition_custom_field_key" id="condition_custom_field_key" style="width: 200px;" 
+                   value="<?php echo isset($conditions['key']) ? esc_attr($conditions['key']) : ''; ?>" 
+                   placeholder="_custom_field_key">
+            <br><br>
+            <label for="condition_custom_field_value"><?php _e('Field Value:', 'smart-product-tabs'); ?></label>
+            <input type="text" name="condition_custom_field_value" id="condition_custom_field_value" style="width: 200px;" 
+                   value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>" 
+                   placeholder="Expected value">
+            <br><br>
+            <label for="condition_custom_field_operator"><?php _e('Operator:', 'smart-product-tabs'); ?></label>
+            <select name="condition_custom_field_operator" id="condition_custom_field_operator">
+                <option value="equals" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'equals', false) : ''; ?>><?php _e('Equals', 'smart-product-tabs'); ?></option>
+                <option value="not_equals" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'not_equals', false) : ''; ?>><?php _e('Not Equals', 'smart-product-tabs'); ?></option>
+                <option value="contains" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'contains', false) : ''; ?>><?php _e('Contains', 'smart-product-tabs'); ?></option>
+                <option value="not_empty" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'not_empty', false) : ''; ?>><?php _e('Not Empty', 'smart-product-tabs'); ?></option>
+                <option value="empty" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'empty', false) : ''; ?>><?php _e('Empty', 'smart-product-tabs'); ?></option>
+            </select>
         </div>
         
-        <div class="condition-field" data-condition="attribute" style="display:none;">
-            <label><?php _e('Attribute:', 'smart-product-tabs'); ?></label>
-            <input type="text" name="condition_attribute_name" style="width: 150px;" 
-                   value="<?php echo isset($conditions['attribute']) ? esc_attr($conditions['attribute']) : ''; ?>">
-            <label style="margin-left: 20px;"><?php _e('Value:', 'smart-product-tabs'); ?></label>
-            <input type="text" name="condition_attribute_value" style="width: 150px;" 
-                   value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>">
+        <div class="condition-field" data-condition="product_type" style="display:none;">
+            <select name="condition_product_type[]" multiple style="width: 300px;">
+                <?php
+                $product_types = wc_get_product_types();
+                $selected_types = isset($conditions['value']) ? (array) $conditions['value'] : array();
+                foreach ($product_types as $key => $label) {
+                    $selected = in_array($key, $selected_types) ? 'selected' : '';
+                    echo '<option value="' . esc_attr($key) . '" ' . $selected . '>' . esc_html($label) . '</option>';
+                }
+                ?>
+            </select>
+            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple types', 'smart-product-tabs'); ?></p>
+        </div>
+        
+        <div class="condition-field" data-condition="tags" style="display:none;">
+            <select name="condition_tags[]" multiple style="width: 300px; height: 120px;">
+                <?php
+                $tags = get_terms(array(
+                    'taxonomy' => 'product_tag',
+                    'hide_empty' => false,
+                    'orderby' => 'name',
+                    'order' => 'ASC'
+                ));
+                $selected_tags = isset($conditions['value']) ? (array) $conditions['value'] : array();
+                foreach ($tags as $tag) {
+                    $selected = in_array($tag->term_id, $selected_tags) ? 'selected' : '';
+                    echo '<option value="' . esc_attr($tag->term_id) . '" ' . $selected . '>' . esc_html($tag->name) . '</option>';
+                }
+                ?>
+            </select>
+            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple tags', 'smart-product-tabs'); ?></p>
+        </div>
+        
+        <div class="condition-field" data-condition="featured" style="display:none;">
+            <select name="condition_featured">
+                <option value="1" <?php echo isset($conditions['value']) ? selected($conditions['value'], 1, false) : ''; ?>><?php _e('Is Featured', 'smart-product-tabs'); ?></option>
+                <option value="0" <?php echo isset($conditions['value']) ? selected($conditions['value'], 0, false) : ''; ?>><?php _e('Is Not Featured', 'smart-product-tabs'); ?></option>
+            </select>
+        </div>
+        
+        <div class="condition-field" data-condition="sale" style="display:none;">
+            <select name="condition_sale">
+                <option value="1" <?php echo isset($conditions['value']) ? selected($conditions['value'], 1, false) : ''; ?>><?php _e('On Sale', 'smart-product-tabs'); ?></option>
+                <option value="0" <?php echo isset($conditions['value']) ? selected($conditions['value'], 0, false) : ''; ?>><?php _e('Not On Sale', 'smart-product-tabs'); ?></option>
+            </select>
         </div>
         <?php
+    }
+    
+    /**
+     * Get hierarchical category options with proper indentation
+     */
+    private function get_hierarchical_category_options($conditions = array(), $parent = 0, $level = 0) {
+        $categories = get_terms(array(
+            'taxonomy' => 'product_cat',
+            'hide_empty' => false,
+            'parent' => $parent,
+            'orderby' => 'name',
+            'order' => 'ASC'
+        ));
+        
+        $output = '';
+        $selected_categories = isset($conditions['value']) ? (array) $conditions['value'] : array();
+        
+        foreach ($categories as $category) {
+            // Create indentation based on level
+            $indent = str_repeat('&nbsp;&nbsp;&nbsp;', $level);
+            $prefix = $level > 0 ? '├─ ' : '';
+            $selected = in_array($category->term_id, $selected_categories) ? 'selected' : '';
+            
+            $output .= sprintf(
+                '<option value="%d" %s>%s%s%s (%d)</option>',
+                esc_attr($category->term_id),
+                $selected,
+                $indent,
+                $prefix,
+                esc_html($category->name),
+                $category->count
+            );
+            
+            // Get child categories recursively
+            $output .= $this->get_hierarchical_category_options($conditions, $category->term_id, $level + 1);
+        }
+        
+        return $output;
     }
     
     /**
@@ -612,6 +779,191 @@ class SPT_Admin {
     }
     
     /**
+     * Enhanced prepare_conditions method to handle all condition types
+     */
+    private function prepare_conditions($post_data) {
+        $condition_type = sanitize_text_field($post_data['condition_type']);
+        
+        $conditions = array('type' => $condition_type);
+        
+        switch ($condition_type) {
+            case 'category':
+                $conditions['value'] = isset($post_data['condition_category']) ? array_map('intval', $post_data['condition_category']) : array();
+                $conditions['operator'] = 'in'; // Default operator
+                break;
+                
+            case 'attribute':
+                $conditions['attribute'] = sanitize_text_field($post_data['condition_attribute'] ?? '');
+                $conditions['value'] = sanitize_text_field($post_data['condition_attribute_value'] ?? '');
+                $conditions['operator'] = 'equals';
+                break;
+                
+            case 'price_range':
+                $conditions['min'] = isset($post_data['condition_price_min']) ? floatval($post_data['condition_price_min']) : 0;
+                $conditions['max'] = isset($post_data['condition_price_max']) ? floatval($post_data['condition_price_max']) : 999999;
+                $conditions['operator'] = 'between';
+                break;
+                
+            case 'stock_status':
+                $conditions['value'] = sanitize_text_field($post_data['condition_stock_status'] ?? 'instock');
+                $conditions['operator'] = 'equals';
+                break;
+                
+            case 'custom_field':
+                $conditions['key'] = sanitize_text_field($post_data['condition_custom_field_key'] ?? '');
+                $conditions['value'] = sanitize_text_field($post_data['condition_custom_field_value'] ?? '');
+                $conditions['operator'] = sanitize_text_field($post_data['condition_custom_field_operator'] ?? 'equals');
+                break;
+                
+            case 'product_type':
+                $conditions['value'] = isset($post_data['condition_product_type']) ? array_map('sanitize_text_field', $post_data['condition_product_type']) : array();
+                $conditions['operator'] = 'in';
+                break;
+                
+            case 'tags':
+                $conditions['value'] = isset($post_data['condition_tags']) ? array_map('intval', $post_data['condition_tags']) : array();
+                $conditions['operator'] = 'in';
+                break;
+                
+            case 'featured':
+                $conditions['value'] = intval($post_data['condition_featured'] ?? 1);
+                $conditions['operator'] = 'equals';
+                break;
+                
+            case 'sale':
+                $conditions['value'] = intval($post_data['condition_sale'] ?? 1);
+                $conditions['operator'] = 'equals';
+                break;
+        }
+        
+        return json_encode($conditions);
+    }
+    
+    /**
+     * Enhanced format_conditions method for better display
+     */
+    private function format_conditions($conditions_json) {
+        $conditions = json_decode($conditions_json, true);
+        
+        if (empty($conditions) || $conditions['type'] === 'all') {
+            return '<span class="condition-all">' . __('All Products', 'smart-product-tabs') . '</span>';
+        }
+        
+        $type = $conditions['type'];
+        
+        switch ($type) {
+            case 'category':
+                if (empty($conditions['value'])) {
+                    return '<span class="condition-invalid">' . __('No categories selected', 'smart-product-tabs') . '</span>';
+                }
+                
+                $category_names = array();
+                foreach ($conditions['value'] as $cat_id) {
+                    $term = get_term($cat_id);
+                    if ($term && !is_wp_error($term)) {
+                        $category_names[] = $term->name;
+                    }
+                }
+                
+                return sprintf(
+                    '<span class="condition-category">%s: %s</span>',
+                    __('Category', 'smart-product-tabs'),
+                    !empty($category_names) ? implode(', ', $category_names) : __('Invalid categories', 'smart-product-tabs')
+                );
+                
+            case 'attribute':
+                return sprintf(
+                    '<span class="condition-attribute">%s: %s = %s</span>',
+                    __('Attribute', 'smart-product-tabs'),
+                    esc_html($conditions['attribute'] ?? ''),
+                    esc_html($conditions['value'] ?? '')
+                );
+                
+            case 'price_range':
+                $currency = get_woocommerce_currency_symbol();
+                return sprintf(
+                    '<span class="condition-price">%s: %s%s - %s%s</span>',
+                    __('Price Range', 'smart-product-tabs'),
+                    $currency,
+                    number_format($conditions['min'] ?? 0, 2),
+                    $currency,
+                    number_format($conditions['max'] ?? 999999, 2)
+                );
+                
+            case 'stock_status':
+                $status_labels = array(
+                    'instock' => __('In Stock', 'smart-product-tabs'),
+                    'outofstock' => __('Out of Stock', 'smart-product-tabs'),
+                    'onbackorder' => __('On Backorder', 'smart-product-tabs')
+                );
+                $status = $conditions['value'] ?? 'instock';
+                return sprintf(
+                    '<span class="condition-stock">%s: %s</span>',
+                    __('Stock Status', 'smart-product-tabs'),
+                    $status_labels[$status] ?? $status
+                );
+                
+            case 'custom_field':
+                return sprintf(
+                    '<span class="condition-custom">%s: %s %s %s</span>',
+                    __('Custom Field', 'smart-product-tabs'),
+                    esc_html($conditions['key'] ?? ''),
+                    esc_html($conditions['operator'] ?? 'equals'),
+                    esc_html($conditions['value'] ?? '')
+                );
+                
+            case 'product_type':
+                $types = $conditions['value'] ?? array();
+                $type_labels = wc_get_product_types();
+                $type_names = array();
+                foreach ($types as $type) {
+                    $type_names[] = $type_labels[$type] ?? $type;
+                }
+                return sprintf(
+                    '<span class="condition-type">%s: %s</span>',
+                    __('Product Type', 'smart-product-tabs'),
+                    implode(', ', $type_names)
+                );
+                
+            case 'tags':
+                if (empty($conditions['value'])) {
+                    return '<span class="condition-invalid">' . __('No tags selected', 'smart-product-tabs') . '</span>';
+                }
+                
+                $tag_names = array();
+                foreach ($conditions['value'] as $tag_id) {
+                    $term = get_term($tag_id);
+                    if ($term && !is_wp_error($term)) {
+                        $tag_names[] = $term->name;
+                    }
+                }
+                
+                return sprintf(
+                    '<span class="condition-tags">%s: %s</span>',
+                    __('Tags', 'smart-product-tabs'),
+                    !empty($tag_names) ? implode(', ', $tag_names) : __('Invalid tags', 'smart-product-tabs')
+                );
+                
+            case 'featured':
+                $value = $conditions['value'] ?? 1;
+                return sprintf(
+                    '<span class="condition-featured">%s</span>',
+                    $value ? __('Featured Products', 'smart-product-tabs') : __('Non-Featured Products', 'smart-product-tabs')
+                );
+                
+            case 'sale':
+                $value = $conditions['value'] ?? 1;
+                return sprintf(
+                    '<span class="condition-sale">%s</span>',
+                    $value ? __('On Sale Products', 'smart-product-tabs') : __('Regular Price Products', 'smart-product-tabs')
+                );
+                
+            default:
+                return '<span class="condition-unknown">' . sprintf(__('Unknown: %s', 'smart-product-tabs'), ucfirst($type)) . '</span>';
+        }
+    }
+    
+    /**
      * Delete rule
      */
     private function delete_rule($rule_id) {
@@ -672,7 +1024,7 @@ class SPT_Admin {
     }
     
     /**
-     * AJAX: Update tab order (keep this for drag-drop functionality)
+     * AJAX: Update tab order
      */
     public function ajax_update_tab_order() {
         check_ajax_referer('spt_ajax_nonce', 'nonce');
@@ -785,76 +1137,6 @@ class SPT_Admin {
         global $wpdb;
         $table = $wpdb->prefix . 'spt_tab_settings';
         return $wpdb->get_results("SELECT * FROM $table ORDER BY sort_order ASC");
-    }
-    
-    /**
-     * Format conditions for display
-     */
-    private function format_conditions($conditions_json) {
-        $conditions = json_decode($conditions_json, true);
-        if (empty($conditions)) {
-            return __('All Products', 'smart-product-tabs');
-        }
-        
-        $type = $conditions['type'] ?? 'all';
-        switch ($type) {
-            case 'category':
-                if (isset($conditions['value']) && is_array($conditions['value'])) {
-                    $category_names = array();
-                    foreach ($conditions['value'] as $cat_id) {
-                        $term = get_term($cat_id, 'product_cat');
-                        if ($term && !is_wp_error($term)) {
-                            $category_names[] = $term->name;
-                        }
-                    }
-                    return __('Category: ', 'smart-product-tabs') . implode(', ', $category_names);
-                }
-                return __('Category', 'smart-product-tabs');
-            case 'price_range':
-                $min = $conditions['min'] ?? '0';
-                $max = $conditions['max'] ?? '∞';
-                return __('Price Range: ', 'smart-product-tabs') . $min . ' - ' . $max;
-            case 'stock_status':
-                return __('Stock Status: ', 'smart-product-tabs') . ucfirst($conditions['value'] ?? '');
-            case 'custom_field':
-                return __('Custom Field: ', 'smart-product-tabs') . ($conditions['key'] ?? '');
-            case 'attribute':
-                return __('Attribute: ', 'smart-product-tabs') . ($conditions['attribute'] ?? '');
-            default:
-                return ucfirst($type);
-        }
-    }
-    
-    /**
-     * Prepare conditions from form data
-     */
-    private function prepare_conditions($post_data) {
-        $condition_type = sanitize_text_field($post_data['condition_type']);
-        
-        $conditions = array('type' => $condition_type);
-        
-        switch ($condition_type) {
-            case 'category':
-                $conditions['value'] = isset($post_data['condition_category']) ? array_map('intval', $post_data['condition_category']) : array();
-                break;
-            case 'price_range':
-                $conditions['min'] = isset($post_data['condition_price_min']) ? floatval($post_data['condition_price_min']) : 0;
-                $conditions['max'] = isset($post_data['condition_price_max']) ? floatval($post_data['condition_price_max']) : 999999;
-                break;
-            case 'stock_status':
-                $conditions['value'] = sanitize_text_field($post_data['condition_stock_status']);
-                break;
-            case 'custom_field':
-                $conditions['key'] = sanitize_text_field($post_data['condition_custom_key']);
-                $conditions['value'] = sanitize_text_field($post_data['condition_custom_value']);
-                break;
-            case 'attribute':
-                $conditions['attribute'] = sanitize_text_field($post_data['condition_attribute_name']);
-                $conditions['value'] = sanitize_text_field($post_data['condition_attribute_value']);
-                break;
-        }
-        
-        return json_encode($conditions);
     }
     
     /**

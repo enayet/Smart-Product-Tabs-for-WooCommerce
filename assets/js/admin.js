@@ -1,5 +1,5 @@
 /**
- * Admin JavaScript for Smart Product Tabs (Simplified)
+ * Admin JavaScript for Smart Product Tabs (Simplified & Fixed)
  */
 
 (function($) {
@@ -31,10 +31,12 @@
             // Form validation
             $(document).on('blur', '#rule_name, #tab_title', this.validateRequiredField);
             $(document).on('submit', 'form', this.validateForm);
-
-            // Analytics
-            $(document).on('change', '#analytics-period', this.loadAnalyticsData);
-            $(document).on('click', '.analytics-refresh', this.refreshAnalytics);
+            
+            // Real-time condition updates
+            $(document).on('change blur', '.condition-field input, .condition-field select', function() {
+                $(this).removeClass('error');
+                SPTAdmin.updateConditionPreview();
+            });
         },
 
         /**
@@ -75,6 +77,9 @@
             
             // Show relevant field
             $('.condition-field[data-condition="' + conditionType + '"]').show();
+            
+            // Update condition preview
+            SPTAdmin.updateConditionPreview();
         },
 
         /**
@@ -103,6 +108,70 @@
                 $('#rich_editor_container').hide();
                 $('#plain_text_container').show();
             }
+        },
+
+        /**
+         * Update condition preview in real-time
+         */
+        updateConditionPreview: function() {
+            var conditionType = $('#condition_type').val();
+            var previewText = '';
+            
+            switch (conditionType) {
+                case 'all':
+                    previewText = 'This tab will show on all products';
+                    break;
+                case 'category':
+                    var selectedCategories = $('select[name="condition_category[]"] option:selected');
+                    if (selectedCategories.length > 0) {
+                        var categoryNames = [];
+                        selectedCategories.each(function() {
+                            categoryNames.push($(this).text().replace(/^\s+/, '').replace(/\s+\(\d+\)$/, ''));
+                        });
+                        previewText = 'This tab will show on products in: ' + categoryNames.join(', ');
+                    } else {
+                        previewText = 'No categories selected';
+                    }
+                    break;
+                case 'price_range':
+                    var minPrice = $('input[name="condition_price_min"]').val() || '0';
+                    var maxPrice = $('input[name="condition_price_max"]').val() || '∞';
+                    previewText = 'This tab will show on products priced between ' + minPrice + ' and ' + maxPrice;
+                    break;
+                case 'attribute':
+                    var attribute = $('select[name="condition_attribute"]').val();
+                    var value = $('input[name="condition_attribute_value"]').val();
+                    if (attribute && value) {
+                        previewText = 'This tab will show on products with ' + attribute + ' = ' + value;
+                    } else {
+                        previewText = 'Select attribute and value';
+                    }
+                    break;
+                case 'stock_status':
+                    var status = $('select[name="condition_stock_status"]').val();
+                    previewText = 'This tab will show on products that are ' + status;
+                    break;
+                case 'custom_field':
+                    var key = $('input[name="condition_custom_field_key"]').val();
+                    var value = $('input[name="condition_custom_field_value"]').val();
+                    var operator = $('select[name="condition_custom_field_operator"]').val();
+                    if (key) {
+                        previewText = 'This tab will show on products where custom field "' + key + '" ' + operator + ' "' + value + '"';
+                    } else {
+                        previewText = 'Enter custom field key';
+                    }
+                    break;
+                default:
+                    previewText = 'This tab will show based on ' + conditionType + ' condition';
+            }
+            
+            // Update or create preview element
+            var $preview = $('.condition-preview');
+            if ($preview.length === 0) {
+                $preview = $('<div class="condition-preview"></div>');
+                $('#condition_details').append($preview);
+            }
+            $preview.text(previewText);
         },
 
         /**
@@ -167,6 +236,14 @@
                 alert('Tab content is required.');
             }
             
+            // Validate condition-specific fields
+            var conditionType = $('#condition_type').val();
+            var conditionValidation = this.validateConditionFields(conditionType);
+            if (!conditionValidation.valid) {
+                isValid = false;
+                alert('Please fix the following issues:\n' + conditionValidation.errors.join('\n'));
+            }
+            
             if (!isValid) {
                 e.preventDefault();
                 return false;
@@ -176,153 +253,67 @@
         },
 
         /**
-         * Load analytics data
+         * Validate condition-specific fields
          */
-        loadAnalyticsData: function() {
-            var period = $('#analytics-period').val() || 30;
+        validateConditionFields: function(conditionType) {
+            var result = { valid: true, errors: [] };
             
-            // Show loading
-            $('.analytics-content').addClass('loading');
-            
-            $.ajax({
-                url: spt_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'spt_get_analytics_data',
-                    type: 'summary',
-                    days: period,
-                    nonce: spt_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        SPTAdmin.updateAnalyticsSummary(response.data);
-                        SPTAdmin.loadAnalyticsCharts(period);
+            switch (conditionType) {
+                case 'category':
+                    var selectedCategories = $('select[name="condition_category[]"] option:selected');
+                    if (selectedCategories.length === 0) {
+                        result.valid = false;
+                        result.errors.push('Please select at least one category');
+                        $('select[name="condition_category[]"]').addClass('error');
                     }
-                },
-                complete: function() {
-                    $('.analytics-content').removeClass('loading');
-                }
-            });
-        },
-
-        /**
-         * Update analytics summary
-         */
-        updateAnalyticsSummary: function(data) {
-            $('.total-views').text(data.total_views || 0);
-            $('.unique-products').text(data.unique_products || 0);
-            $('.active-tabs').text(data.active_tabs || 0);
-            $('.avg-daily-views').text(Math.round(data.avg_daily_views || 0));
-        },
-
-        /**
-         * Load analytics charts
-         */
-        loadAnalyticsCharts: function(days) {
-            // Load popular tabs chart
-            $.ajax({
-                url: spt_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'spt_get_analytics_data',
-                    type: 'popular_tabs',
-                    days: days,
-                    nonce: spt_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        SPTAdmin.renderPopularTabsChart(response.data);
+                    break;
+                    
+                case 'attribute':
+                    var attribute = $('select[name="condition_attribute"]').val();
+                    var value = $('input[name="condition_attribute_value"]').val();
+                    
+                    if (!attribute) {
+                        result.valid = false;
+                        result.errors.push('Please select an attribute');
+                        $('select[name="condition_attribute"]').addClass('error');
                     }
-                }
-            });
-            
-            // Load daily analytics chart
-            $.ajax({
-                url: spt_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'spt_get_analytics_data',
-                    type: 'daily_analytics',
-                    days: days,
-                    nonce: spt_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        SPTAdmin.renderDailyChart(response.data);
+                    
+                    if (!value.trim()) {
+                        result.valid = false;
+                        result.errors.push('Attribute value is required');
+                        $('input[name="condition_attribute_value"]').addClass('error');
                     }
-                }
-            });
-        },
-
-        /**
-         * Render popular tabs chart
-         */
-        renderPopularTabsChart: function(data) {
-            var $container = $('#popular-tabs-chart');
-            if (!$container.length) return;
-            
-            $container.empty();
-            
-            if (!data || data.length === 0) {
-                $container.html('<p>No data available</p>');
-                return;
+                    break;
+                    
+                case 'price_range':
+                    var minPrice = parseFloat($('input[name="condition_price_min"]').val()) || 0;
+                    var maxPrice = parseFloat($('input[name="condition_price_max"]').val()) || 999999;
+                    
+                    if (minPrice < 0) {
+                        result.valid = false;
+                        result.errors.push('Minimum price must be 0 or greater');
+                        $('input[name="condition_price_min"]').addClass('error');
+                    }
+                    
+                    if (maxPrice <= minPrice) {
+                        result.valid = false;
+                        result.errors.push('Maximum price must be greater than minimum price');
+                        $('input[name="condition_price_max"]').addClass('error');
+                    }
+                    break;
+                    
+                case 'custom_field':
+                    var fieldKey = $('input[name="condition_custom_field_key"]').val();
+                    
+                    if (!fieldKey.trim()) {
+                        result.valid = false;
+                        result.errors.push('Custom field key is required');
+                        $('input[name="condition_custom_field_key"]').addClass('error');
+                    }
+                    break;
             }
             
-            var maxViews = Math.max.apply(Math, data.map(function(item) { return item.total_views; }));
-            
-            data.forEach(function(item) {
-                var percentage = maxViews > 0 ? (item.total_views / maxViews) * 100 : 0;
-                var bar = $('<div class="chart-bar">');
-                bar.html(
-                    '<div class="bar-label">' + item.tab_key + '</div>' +
-                    '<div class="bar-fill" style="width: ' + percentage + '%"></div>' +
-                    '<div class="bar-value">' + item.total_views + '</div>'
-                );
-                $container.append(bar);
-            });
-        },
-
-        /**
-         * Render daily chart
-         */
-        renderDailyChart: function(data) {
-            var $container = $('#daily-chart');
-            if (!$container.length) return;
-            
-            $container.empty();
-            
-            if (!data || data.length === 0) {
-                $container.html('<p>No data available</p>');
-                return;
-            }
-            
-            // Simple line chart
-            var maxViews = Math.max.apply(Math, data.map(function(item) { return item.total_views; }));
-            var chartHeight = 200;
-            
-            var svg = $('<svg width="100%" height="' + chartHeight + '" viewBox="0 0 600 ' + chartHeight + '">');
-            var points = [];
-            
-            data.forEach(function(item, index) {
-                var x = (index / (data.length - 1)) * 580 + 10;
-                var y = chartHeight - 20 - ((item.total_views / maxViews) * (chartHeight - 40));
-                points.push(x + ',' + y);
-            });
-            
-            if (points.length > 1) {
-                var polyline = $('<polyline points="' + points.join(' ') + '" fill="none" stroke="#0073aa" stroke-width="2">');
-                svg.append(polyline);
-            }
-            
-            $container.append(svg);
-        },
-
-        /**
-         * Refresh analytics
-         */
-        refreshAnalytics: function(e) {
-            e.preventDefault();
-            SPTAdmin.loadAnalyticsData();
+            return result;
         },
 
         /**
@@ -370,112 +361,6 @@
     };
 
     /**
-     * Analytics Dashboard Widget
-     */
-    var SPTAnalyticsDashboard = {
-        
-        init: function() {
-            this.bindEvents();
-            this.loadDashboardData();
-        },
-
-        bindEvents: function() {
-            $(document).on('click', '.spt-dashboard-refresh', this.refreshData);
-            $(document).on('change', '.spt-dashboard-period', this.changePeriod);
-        },
-
-        loadDashboardData: function() {
-            var period = $('.spt-dashboard-period').val() || 7;
-            
-            $.ajax({
-                url: spt_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'spt_get_analytics_data',
-                    type: 'dashboard',
-                    days: period,
-                    nonce: spt_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        SPTAnalyticsDashboard.updateDashboard(response.data);
-                    }
-                }
-            });
-        },
-
-        updateDashboard: function(data) {
-            // Update summary cards
-            $('.spt-card-views .card-value').text(data.summary.total_views || 0);
-            $('.spt-card-products .card-value').text(data.summary.unique_products || 0);
-            $('.spt-card-tabs .card-value').text(data.summary.active_tabs || 0);
-            $('.spt-card-engagement .card-value').text(data.engagement.engagement_rate + '%' || '0%');
-
-            // Update popular tabs list
-            this.updatePopularTabs(data.popular_tabs || []);
-            
-            // Update top products list
-            this.updateTopProducts(data.top_products || []);
-        },
-
-        updatePopularTabs: function(tabs) {
-            var $list = $('.spt-popular-tabs-list');
-            $list.empty();
-            
-            if (tabs.length === 0) {
-                $list.html('<li>No tab data available</li>');
-                return;
-            }
-            
-            tabs.forEach(function(tab, index) {
-                var $item = $('<li class="tab-item">');
-                $item.html(
-                    '<span class="tab-rank">#' + (index + 1) + '</span>' +
-                    '<span class="tab-name">' + tab.tab_key + '</span>' +
-                    '<span class="tab-views">' + tab.total_views + ' views</span>'
-                );
-                $list.append($item);
-            });
-        },
-
-        updateTopProducts: function(products) {
-            var $list = $('.spt-top-products-list');
-            $list.empty();
-            
-            if (products.length === 0) {
-                $list.html('<li>No product data available</li>');
-                return;
-            }
-            
-            products.forEach(function(product, index) {
-                var $item = $('<li class="product-item">');
-                $item.html(
-                    '<span class="product-rank">#' + (index + 1) + '</span>' +
-                    '<span class="product-name">' +
-                        '<a href="' + product.product_url + '" target="_blank">' + product.product_name + '</a>' +
-                    '</span>' +
-                    '<span class="product-views">' + product.total_views + ' views</span>'
-                );
-                $list.append($item);
-            });
-        },
-
-        refreshData: function(e) {
-            e.preventDefault();
-            $(this).addClass('updating');
-            SPTAnalyticsDashboard.loadDashboardData();
-            
-            setTimeout(function() {
-                $('.spt-dashboard-refresh').removeClass('updating');
-            }, 1000);
-        },
-
-        changePeriod: function() {
-            SPTAnalyticsDashboard.loadDashboardData();
-        }
-    };
-
-    /**
      * Template Manager (simplified)
      */
     var SPTTemplateManager = {
@@ -491,6 +376,12 @@
 
         installTemplate: function(e) {
             e.preventDefault();
+            
+            // Only proceed if we have AJAX capabilities
+            if (typeof spt_ajax === 'undefined') {
+                alert('AJAX not available. Please refresh the page and try again.');
+                return;
+            }
             
             var templateKey = $(this).data('template-key');
             var templateName = $(this).data('template-name');
@@ -533,6 +424,12 @@
         uploadTemplate: function(e) {
             e.preventDefault();
             
+            // Only proceed if we have AJAX capabilities
+            if (typeof spt_ajax === 'undefined') {
+                alert('AJAX not available. Please refresh the page and try again.');
+                return;
+            }
+            
             var formData = new FormData(this);
             formData.append('action', 'spt_import_template');
             formData.append('nonce', spt_ajax.nonce);
@@ -552,7 +449,7 @@
                         SPTAdmin.showSuccess(message);
                         
                         // Reset form
-                        $('#import-template-form')[0].reset();
+                        e.target.reset();
                         
                         // Reload page after delay
                         setTimeout(function() {
@@ -587,6 +484,12 @@
 
         exportRules: function(e) {
             e.preventDefault();
+            
+            // Only proceed if we have AJAX capabilities
+            if (typeof spt_ajax === 'undefined') {
+                alert('AJAX not available. Please refresh the page and try again.');
+                return;
+            }
             
             var includeSettings = $('#export_include_settings').is(':checked');
             var exportFormat = $('#export_format').val();
@@ -635,11 +538,7 @@
     $(document).ready(function() {
         SPTAdmin.init();
         
-        // Initialize additional modules based on page
-        if ($('.spt-analytics-dashboard').length) {
-            SPTAnalyticsDashboard.init();
-        }
-        
+        // Initialize additional modules based on page content
         if ($('.spt-templates').length) {
             SPTTemplateManager.init();
             SPTExport.init();
