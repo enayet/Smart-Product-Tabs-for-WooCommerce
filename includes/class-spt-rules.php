@@ -139,6 +139,7 @@ class SPT_Rules {
         }
     }
     
+
     /**
      * Check product attribute condition
      */
@@ -162,6 +163,35 @@ class SPT_Rules {
             return $operator === 'not_equals' || $operator === 'empty';
         }
         
+        // Handle array values for 'in' operations
+        if (is_array($attribute_value)) {
+            switch ($operator) {
+                case 'equals':
+                case 'in':
+                    return in_array($attribute, $attribute_value);
+                case 'not_equals':
+                case 'not_in':
+                    return !in_array($attribute, $attribute_value);
+                case 'contains':
+                    foreach ($attribute_value as $val) {
+                        if (strpos($attribute, $val) !== false) {
+                            return true;
+                        }
+                    }
+                    return false;
+                case 'not_contains':
+                    foreach ($attribute_value as $val) {
+                        if (strpos($attribute, $val) !== false) {
+                            return false;
+                        }
+                    }
+                    return true;
+                default:
+                    return in_array($attribute, $attribute_value);
+            }
+        }
+        
+        // Handle single values
         switch ($operator) {
             case 'equals':
                 return $attribute === $attribute_value;
@@ -262,6 +292,35 @@ class SPT_Rules {
         
         $meta_value = get_post_meta($product_id, $field_key, true);
         
+        // Handle array values for 'in' operations
+        if (is_array($field_value)) {
+            switch ($operator) {
+                case 'equals':
+                case 'in':
+                    return in_array($meta_value, $field_value);
+                case 'not_equals':
+                case 'not_in':
+                    return !in_array($meta_value, $field_value);
+                case 'contains':
+                    foreach ($field_value as $val) {
+                        if (strpos($meta_value, $val) !== false) {
+                            return true;
+                        }
+                    }
+                    return false;
+                case 'not_contains':
+                    foreach ($field_value as $val) {
+                        if (strpos($meta_value, $val) !== false) {
+                            return false;
+                        }
+                    }
+                    return true;
+                default:
+                    return in_array($meta_value, $field_value);
+            }
+        }
+        
+        // Handle single values
         switch ($operator) {
             case 'equals':
                 return $meta_value == $field_value;

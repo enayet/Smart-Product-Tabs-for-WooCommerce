@@ -840,7 +840,7 @@ class SPT_Admin {
     }
     
     /**
-     * Enhanced format_conditions method for better display
+     * Enhanced format_conditions method for better display - FIXED VERSION
      */
     private function format_conditions($conditions_json) {
         $conditions = json_decode($conditions_json, true);
@@ -872,11 +872,19 @@ class SPT_Admin {
                 );
                 
             case 'attribute':
+                $attribute_name = $conditions['attribute'] ?? '';
+                $attribute_value = $conditions['value'] ?? '';
+                
+                // Handle array values properly
+                if (is_array($attribute_value)) {
+                    $attribute_value = implode(', ', $attribute_value);
+                }
+                
                 return sprintf(
                     '<span class="condition-attribute">%s: %s = %s</span>',
                     __('Attribute', 'smart-product-tabs'),
-                    esc_html($conditions['attribute'] ?? ''),
-                    esc_html($conditions['value'] ?? '')
+                    esc_html($attribute_name),
+                    esc_html($attribute_value)
                 );
                 
             case 'price_range':
@@ -904,12 +912,21 @@ class SPT_Admin {
                 );
                 
             case 'custom_field':
+                $field_key = $conditions['key'] ?? '';
+                $field_value = $conditions['value'] ?? '';
+                $field_operator = $conditions['operator'] ?? 'equals';
+                
+                // Handle array values properly
+                if (is_array($field_value)) {
+                    $field_value = implode(', ', $field_value);
+                }
+                
                 return sprintf(
                     '<span class="condition-custom">%s: %s %s %s</span>',
                     __('Custom Field', 'smart-product-tabs'),
-                    esc_html($conditions['key'] ?? ''),
-                    esc_html($conditions['operator'] ?? 'equals'),
-                    esc_html($conditions['value'] ?? '')
+                    esc_html($field_key),
+                    esc_html($field_operator),
+                    esc_html($field_value)
                 );
                 
             case 'product_type':

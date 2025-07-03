@@ -138,15 +138,19 @@
                     var maxPrice = $('input[name="condition_price_max"]').val() || '∞';
                     previewText = 'This tab will show on products priced between ' + minPrice + ' and ' + maxPrice;
                     break;
+
                 case 'attribute':
                     var attribute = $('select[name="condition_attribute"]').val();
                     var value = $('input[name="condition_attribute_value"]').val();
                     if (attribute && value) {
-                        previewText = 'This tab will show on products with ' + attribute + ' = ' + value;
+                        // Handle array values properly
+                        var displayValue = Array.isArray(value) ? value.join(', ') : value;
+                        previewText = 'This tab will show on products with ' + attribute + ' = ' + displayValue;
                     } else {
                         previewText = 'Select attribute and value';
                     }
-                    break;
+                    break;                    
+                    
                 case 'stock_status':
                     var status = $('select[name="condition_stock_status"]').val();
                     previewText = 'This tab will show on products that are ' + status;
