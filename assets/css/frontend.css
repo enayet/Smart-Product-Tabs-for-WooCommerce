@@ -1,0 +1,670 @@
+/**
+ * Frontend Styles for Smart Product Tabs
+ */
+
+/* ===== CORE TAB STYLES ===== */
+
+.woocommerce-tabs {
+    position: relative;
+    margin: 30px 0;
+}
+
+.woocommerce-tabs .tabs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #e1e1e1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.woocommerce-tabs .tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.woocommerce-tabs .tabs::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.woocommerce-tabs .tabs::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.woocommerce-tabs .tabs::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+.woocommerce-tabs .tabs li {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.woocommerce-tabs .tabs li a {
+    display: block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #666;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.4;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: #f8f8f8;
+    transition: all 0.3s ease;
+    position: relative;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+}
+
+.woocommerce-tabs .tabs li a:hover {
+    background: #fff;
+    color: #333;
+    border-color: #e1e1e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.woocommerce-tabs .tabs li a:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+    background: #fff;
+    color: #333;
+}
+
+.woocommerce-tabs .tabs li.active a {
+    background: #fff;
+    color: #333;
+    border-color: #e1e1e1;
+    border-bottom-color: #fff;
+    margin-bottom: -1px;
+    z-index: 2;
+    position: relative;
+    font-weight: 600;
+}
+
+.woocommerce-tabs .tabs li.active a::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #0073aa;
+}
+
+/* ===== TAB PANELS ===== */
+
+.woocommerce-Tabs-panel {
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-top: none;
+    padding: 30px;
+    margin: 0;
+    display: none;
+    min-height: 200px;
+    position: relative;
+    animation: fadeInUp 0.3s ease-in-out;
+}
+
+.woocommerce-Tabs-panel.active {
+    display: block;
+}
+
+.woocommerce-Tabs-panel h2,
+.woocommerce-Tabs-panel h3,
+.woocommerce-Tabs-panel h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    line-height: 1.3;
+}
+
+.woocommerce-Tabs-panel h2 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.woocommerce-Tabs-panel h3 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.woocommerce-Tabs-panel h4 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.woocommerce-Tabs-panel p {
+    margin-bottom: 20px;
+    line-height: 1.6;
+    color: #555;
+}
+
+.woocommerce-Tabs-panel ul,
+.woocommerce-Tabs-panel ol {
+    margin-bottom: 20px;
+    padding-left: 20px;
+}
+
+.woocommerce-Tabs-panel li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+    color: #555;
+}
+
+.woocommerce-Tabs-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.woocommerce-Tabs-panel table th,
+.woocommerce-Tabs-panel table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.woocommerce-Tabs-panel table th {
+    background: #f8f8f8;
+    font-weight: 600;
+    color: #333;
+}
+
+.woocommerce-Tabs-panel table tr:hover {
+    background: #f9f9f9;
+}
+
+/* ===== SPT ENHANCED CONTENT ===== */
+
+.spt-tab-content {
+    position: relative;
+}
+
+.spt-tab-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.spt-tab-content .button,
+.spt-tab-content .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #0073aa;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.spt-tab-content .button:hover,
+.spt-tab-content .btn:hover {
+    background: #005a87;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 115, 170, 0.3);
+}
+
+.spt-tab-content .button.secondary {
+    background: #f8f8f8;
+    color: #333;
+    border: 1px solid #e1e1e1;
+}
+
+.spt-tab-content .button.secondary:hover {
+    background: #fff;
+    border-color: #ccc;
+}
+
+/* ===== LOADING STATES ===== */
+
+.spt-loading-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    color: #999;
+    font-style: italic;
+    background: #f9f9f9;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.spt-loading-placeholder:hover {
+    background: #f0f0f0;
+    border-color: #ccc;
+    color: #666;
+}
+
+.spt-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 150px;
+    color: #666;
+}
+
+.spt-loading::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== TAB BADGES ===== */
+
+.spt-tab-badge {
+    background: #e74c3c;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px;
+    vertical-align: top;
+    min-width: 16px;
+    text-align: center;
+    display: inline-block;
+    line-height: 1.2;
+}
+
+.spt-tab-badge.success {
+    background: #27ae60;
+}
+
+.spt-tab-badge.warning {
+    background: #f39c12;
+}
+
+.spt-tab-badge.info {
+    background: #3498db;
+}
+
+/* ===== TOOLTIPS ===== */
+
+.spt-tooltip {
+    position: absolute;
+    background: #333;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.spt-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+}
+
+.spt-tooltip.show {
+    opacity: 1;
+}
+
+/* ===== SPECIAL CONTENT SECTIONS ===== */
+
+.size-guide-table {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+.size-guide-table table {
+    min-width: 500px;
+    font-size: 14px;
+}
+
+.size-guide-table th {
+    background: #0073aa;
+    color: #fff;
+    text-align: center;
+}
+
+.size-guide-table td {
+    text-align: center;
+    padding: 10px 12px;
+}
+
+.care-instructions ul,
+.materials-info ul,
+.system-requirements ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.care-instructions li,
+.materials-info li,
+.system-requirements li {
+    position: relative;
+    padding-left: 25px;
+    margin-bottom: 8px;
+}
+
+.care-instructions li::before,
+.materials-info li::before,
+.system-requirements li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.license-info,
+.download-info,
+.warranty-info {
+    background: #f8f9fa;
+    border-left: 4px solid #0073aa;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.license-info h4,
+.download-info h4,
+.warranty-info h4 {
+    margin-top: 0;
+    color: #0073aa;
+}
+
+/* ===== RESPONSIVE DESIGN HELPERS ===== */
+
+.spt-scroll-indicator {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 8px 15px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+.spt-mobile-tabs {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+
+.woocommerce-tabs .tabs a:focus-visible {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.screen-reader-text {
+    border: 0;
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute !important;
+    width: 1px;
+    word-wrap: normal !important;
+}
+
+.skip-link {
+    background: #000;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 16px;
+    position: absolute;
+    left: -9999px;
+    z-index: 999999;
+}
+
+.skip-link:focus {
+    left: 6px;
+    top: 6px;
+}
+
+/* ===== THEME COMPATIBILITY ===== */
+
+/* Storefront Theme */
+.storefront .woocommerce-tabs .tabs li a {
+    border-radius: 0;
+}
+
+/* Astra Theme */
+.astra-theme .woocommerce-tabs {
+    clear: both;
+}
+
+/* OceanWP Theme */
+.oceanwp-theme .woocommerce-tabs .tabs {
+    border-bottom: 1px solid #e9e9e9;
+}
+
+/* GeneratePress Theme */
+.generate-theme .woocommerce-tabs .tabs li a {
+    font-family: inherit;
+}
+
+/* Twenty Twenty-Three Theme */
+.wp-theme-twentytwentythree .woocommerce-tabs {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ===== PRINT STYLES ===== */
+
+@media print {
+    .woocommerce-tabs .tabs {
+        display: none;
+    }
+    
+    .woocommerce-Tabs-panel {
+        display: block !important;
+        border: none;
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+    
+    .woocommerce-Tabs-panel h2,
+    .woocommerce-Tabs-panel h3 {
+        page-break-after: avoid;
+    }
+    
+    .spt-loading,
+    .spt-loading-placeholder,
+    .spt-tooltip {
+        display: none !important;
+    }
+    
+    .spt-tab-content {
+        margin-bottom: 30px;
+    }
+    
+    .spt-tab-content::before {
+        content: "Tab: " attr(data-tab-title);
+        display: block;
+        font-weight: bold;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ccc;
+    }
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* ===== DARK MODE SUPPORT ===== */
+
+@media (prefers-color-scheme: dark) {
+    .woocommerce-tabs .tabs {
+        border-bottom-color: #444;
+    }
+    
+    .woocommerce-tabs .tabs li a {
+        background: #2a2a2a;
+        color: #ccc;
+        border-color: #444;
+    }
+    
+    .woocommerce-tabs .tabs li a:hover {
+        background: #333;
+        color: #fff;
+        border-color: #555;
+    }
+    
+    .woocommerce-tabs .tabs li.active a {
+        background: #333;
+        color: #fff;
+        border-color: #555;
+    }
+    
+    .woocommerce-Tabs-panel {
+        background: #1e1e1e;
+        border-color: #444;
+        color: #ccc;
+    }
+    
+    .woocommerce-Tabs-panel h2,
+    .woocommerce-Tabs-panel h3,
+    .woocommerce-Tabs-panel h4 {
+        color: #fff;
+    }
+    
+    .woocommerce-Tabs-panel table th {
+        background: #2a2a2a;
+        color: #fff;
+    }
+    
+    .woocommerce-Tabs-panel table th,
+    .woocommerce-Tabs-panel table td {
+        border-bottom-color: #444;
+    }
+    
+    .license-info,
+    .download-info,
+    .warranty-info {
+        background: #2a2a2a;
+        border-left-color: #0073aa;
+    }
+    
+    .spt-loading-placeholder {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #999;
+    }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+
+@media (prefers-contrast: high) {
+    .woocommerce-tabs .tabs li a {
+        border: 2px solid #000;
+        background: #fff;
+        color: #000;
+    }
+    
+    .woocommerce-tabs .tabs li.active a {
+        background: #000;
+        color: #fff;
+    }
+    
+    .woocommerce-Tabs-panel {
+        border: 2px solid #000;
+        background: #fff;
+        color: #000;
+    }
+}
+
+/* ===== REDUCED MOTION ===== */
+
+@media (prefers-reduced-motion: reduce) {
+    .woocommerce-tabs .tabs li a {
+        transition: none;
+    }
+    
+    .woocommerce-Tabs-panel {
+        animation: none;
+    }
+    
+    .spt-loading::before {
+        animation: none;
+    }
+    
+    .spt-tooltip {
+        transition: none;
+    }
+    
+    .spt-tab-content .button {
+        transition: none;
+    }
+}

@@ -1,0 +1,724 @@
+/**
+ * Mobile Styles for Smart Product Tabs
+ */
+
+/* ===== MOBILE BREAKPOINTS ===== */
+
+/* Small Mobile: 320px - 479px */
+/* Mobile: 480px - 767px */
+/* Tablet: 768px - 1024px */
+
+/* ===== MOBILE-FIRST TAB NAVIGATION ===== */
+
+@media screen and (max-width: 768px) {
+    
+    .woocommerce-tabs {
+        margin: 20px 0;
+    }
+    
+    /* Mobile Tab Navigation */
+    .woocommerce-tabs .tabs {
+        background: #f8f8f8;
+        border: 1px solid #e1e1e1;
+        border-radius: 6px 6px 0 0;
+        padding: 0;
+        margin: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        position: relative;
+    }
+    
+    .woocommerce-tabs .tabs::before {
+        content: '← Swipe →';
+        position: absolute;
+        top: -25px;
+        right: 0;
+        font-size: 11px;
+        color: #999;
+        font-style: italic;
+        opacity: 0;
+        animation: fadeInOut 4s ease-in-out;
+    }
+    
+    .woocommerce-tabs .tabs li {
+        display: inline-block;
+        scroll-snap-align: start;
+        min-width: 120px;
+        max-width: 200px;
+        flex: 0 0 auto;
+    }
+    
+    .woocommerce-tabs .tabs li a {
+        padding: 12px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        text-align: center;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-radius: 0;
+        border: none;
+        border-right: 1px solid #e1e1e1;
+        background: transparent;
+        transition: all 0.2s ease;
+        touch-action: manipulation;
+    }
+    
+    .woocommerce-tabs .tabs li:last-child a {
+        border-right: none;
+    }
+    
+    .woocommerce-tabs .tabs li a:hover,
+    .woocommerce-tabs .tabs li a:focus {
+        background: #fff;
+        transform: none;
+        box-shadow: inset 0 -3px 0 #0073aa;
+    }
+    
+    .woocommerce-tabs .tabs li.active a {
+        background: #fff;
+        color: #0073aa;
+        font-weight: 600;
+        border-bottom: 3px solid #0073aa;
+        margin-bottom: 0;
+        position: relative;
+    }
+    
+    .woocommerce-tabs .tabs li.active a::after {
+        display: none;
+    }
+    
+    /* Mobile Tab Panels */
+    .woocommerce-Tabs-panel {
+        padding: 20px 15px;
+        border-radius: 0 0 6px 6px;
+        min-height: 150px;
+        animation: slideInUp 0.3s ease-out;
+    }
+    
+    .woocommerce-Tabs-panel h2 {
+        font-size: 20px;
+        margin-bottom: 15px;
+        line-height: 1.3;
+    }
+    
+    .woocommerce-Tabs-panel h3 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+    
+    .woocommerce-Tabs-panel h4 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    
+    .woocommerce-Tabs-panel p {
+        margin-bottom: 15px;
+        line-height: 1.5;
+        font-size: 14px;
+    }
+    
+    /* Mobile Table Styling */
+    .woocommerce-Tabs-panel table {
+        font-size: 13px;
+    }
+    
+    .woocommerce-Tabs-panel table th,
+    .woocommerce-Tabs-panel table td {
+        padding: 8px 6px;
+    }
+    
+    /* Responsive Tables */
+    .size-guide-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid #e1e1e1;
+        border-radius: 4px;
+    }
+    
+    .size-guide-table table {
+        min-width: 400px;
+        margin: 0;
+    }
+}
+
+/* ===== ACCORDION MODE FOR MOBILE ===== */
+
+@media screen and (max-width: 768px) {
+    
+    .spt-mobile-enabled.accordion-mode .tabs {
+        display: none;
+    }
+    
+    .spt-mobile-accordion {
+        border: 1px solid #e1e1e1;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #fff;
+    }
+    
+    .spt-accordion-item {
+        border-bottom: 1px solid #e1e1e1;
+    }
+    
+    .spt-accordion-item:last-child {
+        border-bottom: none;
+    }
+    
+    .spt-mobile-tab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: #f8f8f8;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s ease;
+        touch-action: manipulation;
+        position: relative;
+    }
+    
+    .spt-mobile-tab-header:hover {
+        background: #f0f0f0;
+    }
+    
+    .spt-mobile-tab-header:active {
+        background: #e8e8e8;
+    }
+    
+    .spt-accordion-item.active .spt-mobile-tab-header {
+        background: #fff;
+        border-bottom: 1px solid #e1e1e1;
+    }
+    
+    .tab-title {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+        flex: 1;
+    }
+    
+    .tab-toggle {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0073aa;
+        color: #fff;
+        border-radius: 50%;
+        font-weight: bold;
+        font-size: 16px;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+    
+    .spt-accordion-item.active .tab-toggle {
+        background: #005a87;
+        transform: rotate(45deg);
+    }
+    
+    .spt-mobile-tab-content {
+        display: none;
+        padding: 20px;
+        background: #fff;
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    .spt-accordion-item.active .spt-mobile-tab-content {
+        display: block;
+    }
+}
+
+/* ===== MOBILE HIDDEN ELEMENTS ===== */
+
+@media screen and (max-width: 768px) {
+    .spt-mobile-hidden {
+        display: none !important;
+    }
+}
+
+/* ===== TOUCH OPTIMIZATIONS ===== */
+
+@media screen and (max-width: 768px) {
+    
+    /* Larger touch targets */
+    .woocommerce-tabs .tabs li a {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .spt-tab-content .button,
+    .spt-tab-content .btn {
+        min-height: 44px;
+        padding: 12px 20px;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 5px 5px 5px 0;
+    }
+    
+    /* Touch-friendly spacing */
+    .woocommerce-Tabs-panel ul,
+    .woocommerce-Tabs-panel ol {
+        padding-left: 15px;
+    }
+    
+    .woocommerce-Tabs-panel li {
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+    
+    /* Improved form elements */
+    .woocommerce-Tabs-panel input,
+    .woocommerce-Tabs-panel select,
+    .woocommerce-Tabs-panel textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+/* ===== SMALL MOBILE OPTIMIZATIONS ===== */
+
+@media screen and (max-width: 480px) {
+    
+    .woocommerce-tabs {
+        margin: 15px -15px;
+    }
+    
+    .woocommerce-tabs .tabs li {
+        min-width: 100px;
+    }
+    
+    .woocommerce-tabs .tabs li a {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+    
+    .woocommerce-Tabs-panel {
+        padding: 15px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .woocommerce-Tabs-panel h2 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+    
+    .woocommerce-Tabs-panel h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    
+    .woocommerce-Tabs-panel h4 {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    .woocommerce-Tabs-panel p {
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+    
+    /* Accordion adjustments for small screens */
+    .spt-mobile-tab-header {
+        padding: 12px 15px;
+    }
+    
+    .tab-title {
+        font-size: 13px;
+    }
+    
+    .tab-toggle {
+        width: 22px;
+        height: 22px;
+        font-size: 14px;
+    }
+    
+    .spt-mobile-tab-content {
+        padding: 15px;
+    }
+    
+    /* Compact tables on small screens */
+    .woocommerce-Tabs-panel table {
+        font-size: 11px;
+    }
+    
+    .woocommerce-Tabs-panel table th,
+    .woocommerce-Tabs-panel table td {
+        padding: 6px 4px;
+    }
+    
+    /* Stack content sections */
+    .care-instructions,
+    .materials-info,
+    .system-requirements,
+    .license-info,
+    .download-info {
+        margin: 15px 0;
+        padding: 15px;
+    }
+    
+    .care-instructions h4,
+    .materials-info h4,
+    .system-requirements h4 {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+}
+
+/* ===== TABLET SPECIFIC STYLES ===== */
+
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    
+    .woocommerce-tabs .tabs li a {
+        padding: 14px 18px;
+        font-size: 13px;
+    }
+    
+    .woocommerce-Tabs-panel {
+        padding: 25px;
+    }
+    
+    /* Responsive grid for tablet */
+    .template-grid,
+    .analytics-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+/* ===== MOBILE LOADING STATES ===== */
+
+@media screen and (max-width: 768px) {
+    
+    .spt-loading-placeholder {
+        min-height: 120px;
+        font-size: 13px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .spt-loading {
+        min-height: 120px;
+        font-size: 13px;
+    }
+    
+    .spt-loading::before {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+    }
+}
+
+/* ===== MOBILE SCROLL INDICATORS ===== */
+
+@media screen and (max-width: 768px) {
+    
+    .spt-scroll-indicator {
+        position: relative;
+        padding: 6px 12px;
+        font-size: 11px;
+        text-align: center;
+        margin-bottom: 5px;
+        border-radius: 15px;
+        background: linear-gradient(90deg, #fff3cd, #ffeaa7);
+    }
+    
+    .spt-scroll-indicator::before {
+        content: '👆';
+        margin-right: 5px;
+    }
+    
+    /* Hide scroll indicator after interaction */
+    .tabs.scrolled .spt-scroll-indicator {
+        display: none;
+    }
+}
+
+/* ===== MOBILE TOOLTIPS ===== */
+
+@media screen and (max-width: 768px) {
+    
+    /* Disable tooltips on mobile to avoid interference with touch */
+    .spt-tooltip {
+        display: none !important;
+    }
+    
+    /* Replace with data attributes for touch */
+    [data-mobile-tooltip]::after {
+        content: attr(data-mobile-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: #fff;
+        padding: 5px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 1000;
+    }
+    
+    [data-mobile-tooltip]:active::after {
+        opacity: 1;
+    }
+}
+
+/* ===== MOBILE BADGES ===== */
+
+@media screen and (max-width: 768px) {
+    
+    .spt-tab-badge {
+        font-size: 10px;
+        padding: 1px 5px;
+        margin-left: 6px;
+        min-width: 14px;
+    }
+}
+
+/* ===== MOBILE ANIMATIONS ===== */
+
+@media screen and (max-width: 768px) {
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 1000px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+    }
+    
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 0; }
+        20%, 80% { opacity: 1; }
+    }
+    
+    /* Reduce animations on low-end devices */
+    @media (update: slow) {
+        .woocommerce-Tabs-panel {
+            animation: none;
+        }
+        
+        .spt-mobile-tab-content {
+            animation: none;
+        }
+        
+        .tab-toggle {
+            transition: none;
+        }
+    }
+}
+
+/* ===== MOBILE ACCESSIBILITY ===== */
+
+@media screen and (max-width: 768px) {
+    
+    /* Larger focus indicators for mobile */
+    .woocommerce-tabs .tabs li a:focus {
+        outline: 3px solid #0073aa;
+        outline-offset: 2px;
+    }
+    
+    .spt-mobile-tab-header:focus {
+        outline: 2px solid #0073aa;
+        outline-offset: 1px;
+    }
+    
+    /* High contrast improvements */
+    @media (prefers-contrast: high) {
+        .woocommerce-tabs .tabs li a {
+            border: 2px solid #000;
+        }
+        
+        .spt-mobile-tab-header {
+            border: 1px solid #000;
+        }
+        
+        .tab-toggle {
+            background: #000;
+            border: 2px solid #fff;
+        }
+    }
+    
+    /* Reduced motion on mobile */
+    @media (prefers-reduced-motion: reduce) {
+        .woocommerce-Tabs-panel {
+            animation: none;
+        }
+        
+        .spt-mobile-tab-content {
+            animation: none;
+        }
+        
+        .tab-toggle {
+            transition: none;
+        }
+        
+        .woocommerce-tabs .tabs li a {
+            transition: none;
+        }
+    }
+}
+
+/* ===== LANDSCAPE MOBILE OPTIMIZATIONS ===== */
+
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    
+    .woocommerce-tabs {
+        margin: 10px 0;
+    }
+    
+    .woocommerce-Tabs-panel {
+        padding: 15px 20px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    .spt-mobile-tab-header {
+        padding: 10px 15px;
+    }
+    
+    .spt-mobile-tab-content {
+        padding: 15px;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+}
+
+/* ===== PWA AND STANDALONE MODE ===== */
+
+@media screen and (max-width: 768px) and (display-mode: standalone) {
+    
+    .woocommerce-tabs {
+        margin-top: 10px;
+    }
+    
+    .woocommerce-tabs .tabs {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: #f8f8f8;
+    }
+}
+
+/* ===== MOBILE PERFORMANCE OPTIMIZATIONS ===== */
+
+@media screen and (max-width: 768px) {
+    
+    /* Enable hardware acceleration for smoother animations */
+    .woocommerce-Tabs-panel,
+    .spt-mobile-tab-content,
+    .tab-toggle {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        will-change: transform, opacity;
+    }
+    
+    /* Optimize repaints */
+    .woocommerce-tabs .tabs {
+        contain: layout style paint;
+    }
+    
+    .spt-accordion-item {
+        contain: layout style;
+    }
+}
+
+/* ===== MOBILE DARK MODE ===== */
+
+@media screen and (max-width: 768px) and (prefers-color-scheme: dark) {
+    
+    .woocommerce-tabs .tabs {
+        background: #2a2a2a;
+        border-color: #444;
+    }
+    
+    .woocommerce-tabs .tabs li a {
+        color: #ccc;
+        border-color: #444;
+    }
+    
+    .woocommerce-tabs .tabs li a:hover {
+        background: #333;
+        color: #fff;
+    }
+    
+    .woocommerce-tabs .tabs li.active a {
+        background: #333;
+        color: #0099ff;
+        border-bottom-color: #0099ff;
+    }
+    
+    .spt-mobile-accordion {
+        background: #1e1e1e;
+        border-color: #444;
+    }
+    
+    .spt-mobile-tab-header {
+        background: #2a2a2a;
+        border-color: #444;
+    }
+    
+    .spt-accordion-item.active .spt-mobile-tab-header {
+        background: #1e1e1e;
+    }
+    
+    .tab-title {
+        color: #fff;
+    }
+    
+    .tab-toggle {
+        background: #0099ff;
+    }
+    
+    .spt-accordion-item.active .tab-toggle {
+        background: #0077cc;
+    }
+    
+    .spt-mobile-tab-content {
+        background: #1e1e1e;
+        color: #ccc;
+    }
+    
+    .spt-loading-placeholder {
+        background: #2a2a2a;
+        border-color: #444;
+        color: #999;
+    }
+}
