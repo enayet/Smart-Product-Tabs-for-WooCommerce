@@ -15,10 +15,8 @@ class SPT_Admin {
      */
     public function __construct() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
-        add_action('wp_ajax_spt_save_rule', array($this, 'ajax_save_rule'));
-        add_action('wp_ajax_spt_delete_rule', array($this, 'ajax_delete_rule'));
+        add_action('admin_init', array($this, 'handle_form_submissions'));
         add_action('wp_ajax_spt_update_tab_order', array($this, 'ajax_update_tab_order'));
-        add_action('wp_ajax_spt_toggle_tab', array($this, 'ajax_toggle_tab'));
         add_action('admin_notices', array($this, 'admin_notices'));
     }
     
@@ -37,10 +35,50 @@ class SPT_Admin {
     }
     
     /**
-     * Main admin page
+     * Handle form submissions
+     */
+    public function handle_form_submissions() {
+        // Handle rule save/update
+        if (isset($_POST['spt_save_rule']) && wp_verify_nonce($_POST['spt_rule_nonce'], 'spt_save_rule')) {
+            $this->save_rule();
+        }
+        
+        // Handle rule delete
+        if (isset($_GET['spt_action']) && $_GET['spt_action'] === 'delete_rule' && 
+            isset($_GET['rule_id']) && wp_verify_nonce($_GET['_wpnonce'], 'spt_delete_rule_' . $_GET['rule_id'])) {
+            $this->delete_rule($_GET['rule_id']);
+        }
+        
+        // Handle default tabs settings
+        if (isset($_POST['spt_save_default_tabs']) && wp_verify_nonce($_POST['spt_default_tabs_nonce'], 'spt_save_default_tabs')) {
+            $this->save_default_tabs();
+        }
+    }
+    
+    /**
+     * Main admin page router
      */
     public function admin_page() {
+        $action = isset($_GET['spt_action']) ? sanitize_text_field($_GET['spt_action']) : '';
         $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'rules';
+        
+        // Handle specific actions
+        switch ($action) {
+            case 'add_rule':
+                $this->render_add_rule_page();
+                return;
+            case 'edit_rule':
+                $this->render_edit_rule_page();
+                return;
+            default:
+                $this->render_main_page($active_tab);
+        }
+    }
+    
+    /**
+     * Render main admin page
+     */
+    private function render_main_page($active_tab) {
         ?>
         <div class="wrap">
             <h1><?php _e('Smart Product Tabs', 'smart-product-tabs'); ?></h1>
@@ -91,6 +129,49 @@ class SPT_Admin {
     }
     
     /**
+     * Render add rule page
+     */
+    private function render_add_rule_page() {
+        ?>
+        <div class="wrap">
+            <h1>
+                <?php _e('Add New Rule', 'smart-product-tabs'); ?>
+                <a href="<?php echo admin_url('admin.php?page=smart-product-tabs'); ?>" class="page-title-action">
+                    <?php _e('Back to Rules', 'smart-product-tabs'); ?>
+                </a>
+            </h1>
+            
+            <?php $this->render_rule_form(); ?>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Render edit rule page
+     */
+    private function render_edit_rule_page() {
+        $rule_id = isset($_GET['rule_id']) ? intval($_GET['rule_id']) : 0;
+        $rule = $this->get_rule_by_id($rule_id);
+        
+        if (!$rule) {
+            wp_die(__('Rule not found.', 'smart-product-tabs'));
+        }
+        
+        ?>
+        <div class="wrap">
+            <h1>
+                <?php _e('Edit Rule', 'smart-product-tabs'); ?>
+                <a href="<?php echo admin_url('admin.php?page=smart-product-tabs'); ?>" class="page-title-action">
+                    <?php _e('Back to Rules', 'smart-product-tabs'); ?>
+                </a>
+            </h1>
+            
+            <?php $this->render_rule_form($rule); ?>
+        </div>
+        <?php
+    }
+    
+    /**
      * Render rules tab
      */
     private function render_rules_tab() {
@@ -99,9 +180,9 @@ class SPT_Admin {
         <div class="spt-rules-container">
             <div class="spt-rules-header">
                 <h2><?php _e('Tab Rules', 'smart-product-tabs'); ?></h2>
-                <button type="button" class="button-primary" id="add-new-rule">
+                <a href="<?php echo admin_url('admin.php?page=smart-product-tabs&spt_action=add_rule'); ?>" class="button-primary">
                     <?php _e('Add New Rule', 'smart-product-tabs'); ?>
-                </button>
+                </a>
             </div>
             
             <!-- Rules List -->
@@ -135,31 +216,20 @@ class SPT_Admin {
                                 </span>
                             </td>
                             <td>
-                                <button type="button" class="button edit-rule" data-rule-id="<?php echo esc_attr($rule->id); ?>">
+                                <a href="<?php echo admin_url('admin.php?page=smart-product-tabs&spt_action=edit_rule&rule_id=' . $rule->id); ?>" class="button">
                                     <?php _e('Edit', 'smart-product-tabs'); ?>
-                                </button>
-                                <button type="button" class="button delete-rule" data-rule-id="<?php echo esc_attr($rule->id); ?>">
+                                </a>
+                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=smart-product-tabs&spt_action=delete_rule&rule_id=' . $rule->id), 'spt_delete_rule_' . $rule->id); ?>" 
+                                   class="button" 
+                                   onclick="return confirm('<?php _e('Are you sure you want to delete this rule?', 'smart-product-tabs'); ?>')">
                                     <?php _e('Delete', 'smart-product-tabs'); ?>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
-            </div>
-            
-            <!-- Rule Form Modal -->
-            <div id="rule-form-modal" class="spt-modal" style="display: none;">
-                <div class="spt-modal-content">
-                    <div class="spt-modal-header">
-                        <h3 id="modal-title"><?php _e('Add New Rule', 'smart-product-tabs'); ?></h3>
-                        <span class="spt-modal-close">&times;</span>
-                    </div>
-                    <div class="spt-modal-body">
-                        <?php $this->render_rule_form(); ?>
-                    </div>
-                </div>
             </div>
         </div>
         <?php
@@ -168,10 +238,15 @@ class SPT_Admin {
     /**
      * Render rule form
      */
-    private function render_rule_form() {
+    private function render_rule_form($rule = null) {
+        $is_edit = $rule !== null;
         ?>
-        <form id="spt-rule-form" method="post">
-            <input type="hidden" id="rule_id" name="rule_id" value="">
+        <form method="post" action="">
+            <?php wp_nonce_field('spt_save_rule', 'spt_rule_nonce'); ?>
+            <input type="hidden" name="spt_save_rule" value="1">
+            <?php if ($is_edit): ?>
+                <input type="hidden" name="rule_id" value="<?php echo esc_attr($rule->id); ?>">
+            <?php endif; ?>
             
             <table class="form-table">
                 <!-- Basic Info -->
@@ -180,7 +255,8 @@ class SPT_Admin {
                         <label for="rule_name"><?php _e('Rule Name', 'smart-product-tabs'); ?></label>
                     </th>
                     <td>
-                        <input type="text" id="rule_name" name="rule_name" class="regular-text" required>
+                        <input type="text" id="rule_name" name="rule_name" class="regular-text" 
+                               value="<?php echo $is_edit ? esc_attr($rule->rule_name) : ''; ?>" required>
                         <p class="description"><?php _e('Internal name for this rule', 'smart-product-tabs'); ?></p>
                     </td>
                 </tr>
@@ -190,7 +266,8 @@ class SPT_Admin {
                         <label for="tab_title"><?php _e('Tab Title', 'smart-product-tabs'); ?></label>
                     </th>
                     <td>
-                        <input type="text" id="tab_title" name="tab_title" class="regular-text" required>
+                        <input type="text" id="tab_title" name="tab_title" class="regular-text" 
+                               value="<?php echo $is_edit ? esc_attr($rule->tab_title) : ''; ?>" required>
                         <p class="description"><?php _e('Use {product_name} for dynamic titles', 'smart-product-tabs'); ?></p>
                     </td>
                 </tr>
@@ -201,16 +278,20 @@ class SPT_Admin {
                         <label for="condition_type"><?php _e('Show Tab When', 'smart-product-tabs'); ?></label>
                     </th>
                     <td>
-                        <select id="condition_type" name="condition_type">
-                            <option value="all"><?php _e('All Products', 'smart-product-tabs'); ?></option>
-                            <option value="category"><?php _e('Product Category', 'smart-product-tabs'); ?></option>
-                            <option value="attribute"><?php _e('Product Attribute', 'smart-product-tabs'); ?></option>
-                            <option value="price_range"><?php _e('Price Range', 'smart-product-tabs'); ?></option>
-                            <option value="stock_status"><?php _e('Stock Status', 'smart-product-tabs'); ?></option>
-                            <option value="custom_field"><?php _e('Custom Field', 'smart-product-tabs'); ?></option>
+                        <?php 
+                        $conditions = $is_edit ? json_decode($rule->conditions, true) : array();
+                        $condition_type = isset($conditions['type']) ? $conditions['type'] : 'all';
+                        ?>
+                        <select name="condition_type" id="condition_type">
+                            <option value="all" <?php selected($condition_type, 'all'); ?>><?php _e('All Products', 'smart-product-tabs'); ?></option>
+                            <option value="category" <?php selected($condition_type, 'category'); ?>><?php _e('Product Category', 'smart-product-tabs'); ?></option>
+                            <option value="attribute" <?php selected($condition_type, 'attribute'); ?>><?php _e('Product Attribute', 'smart-product-tabs'); ?></option>
+                            <option value="price_range" <?php selected($condition_type, 'price_range'); ?>><?php _e('Price Range', 'smart-product-tabs'); ?></option>
+                            <option value="stock_status" <?php selected($condition_type, 'stock_status'); ?>><?php _e('Stock Status', 'smart-product-tabs'); ?></option>
+                            <option value="custom_field" <?php selected($condition_type, 'custom_field'); ?>><?php _e('Custom Field', 'smart-product-tabs'); ?></option>
                         </select>
                         <div id="condition_details" style="margin-top:10px;">
-                            <?php $this->render_condition_fields(); ?>
+                            <?php $this->render_condition_fields($conditions); ?>
                         </div>
                     </td>
                 </tr>
@@ -221,15 +302,22 @@ class SPT_Admin {
                         <label for="user_role_condition"><?php _e('Show Tab For', 'smart-product-tabs'); ?></label>
                     </th>
                     <td>
+                        <?php $user_role_condition = $is_edit ? $rule->user_role_condition : 'all'; ?>
                         <select id="user_role_condition" name="user_role_condition">
-                            <option value="all"><?php _e('All Users', 'smart-product-tabs'); ?></option>
-                            <option value="logged_in"><?php _e('Logged-in Users Only', 'smart-product-tabs'); ?></option>
-                            <option value="specific_role"><?php _e('Specific Role(s)', 'smart-product-tabs'); ?></option>
+                            <option value="all" <?php selected($user_role_condition, 'all'); ?>><?php _e('All Users', 'smart-product-tabs'); ?></option>
+                            <option value="logged_in" <?php selected($user_role_condition, 'logged_in'); ?>><?php _e('Logged-in Users Only', 'smart-product-tabs'); ?></option>
+                            <option value="specific_role" <?php selected($user_role_condition, 'specific_role'); ?>><?php _e('Specific Role(s)', 'smart-product-tabs'); ?></option>
                         </select>
-                        <div id="role_selector" style="display:none; margin-top:10px;">
-                            <?php foreach (wp_roles()->roles as $role => $details): ?>
+                        <div id="role_selector" style="<?php echo $user_role_condition !== 'specific_role' ? 'display:none;' : ''; ?> margin-top:10px;">
+                            <?php 
+                            $selected_roles = $is_edit ? json_decode($rule->user_roles, true) : array();
+                            if (!is_array($selected_roles)) $selected_roles = array();
+                            
+                            foreach (wp_roles()->roles as $role => $details): 
+                            ?>
                             <label style="display: block; margin: 5px 0;">
-                                <input type="checkbox" name="user_roles[]" value="<?php echo esc_attr($role); ?>">
+                                <input type="checkbox" name="user_roles[]" value="<?php echo esc_attr($role); ?>" 
+                                       <?php checked(in_array($role, $selected_roles)); ?>>
                                 <?php echo esc_html($details['name']); ?>
                             </label>
                             <?php endforeach; ?>
@@ -241,12 +329,13 @@ class SPT_Admin {
                 <tr>
                     <th scope="row"><?php _e('Content Type', 'smart-product-tabs'); ?></th>
                     <td>
+                        <?php $content_type = $is_edit ? $rule->content_type : 'rich_editor'; ?>
                         <label>
-                            <input type="radio" name="content_type" value="rich_editor" checked>
+                            <input type="radio" name="content_type" value="rich_editor" <?php checked($content_type, 'rich_editor'); ?>>
                             <?php _e('Rich Editor', 'smart-product-tabs'); ?>
                         </label>
                         <label style="margin-left: 20px;">
-                            <input type="radio" name="content_type" value="plain_text">
+                            <input type="radio" name="content_type" value="plain_text" <?php checked($content_type, 'plain_text'); ?>>
                             <?php _e('Plain Text', 'smart-product-tabs'); ?>
                         </label>
                     </td>
@@ -258,17 +347,18 @@ class SPT_Admin {
                         <label for="tab_content"><?php _e('Tab Content', 'smart-product-tabs'); ?></label>
                     </th>
                     <td>
-                        <div id="rich_editor_container">
+                        <div id="rich_editor_container" style="<?php echo $content_type === 'plain_text' ? 'display:none;' : ''; ?>">
                             <?php 
-                            wp_editor('', 'tab_content', array(
+                            $content = $is_edit ? $rule->tab_content : '';
+                            wp_editor($content, 'tab_content', array(
                                 'media_buttons' => true,
                                 'textarea_rows' => 10,
                                 'teeny' => false
                             )); 
                             ?>
                         </div>
-                        <div id="plain_text_container" style="display:none;">
-                            <textarea id="tab_content_plain" name="tab_content_plain" rows="10" cols="50" class="large-text"></textarea>
+                        <div id="plain_text_container" style="<?php echo $content_type === 'rich_editor' ? 'display:none;' : ''; ?>">
+                            <textarea id="tab_content_plain" name="tab_content_plain" rows="10" cols="50" class="large-text"><?php echo $is_edit && $content_type === 'plain_text' ? esc_textarea($rule->tab_content) : ''; ?></textarea>
                         </div>
                         <div class="merge-tags-help" style="margin-top: 10px;">
                             <strong><?php _e('Available merge tags:', 'smart-product-tabs'); ?></strong><br>
@@ -284,16 +374,17 @@ class SPT_Admin {
                     <td>
                         <label>
                             <?php _e('Priority:', 'smart-product-tabs'); ?>
-                            <input type="number" name="priority" value="10" min="1" max="100" style="width: 80px;">
+                            <input type="number" name="priority" value="<?php echo $is_edit ? esc_attr($rule->priority) : '10'; ?>" 
+                                   min="1" max="100" style="width: 80px;">
                         </label><br><br>
                         
                         <label>
-                            <input type="checkbox" name="mobile_hidden">
+                            <input type="checkbox" name="mobile_hidden" value="1" <?php echo $is_edit ? checked($rule->mobile_hidden, 1) : ''; ?>>
                             <?php _e('Hide on mobile', 'smart-product-tabs'); ?>
                         </label><br><br>
                         
                         <label>
-                            <input type="checkbox" name="is_active" checked>
+                            <input type="checkbox" name="is_active" value="1" <?php echo $is_edit ? checked($rule->is_active, 1) : 'checked'; ?>>
                             <?php _e('Active', 'smart-product-tabs'); ?>
                         </label>
                     </td>
@@ -301,24 +392,60 @@ class SPT_Admin {
             </table>
             
             <p class="submit">
-                <input type="submit" class="button-primary" value="<?php _e('Save Rule', 'smart-product-tabs'); ?>">
-                <button type="button" class="button" id="cancel-rule"><?php _e('Cancel', 'smart-product-tabs'); ?></button>
+                <input type="submit" class="button-primary" value="<?php echo $is_edit ? __('Update Rule', 'smart-product-tabs') : __('Save Rule', 'smart-product-tabs'); ?>">
+                <a href="<?php echo admin_url('admin.php?page=smart-product-tabs'); ?>" class="button">
+                    <?php _e('Cancel', 'smart-product-tabs'); ?>
+                </a>
             </p>
         </form>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            // Handle condition type change
+            $('#condition_type').change(function() {
+                var conditionType = $(this).val();
+                $('.condition-field').hide();
+                $('.condition-field[data-condition="' + conditionType + '"]').show();
+            }).trigger('change');
+            
+            // Handle user role condition change
+            $('#user_role_condition').change(function() {
+                if ($(this).val() === 'specific_role') {
+                    $('#role_selector').show();
+                } else {
+                    $('#role_selector').hide();
+                }
+            });
+            
+            // Handle content type change
+            $('input[name="content_type"]').change(function() {
+                if ($(this).val() === 'rich_editor') {
+                    $('#rich_editor_container').show();
+                    $('#plain_text_container').hide();
+                } else {
+                    $('#rich_editor_container').hide();
+                    $('#plain_text_container').show();
+                }
+            });
+        });
+        </script>
         <?php
     }
     
     /**
      * Render condition fields
      */
-    private function render_condition_fields() {
+    private function render_condition_fields($conditions = array()) {
         ?>
         <div class="condition-field" data-condition="category" style="display:none;">
-            <select name="condition_category" multiple style="width: 300px;">
+            <select name="condition_category[]" multiple style="width: 300px;">
                 <?php
                 $categories = get_terms(array('taxonomy' => 'product_cat', 'hide_empty' => false));
+                $selected_categories = isset($conditions['value']) ? (array) $conditions['value'] : array();
                 foreach ($categories as $category) {
-                    echo '<option value="' . esc_attr($category->term_id) . '">' . esc_html($category->name) . '</option>';
+                    echo '<option value="' . esc_attr($category->term_id) . '" ' . 
+                         (in_array($category->term_id, $selected_categories) ? 'selected' : '') . '>' . 
+                         esc_html($category->name) . '</option>';
                 }
                 ?>
             </select>
@@ -326,17 +453,37 @@ class SPT_Admin {
         
         <div class="condition-field" data-condition="price_range" style="display:none;">
             <label><?php _e('Min Price:', 'smart-product-tabs'); ?></label>
-            <input type="number" name="condition_price_min" step="0.01" style="width: 100px;">
+            <input type="number" name="condition_price_min" step="0.01" style="width: 100px;" 
+                   value="<?php echo isset($conditions['min']) ? esc_attr($conditions['min']) : ''; ?>">
             <label style="margin-left: 20px;"><?php _e('Max Price:', 'smart-product-tabs'); ?></label>
-            <input type="number" name="condition_price_max" step="0.01" style="width: 100px;">
+            <input type="number" name="condition_price_max" step="0.01" style="width: 100px;" 
+                   value="<?php echo isset($conditions['max']) ? esc_attr($conditions['max']) : ''; ?>">
         </div>
         
         <div class="condition-field" data-condition="stock_status" style="display:none;">
             <select name="condition_stock_status">
-                <option value="instock"><?php _e('In Stock', 'smart-product-tabs'); ?></option>
-                <option value="outofstock"><?php _e('Out of Stock', 'smart-product-tabs'); ?></option>
-                <option value="onbackorder"><?php _e('On Backorder', 'smart-product-tabs'); ?></option>
+                <option value="instock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'instock') : ''; ?>><?php _e('In Stock', 'smart-product-tabs'); ?></option>
+                <option value="outofstock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'outofstock') : ''; ?>><?php _e('Out of Stock', 'smart-product-tabs'); ?></option>
+                <option value="onbackorder" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'onbackorder') : ''; ?>><?php _e('On Backorder', 'smart-product-tabs'); ?></option>
             </select>
+        </div>
+        
+        <div class="condition-field" data-condition="custom_field" style="display:none;">
+            <label><?php _e('Field Key:', 'smart-product-tabs'); ?></label>
+            <input type="text" name="condition_custom_key" style="width: 150px;" 
+                   value="<?php echo isset($conditions['key']) ? esc_attr($conditions['key']) : ''; ?>">
+            <label style="margin-left: 20px;"><?php _e('Field Value:', 'smart-product-tabs'); ?></label>
+            <input type="text" name="condition_custom_value" style="width: 150px;" 
+                   value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>">
+        </div>
+        
+        <div class="condition-field" data-condition="attribute" style="display:none;">
+            <label><?php _e('Attribute:', 'smart-product-tabs'); ?></label>
+            <input type="text" name="condition_attribute_name" style="width: 150px;" 
+                   value="<?php echo isset($conditions['attribute']) ? esc_attr($conditions['attribute']) : ''; ?>">
+            <label style="margin-left: 20px;"><?php _e('Value:', 'smart-product-tabs'); ?></label>
+            <input type="text" name="condition_attribute_value" style="width: 150px;" 
+                   value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>">
         </div>
         <?php
     }
@@ -351,37 +498,203 @@ class SPT_Admin {
             <h2><?php _e('Manage Default Tabs', 'smart-product-tabs'); ?></h2>
             <p><?php _e('Reorder and configure WooCommerce default tabs and your custom rules.', 'smart-product-tabs'); ?></p>
             
-            <div class="spt-sorting-container">
-                <ul id="sortable-tabs" class="sortable-list">
-                    <?php foreach ($tab_settings as $tab): ?>
-                    <li class="tab-item" data-tab-key="<?php echo esc_attr($tab->tab_key); ?>">
-                        <div class="tab-handle">
-                            <span class="dashicons dashicons-menu"></span>
-                        </div>
-                        <div class="tab-info">
-                            <strong><?php echo esc_html($tab->custom_title); ?></strong>
-                            <span class="tab-type">(<?php echo esc_html($tab->tab_type); ?>)</span>
-                        </div>
-                        <div class="tab-controls">
-                            <label>
-                                <input type="checkbox" class="tab-enabled" <?php checked($tab->is_enabled); ?>>
-                                <?php _e('Enabled', 'smart-product-tabs'); ?>
-                            </label>
-                            <label>
-                                <input type="checkbox" class="tab-mobile-hidden" <?php checked($tab->mobile_hidden); ?>>
-                                <?php _e('Hide on Mobile', 'smart-product-tabs'); ?>
-                            </label>
-                        </div>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
+            <form method="post" action="">
+                <?php wp_nonce_field('spt_save_default_tabs', 'spt_default_tabs_nonce'); ?>
+                <input type="hidden" name="spt_save_default_tabs" value="1">
                 
-                <button type="button" id="save-tab-order" class="button-primary">
-                    <?php _e('Save Order', 'smart-product-tabs'); ?>
-                </button>
-            </div>
+                <div class="spt-sorting-container">
+                    <ul id="sortable-tabs" class="sortable-list">
+                        <?php foreach ($tab_settings as $tab): ?>
+                        <li class="tab-item" data-tab-key="<?php echo esc_attr($tab->tab_key); ?>">
+                            <input type="hidden" name="tab_order[<?php echo esc_attr($tab->tab_key); ?>][sort_order]" value="<?php echo esc_attr($tab->sort_order); ?>" class="sort-order-input">
+                            <div class="tab-handle">
+                                <span class="dashicons dashicons-menu"></span>
+                            </div>
+                            <div class="tab-info">
+                                <strong><?php echo esc_html($tab->custom_title ?: $tab->tab_key); ?></strong>
+                                <span class="tab-type">(<?php echo esc_html($tab->tab_type); ?>)</span>
+                                <?php if ($tab->tab_type === 'default'): ?>
+                                    <input type="text" name="tab_order[<?php echo esc_attr($tab->tab_key); ?>][custom_title]" 
+                                           value="<?php echo esc_attr($tab->custom_title); ?>" 
+                                           placeholder="Custom title" style="margin-left: 10px; width: 200px;">
+                                <?php endif; ?>
+                            </div>
+                            <div class="tab-controls">
+                                <label>
+                                    <input type="checkbox" name="tab_order[<?php echo esc_attr($tab->tab_key); ?>][is_enabled]" 
+                                           value="1" <?php checked($tab->is_enabled); ?>>
+                                    <?php _e('Enabled', 'smart-product-tabs'); ?>
+                                </label>
+                                <label>
+                                    <input type="checkbox" name="tab_order[<?php echo esc_attr($tab->tab_key); ?>][mobile_hidden]" 
+                                           value="1" <?php checked($tab->mobile_hidden); ?>>
+                                    <?php _e('Hide on Mobile', 'smart-product-tabs'); ?>
+                                </label>
+                            </div>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    
+                    <p class="submit">
+                        <input type="submit" class="button-primary" value="<?php _e('Save Changes', 'smart-product-tabs'); ?>">
+                    </p>
+                </div>
+            </form>
         </div>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            $('#sortable-tabs').sortable({
+                handle: '.tab-handle',
+                placeholder: 'tab-placeholder',
+                axis: 'y',
+                opacity: 0.8,
+                update: function(event, ui) {
+                    $('#sortable-tabs .tab-item').each(function(index) {
+                        $(this).find('.sort-order-input').val(index + 1);
+                    });
+                }
+            });
+        });
+        </script>
         <?php
+    }
+    
+    /**
+     * Save rule
+     */
+    private function save_rule() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+        }
+        
+        global $wpdb;
+        $table = $wpdb->prefix . 'spt_rules';
+        
+        $rule_id = isset($_POST['rule_id']) ? intval($_POST['rule_id']) : 0;
+        $content_type = sanitize_text_field($_POST['content_type']);
+        
+        // Get content based on type
+        if ($content_type === 'rich_editor') {
+            $content = wp_kses_post($_POST['tab_content']);
+        } else {
+            $content = sanitize_textarea_field($_POST['tab_content_plain']);
+        }
+        
+        $rule_data = array(
+            'rule_name' => sanitize_text_field($_POST['rule_name']),
+            'tab_title' => sanitize_text_field($_POST['tab_title']),
+            'tab_content' => $content,
+            'content_type' => $content_type,
+            'conditions' => $this->prepare_conditions($_POST),
+            'user_role_condition' => sanitize_text_field($_POST['user_role_condition']),
+            'user_roles' => isset($_POST['user_roles']) ? json_encode(array_map('sanitize_text_field', $_POST['user_roles'])) : '',
+            'priority' => intval($_POST['priority']),
+            'is_active' => isset($_POST['is_active']) ? 1 : 0,
+            'mobile_hidden' => isset($_POST['mobile_hidden']) ? 1 : 0
+        );
+        
+        if ($rule_id > 0) {
+            $result = $wpdb->update($table, $rule_data, array('id' => $rule_id));
+            $message = __('Rule updated successfully', 'smart-product-tabs');
+        } else {
+            $result = $wpdb->insert($table, $rule_data);
+            $message = __('Rule created successfully', 'smart-product-tabs');
+        }
+        
+        if ($result !== false) {
+            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_message=' . urlencode($message)));
+            exit;
+        } else {
+            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_error=' . urlencode(__('Failed to save rule', 'smart-product-tabs'))));
+            exit;
+        }
+    }
+    
+    /**
+     * Delete rule
+     */
+    private function delete_rule($rule_id) {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+        }
+        
+        global $wpdb;
+        $table = $wpdb->prefix . 'spt_rules';
+        $rule_id = intval($rule_id);
+        
+        $result = $wpdb->delete($table, array('id' => $rule_id));
+        
+        if ($result !== false) {
+            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_message=' . urlencode(__('Rule deleted successfully', 'smart-product-tabs'))));
+        } else {
+            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_error=' . urlencode(__('Failed to delete rule', 'smart-product-tabs'))));
+        }
+        exit;
+    }
+    
+    /**
+     * Save default tabs settings
+     */
+    private function save_default_tabs() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+        }
+        
+        global $wpdb;
+        $table = $wpdb->prefix . 'spt_tab_settings';
+        
+        if (isset($_POST['tab_order']) && is_array($_POST['tab_order'])) {
+            foreach ($_POST['tab_order'] as $tab_key => $tab_data) {
+                $tab_key = sanitize_text_field($tab_key);
+                
+                $update_data = array(
+                    'sort_order' => intval($tab_data['sort_order']),
+                    'is_enabled' => isset($tab_data['is_enabled']) ? 1 : 0,
+                    'mobile_hidden' => isset($tab_data['mobile_hidden']) ? 1 : 0
+                );
+                
+                // Add custom title for default tabs
+                if (isset($tab_data['custom_title'])) {
+                    $update_data['custom_title'] = sanitize_text_field($tab_data['custom_title']);
+                }
+                
+                $wpdb->update(
+                    $table,
+                    $update_data,
+                    array('tab_key' => $tab_key)
+                );
+            }
+        }
+        
+        wp_redirect(admin_url('admin.php?page=smart-product-tabs&tab=default-tabs&spt_message=' . urlencode(__('Tab settings saved successfully', 'smart-product-tabs'))));
+        exit;
+    }
+    
+    /**
+     * AJAX: Update tab order (keep this for drag-drop functionality)
+     */
+    public function ajax_update_tab_order() {
+        check_ajax_referer('spt_ajax_nonce', 'nonce');
+        
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+        
+        global $wpdb;
+        $table = $wpdb->prefix . 'spt_tab_settings';
+        $tab_order = $_POST['tab_order'] ?? array();
+        
+        foreach ($tab_order as $tab_data) {
+            $wpdb->update(
+                $table,
+                array('sort_order' => intval($tab_data['sort_order'])),
+                array('tab_key' => sanitize_text_field($tab_data['tab_key']))
+            );
+        }
+        
+        wp_send_json_success(__('Tab order updated successfully', 'smart-product-tabs'));
     }
     
     /**
@@ -421,14 +734,15 @@ class SPT_Admin {
      * Render settings tab
      */
     private function render_settings_tab() {
+        if (isset($_POST['submit']) && wp_verify_nonce($_POST['_wpnonce'], 'spt_settings')) {
+            update_option('spt_enable_analytics', isset($_POST['spt_enable_analytics']) ? 1 : 0);
+            echo '<div class="notice notice-success"><p>' . __('Settings saved.', 'smart-product-tabs') . '</p></div>';
+        }
         ?>
         <div class="spt-settings">
             <h2><?php _e('Settings', 'smart-product-tabs'); ?></h2>
-            <form method="post" action="options.php">
-                <?php
-                settings_fields('spt_settings');
-                do_settings_sections('spt_settings');
-                ?>
+            <form method="post" action="">
+                <?php wp_nonce_field('spt_settings'); ?>
                 <table class="form-table">
                     <tr>
                         <th scope="row"><?php _e('Enable Analytics', 'smart-product-tabs'); ?></th>
@@ -447,66 +761,12 @@ class SPT_Admin {
     }
     
     /**
-     * AJAX: Save rule
+     * Get rule by ID
      */
-    public function ajax_save_rule() {
-        check_ajax_referer('spt_ajax_nonce', 'nonce');
-        
-        if (!current_user_can('manage_woocommerce')) {
-            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
-        }
-        
+    private function get_rule_by_id($rule_id) {
         global $wpdb;
         $table = $wpdb->prefix . 'spt_rules';
-        
-        $rule_id = isset($_POST['rule_id']) ? intval($_POST['rule_id']) : 0;
-        $rule_data = array(
-            'rule_name' => sanitize_text_field($_POST['rule_name']),
-            'tab_title' => sanitize_text_field($_POST['tab_title']),
-            'tab_content' => wp_kses_post($_POST['tab_content']),
-            'content_type' => sanitize_text_field($_POST['content_type']),
-            'conditions' => $this->prepare_conditions($_POST),
-            'user_role_condition' => sanitize_text_field($_POST['user_role_condition']),
-            'user_roles' => isset($_POST['user_roles']) ? json_encode(array_map('sanitize_text_field', $_POST['user_roles'])) : '',
-            'priority' => intval($_POST['priority']),
-            'is_active' => isset($_POST['is_active']) ? 1 : 0,
-            'mobile_hidden' => isset($_POST['mobile_hidden']) ? 1 : 0
-        );
-        
-        if ($rule_id > 0) {
-            $result = $wpdb->update($table, $rule_data, array('id' => $rule_id));
-        } else {
-            $result = $wpdb->insert($table, $rule_data);
-        }
-        
-        if ($result !== false) {
-            wp_send_json_success(__('Rule saved successfully', 'smart-product-tabs'));
-        } else {
-            wp_send_json_error(__('Failed to save rule', 'smart-product-tabs'));
-        }
-    }
-    
-    /**
-     * AJAX: Delete rule
-     */
-    public function ajax_delete_rule() {
-        check_ajax_referer('spt_ajax_nonce', 'nonce');
-        
-        if (!current_user_can('manage_woocommerce')) {
-            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
-        }
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'spt_rules';
-        $rule_id = intval($_POST['rule_id']);
-        
-        $result = $wpdb->delete($table, array('id' => $rule_id));
-        
-        if ($result !== false) {
-            wp_send_json_success(__('Rule deleted successfully', 'smart-product-tabs'));
-        } else {
-            wp_send_json_error(__('Failed to delete rule', 'smart-product-tabs'));
-        }
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $rule_id));
     }
     
     /**
@@ -539,9 +799,27 @@ class SPT_Admin {
         $type = $conditions['type'] ?? 'all';
         switch ($type) {
             case 'category':
-                return __('Category: ', 'smart-product-tabs') . ($conditions['value'] ?? '');
+                if (isset($conditions['value']) && is_array($conditions['value'])) {
+                    $category_names = array();
+                    foreach ($conditions['value'] as $cat_id) {
+                        $term = get_term($cat_id, 'product_cat');
+                        if ($term && !is_wp_error($term)) {
+                            $category_names[] = $term->name;
+                        }
+                    }
+                    return __('Category: ', 'smart-product-tabs') . implode(', ', $category_names);
+                }
+                return __('Category', 'smart-product-tabs');
             case 'price_range':
-                return __('Price Range: ', 'smart-product-tabs') . ($conditions['min'] ?? '0') . ' - ' . ($conditions['max'] ?? '∞');
+                $min = $conditions['min'] ?? '0';
+                $max = $conditions['max'] ?? '∞';
+                return __('Price Range: ', 'smart-product-tabs') . $min . ' - ' . $max;
+            case 'stock_status':
+                return __('Stock Status: ', 'smart-product-tabs') . ucfirst($conditions['value'] ?? '');
+            case 'custom_field':
+                return __('Custom Field: ', 'smart-product-tabs') . ($conditions['key'] ?? '');
+            case 'attribute':
+                return __('Attribute: ', 'smart-product-tabs') . ($conditions['attribute'] ?? '');
             default:
                 return ucfirst($type);
         }
@@ -566,6 +844,14 @@ class SPT_Admin {
             case 'stock_status':
                 $conditions['value'] = sanitize_text_field($post_data['condition_stock_status']);
                 break;
+            case 'custom_field':
+                $conditions['key'] = sanitize_text_field($post_data['condition_custom_key']);
+                $conditions['value'] = sanitize_text_field($post_data['condition_custom_value']);
+                break;
+            case 'attribute':
+                $conditions['attribute'] = sanitize_text_field($post_data['condition_attribute_name']);
+                $conditions['value'] = sanitize_text_field($post_data['condition_attribute_value']);
+                break;
         }
         
         return json_encode($conditions);
@@ -578,6 +864,11 @@ class SPT_Admin {
         if (isset($_GET['spt_message'])) {
             $message = sanitize_text_field($_GET['spt_message']);
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
+        }
+        
+        if (isset($_GET['spt_error'])) {
+            $error = sanitize_text_field($_GET['spt_error']);
+            echo '<div class="notice notice-error is-dismissible"><p>' . esc_html($error) . '</p></div>';
         }
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Admin Styles for Smart Product Tabs
+ * Admin Styles for Smart Product Tabs (Updated)
  */
 
 /* ===== GENERAL ADMIN STYLES ===== */
@@ -149,114 +149,55 @@
     margin-right: 5px;
 }
 
-.spt-rules-list .delete-rule {
-    color: #a00;
-}
+/* ===== PAGE-BASED FORMS ===== */
 
-.spt-rules-list .delete-rule:hover {
-    color: #dc3232;
-}
-
-/* ===== MODAL STYLES ===== */
-
-.spt-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 100000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-.spt-modal.show {
-    display: flex;
-}
-
-.spt-modal-content {
+.wrap form {
     background: #fff;
-    border-radius: 4px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    max-width: 800px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+    margin-top: 20px;
 }
 
-.spt-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    border-bottom: 1px solid #eee;
-    background: #f9f9f9;
+.wrap .page-title-action {
+    text-decoration: none;
 }
 
-.spt-modal-header h3 {
-    margin: 0;
-    color: #23282d;
-    font-size: 18px;
-}
-
-.spt-modal-close {
-    font-size: 24px;
-    font-weight: bold;
-    color: #666;
-    cursor: pointer;
-    line-height: 1;
-    padding: 5px;
-}
-
-.spt-modal-close:hover {
-    color: #000;
-}
-
-.spt-modal-body {
-    padding: 25px;
-}
-
-/* ===== FORM STYLES ===== */
-
-#spt-rule-form .form-table {
+/* Form Styles */
+.form-table {
     margin: 0;
 }
 
-#spt-rule-form .form-table th {
-    width: 150px;
+.form-table th {
+    width: 200px;
     font-weight: 600;
     color: #23282d;
     vertical-align: top;
-    padding: 15px 10px 15px 0;
+    padding: 20px 10px 20px 0;
 }
 
-#spt-rule-form .form-table td {
-    padding: 15px 0;
+.form-table td {
+    padding: 20px 0;
     vertical-align: top;
 }
 
-#spt-rule-form .regular-text {
+.regular-text {
     width: 400px;
 }
 
-#spt-rule-form .large-text {
+.large-text {
     width: 100%;
     min-height: 100px;
 }
 
-#spt-rule-form .description {
+.description {
     margin: 5px 0 0 0;
     font-style: italic;
     color: #666;
     font-size: 13px;
 }
 
-#spt-rule-form .merge-tags-help {
+.merge-tags-help {
     margin-top: 10px;
     padding: 10px;
     background: #f7f7f7;
@@ -264,7 +205,7 @@
     font-size: 13px;
 }
 
-#spt-rule-form .merge-tags-help code {
+.merge-tags-help code {
     background: #fff;
     padding: 2px 4px;
     border-radius: 2px;
@@ -274,10 +215,15 @@
 /* Condition Fields */
 .condition-field {
     margin-top: 10px;
-    padding: 10px;
+    padding: 15px;
     background: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 4px;
+    display: none;
+}
+
+.condition-field.active {
+    display: block;
 }
 
 .condition-field select,
@@ -285,21 +231,32 @@
     margin-right: 10px;
 }
 
+.condition-field label {
+    display: inline-block;
+    margin-right: 15px;
+    font-weight: 500;
+}
+
 /* User Role Selector */
 #role_selector {
     margin-top: 10px;
-    padding: 10px;
+    padding: 15px;
     background: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 4px;
-    max-height: 150px;
+    max-height: 200px;
     overflow-y: auto;
 }
 
 #role_selector label {
     display: block;
-    margin: 5px 0;
-    padding: 2px 0;
+    margin: 8px 0;
+    padding: 5px 0;
+    font-weight: normal;
+}
+
+#role_selector input[type="checkbox"] {
+    margin-right: 8px;
 }
 
 /* Content Type Toggle */
@@ -312,6 +269,21 @@
 .error {
     border-color: #dc3232 !important;
     box-shadow: 0 0 2px rgba(220, 50, 50, 0.8);
+}
+
+.form-invalid {
+    background-color: #ffebe8;
+}
+
+/* Submit Button Area */
+.submit {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 30px;
+}
+
+.submit .button {
+    margin-right: 10px;
 }
 
 /* ===== TAB SORTING ===== */
@@ -378,23 +350,36 @@
 
 .tab-info {
     flex: 1;
+    min-width: 0;
 }
 
 .tab-info strong {
     color: #23282d;
     font-size: 14px;
+    display: block;
+    margin-bottom: 5px;
 }
 
 .tab-type {
     color: #666;
     font-size: 12px;
-    margin-left: 10px;
     text-transform: uppercase;
+    background: #eee;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 10px;
+}
+
+.tab-info input[type="text"] {
+    margin-top: 5px;
+    width: 250px;
 }
 
 .tab-controls {
     display: flex;
-    gap: 15px;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 15px;
 }
 
 .tab-controls label {
@@ -403,13 +388,23 @@
     font-size: 13px;
     color: #555;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .tab-controls input[type="checkbox"] {
     margin-right: 5px;
 }
 
-#save-tab-order {
+/* ===== DEFAULT TABS FORM ===== */
+
+.spt-default-tabs form {
+    margin-top: 0;
+}
+
+.spt-default-tabs .submit {
+    text-align: left;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
     margin-top: 20px;
 }
 
@@ -521,6 +516,25 @@
 .export-section .form-table th {
     width: 120px;
     font-weight: 600;
+}
+
+/* File Upload Styling */
+.file-upload-area {
+    border: 2px dashed #ddd;
+    padding: 20px;
+    text-align: center;
+    border-radius: 6px;
+    margin: 10px 0;
+    transition: all 0.2s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #0073aa;
+    background: #f8f9fa;
+}
+
+.file-upload-area input[type="file"] {
+    margin: 10px 0;
 }
 
 /* ===== ANALYTICS ===== */
@@ -673,6 +687,28 @@
     color: #23282d;
 }
 
+/* ===== BREADCRUMB NAVIGATION ===== */
+
+.spt-breadcrumb {
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #666;
+}
+
+.spt-breadcrumb a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.spt-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.spt-breadcrumb .separator {
+    margin: 0 8px;
+    color: #999;
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 
 @media screen and (max-width: 1200px) {
@@ -683,27 +719,14 @@
     .template-grid {
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     }
+    
+    .import-export-section {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media screen and (max-width: 768px) {
-    .spt-modal {
-        padding: 10px;
-    }
-    
-    .spt-modal-content {
-        max-height: 95vh;
-    }
-    
-    .spt-modal-header,
-    .spt-modal-body {
-        padding: 15px;
-    }
-    
     .analytics-summary {
-        grid-template-columns: 1fr;
-    }
-    
-    .import-export-section {
         grid-template-columns: 1fr;
     }
     
@@ -711,10 +734,16 @@
         flex-wrap: wrap;
     }
     
+    .tab-info {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
     .tab-controls {
         width: 100%;
-        margin-top: 10px;
+        flex-direction: row;
         justify-content: flex-start;
+        margin-left: 0;
     }
     
     .spt-rules-header {
@@ -723,13 +752,25 @@
         gap: 15px;
     }
     
-    #spt-rule-form .regular-text {
+    .regular-text {
         width: 100%;
         max-width: 400px;
     }
     
     .nav-tab {
         display: block;
+        margin-bottom: 5px;
+    }
+    
+    .form-table th,
+    .form-table td {
+        display: block;
+        width: 100%;
+        padding: 10px 0;
+    }
+    
+    .form-table th {
+        font-weight: 600;
         margin-bottom: 5px;
     }
 }
@@ -749,50 +790,10 @@
         gap: 15px;
     }
     
-    .spt-modal-header h3 {
-        font-size: 16px;
+    .tab-controls {
+        flex-direction: column;
+        align-items: flex-start;
     }
-    
-    #spt-rule-form .form-table th,
-    #spt-rule-form .form-table td {
-        display: block;
-        width: 100%;
-        padding: 10px 0;
-    }
-    
-    #spt-rule-form .form-table th {
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-}
-
-/* ===== ANIMATION UTILITIES ===== */
-
-.fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.fade-out {
-    animation: fadeOut 0.3s ease-in-out;
-}
-
-.slide-in {
-    animation: slideIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-@keyframes slideIn {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
 }
 
 /* ===== HELPER CLASSES ===== */
@@ -852,43 +853,28 @@
     border-color: #ccc;
 }
 
-/* Dark Mode Support (for future WordPress versions) */
-@media (prefers-color-scheme: dark) {
-    .spt-modal-content {
-        background: #1e1e1e;
-        color: #fff;
-    }
-    
-    .spt-modal-header {
-        background: #2a2a2a;
-        border-color: #444;
-    }
-    
-    .template-card {
-        background: #2a2a2a;
-        border-color: #444;
-        color: #fff;
-    }
-    
-    .analytics-card {
-        background: #2a2a2a;
-        border-color: #444;
-        color: #fff;
-    }
+/* Loading states for specific elements */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.updating {
+    opacity: 0.6;
 }
 
 /* Print Styles */
 @media print {
-    .spt-modal,
-    .spt-loading,
     .nav-tab-wrapper,
     .template-actions,
-    .analytics-controls {
+    .analytics-controls,
+    .submit {
         display: none !important;
     }
     
     .spt-rules-list,
-    .analytics-summary {
+    .analytics-summary,
+    .form-table {
         break-inside: avoid;
     }
 }
