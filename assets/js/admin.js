@@ -138,18 +138,6 @@
                     var maxPrice = $('input[name="condition_price_max"]').val() || '∞';
                     previewText = 'This tab will show on products priced between ' + minPrice + ' and ' + maxPrice;
                     break;
-
-                case 'attribute':
-                    var attribute = $('select[name="condition_attribute"]').val();
-                    var value = $('input[name="condition_attribute_value"]').val();
-                    if (attribute && value) {
-                        // Handle array values properly
-                        var displayValue = Array.isArray(value) ? value.join(', ') : value;
-                        previewText = 'This tab will show on products with ' + attribute + ' = ' + displayValue;
-                    } else {
-                        previewText = 'Select attribute and value';
-                    }
-                    break;                    
                     
                 case 'stock_status':
                     var status = $('select[name="condition_stock_status"]').val();
@@ -164,6 +152,38 @@
                     } else {
                         previewText = 'Enter custom field key';
                     }
+                    break;
+                case 'product_type':
+                    var selectedTypes = $('select[name="condition_product_type[]"] option:selected');
+                    if (selectedTypes.length > 0) {
+                        var typeNames = [];
+                        selectedTypes.each(function() {
+                            typeNames.push($(this).text());
+                        });
+                        previewText = 'This tab will show on products of type: ' + typeNames.join(', ');
+                    } else {
+                        previewText = 'No product types selected';
+                    }
+                    break;
+                case 'tags':
+                    var selectedTags = $('select[name="condition_tags[]"] option:selected');
+                    if (selectedTags.length > 0) {
+                        var tagNames = [];
+                        selectedTags.each(function() {
+                            tagNames.push($(this).text());
+                        });
+                        previewText = 'This tab will show on products tagged with: ' + tagNames.join(', ');
+                    } else {
+                        previewText = 'No tags selected';
+                    }
+                    break;
+                case 'featured':
+                    var featured = $('select[name="condition_featured"]').val();
+                    previewText = 'This tab will show on ' + (featured == '1' ? 'featured' : 'non-featured') + ' products';
+                    break;
+                case 'sale':
+                    var sale = $('select[name="condition_sale"]').val();
+                    previewText = 'This tab will show on products that are ' + (sale == '1' ? 'on sale' : 'not on sale');
                     break;
                 default:
                     previewText = 'This tab will show based on ' + conditionType + ' condition';
@@ -257,7 +277,7 @@
         },
 
         /**
-         * Validate condition-specific fields
+         * Validate condition-specific fields (without attributes)
          */
         validateConditionFields: function(conditionType) {
             var result = { valid: true, errors: [] };
@@ -269,23 +289,6 @@
                         result.valid = false;
                         result.errors.push('Please select at least one category');
                         $('select[name="condition_category[]"]').addClass('error');
-                    }
-                    break;
-                    
-                case 'attribute':
-                    var attribute = $('select[name="condition_attribute"]').val();
-                    var value = $('input[name="condition_attribute_value"]').val();
-                    
-                    if (!attribute) {
-                        result.valid = false;
-                        result.errors.push('Please select an attribute');
-                        $('select[name="condition_attribute"]').addClass('error');
-                    }
-                    
-                    if (!value.trim()) {
-                        result.valid = false;
-                        result.errors.push('Attribute value is required');
-                        $('input[name="condition_attribute_value"]').addClass('error');
                     }
                     break;
                     
@@ -313,6 +316,24 @@
                         result.valid = false;
                         result.errors.push('Custom field key is required');
                         $('input[name="condition_custom_field_key"]').addClass('error');
+                    }
+                    break;
+                    
+                case 'product_type':
+                    var selectedTypes = $('select[name="condition_product_type[]"] option:selected');
+                    if (selectedTypes.length === 0) {
+                        result.valid = false;
+                        result.errors.push('Please select at least one product type');
+                        $('select[name="condition_product_type[]"]').addClass('error');
+                    }
+                    break;
+                    
+                case 'tags':
+                    var selectedTags = $('select[name="condition_tags[]"] option:selected');
+                    if (selectedTags.length === 0) {
+                        result.valid = false;
+                        result.errors.push('Please select at least one tag');
+                        $('select[name="condition_tags[]"]').addClass('error');
                     }
                     break;
             }

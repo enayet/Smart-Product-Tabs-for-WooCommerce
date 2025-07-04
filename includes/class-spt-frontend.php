@@ -25,9 +25,13 @@ class SPT_Frontend {
      */
     public function __construct() {
         add_filter('woocommerce_product_tabs', array($this, 'add_custom_tabs'), 99);
+        add_filter('woocommerce_product_tabs', array($this, 'filter_default_tabs'), 5);
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
         add_action('wp_ajax_spt_track_tab_view', array($this, 'ajax_track_tab_view'));
         add_action('wp_ajax_nopriv_spt_track_tab_view', array($this, 'ajax_track_tab_view'));
+        add_action('wp_ajax_spt_get_tab_content', array($this, 'ajax_get_tab_content'));
+        add_action('wp_ajax_nopriv_spt_get_tab_content', array($this, 'ajax_get_tab_content'));
+        add_filter('body_class', array($this, 'add_body_classes'));
         
         // Initialize dependencies when needed
         add_action('init', array($this, 'init_dependencies'));
@@ -179,14 +183,25 @@ class SPT_Frontend {
             '{product_sku}' => $product->get_sku(),
             '{product_category}' => $this->get_product_categories($product),
             '{product_short_description}' => $product->get_short_description(),
-            '{product_weight}' => $product->get_weight(),
+            '{product_weight}' => $this->get_formatted_weight($product),
             '{product_dimensions}' => $this->get_product_dimensions($product),
-            '{product_stock_status}' => $product->get_stock_status(),
-            '{product_stock_quantity}' => $product->get_stock_quantity(),
+            '{product_stock_status}' => $this->get_formatted_stock_status($product),
+            '{product_stock_quantity}' => $this->get_formatted_stock_quantity($product),
+            '{product_type}' => $this->get_formatted_product_type($product),
+            '{product_tags}' => $this->get_product_tags($product),
+            '{product_rating}' => $this->get_product_rating($product),
+            '{product_review_count}' => $this->get_product_review_count($product),
+            '{product_sale_price}' => $this->get_formatted_sale_price($product),
+            '{product_regular_price}' => $this->get_formatted_regular_price($product),
+            '{product_featured}' => $this->get_featured_status($product),
+            '{product_on_sale}' => $this->get_sale_status($product),
         );
         
         // Add custom field merge tags
         $content = $this->process_custom_field_tags($content, $product);
+        
+        // Add attribute merge tags
+        $content = $this->process_attribute_tags($content, $product);
         
         // Replace standard merge tags
         $content = str_replace(array_keys($merge_tags), array_values($merge_tags), $content);
@@ -212,11 +227,33 @@ class SPT_Frontend {
     }
     
     /**
+     * Process attribute merge tags
+     */
+    private function process_attribute_tags($content, $product) {
+        // Pattern: {attribute_name}
+        $pattern = '/\{attribute_([^}]+)\}/';
+        
+        return preg_replace_callback($pattern, function($matches) use ($product) {
+            $attribute_name = $matches[1];
+            $attribute_value = $product->get_attribute($attribute_name);
+            return !empty($attribute_value) ? $attribute_value : '';
+        }, $content);
+    }
+    
+    /**
      * Get product categories as string
      */
     private function get_product_categories($product) {
         $categories = wp_get_post_terms($product->get_id(), 'product_cat', array('fields' => 'names'));
-        return !empty($categories) ? implode(', ', $categories) : '';
+        return !empty($categories) && !is_wp_error($categories) ? implode(', ', $categories) : '';
+    }
+    
+    /**
+     * Get product tags as string
+     */
+    private function get_product_tags($product) {
+        $tags = wp_get_post_terms($product->get_id(), 'product_tag', array('fields' => 'names'));
+        return !empty($tags) && !is_wp_error($tags) ? implode(', ', $tags) : '';
     }
     
     /**
@@ -236,6 +273,93 @@ class SPT_Frontend {
         }
         
         return !empty($dimensions) ? implode(' × ', $dimensions) : '';
+    }
+    
+    /**
+     * Get formatted weight
+     */
+    private function get_formatted_weight($product) {
+        $weight = $product->get_weight();
+        if ($weight) {
+            return $weight . ' ' . get_option('woocommerce_weight_unit');
+        }
+        return '';
+    }
+    
+    /**
+     * Get formatted stock status
+     */
+    private function get_formatted_stock_status($product) {
+        $status = $product->get_stock_status();
+        $status_labels = array(
+            'instock' => __('In Stock', 'smart-product-tabs'),
+            'outofstock' => __('Out of Stock', 'smart-product-tabs'),
+            'onbackorder' => __('On Backorder', 'smart-product-tabs')
+        );
+        
+        return isset($status_labels[$status]) ? $status_labels[$status] : $status;
+    }
+    
+    /**
+     * Get formatted stock quantity
+     */
+    private function get_formatted_stock_quantity($product) {
+        $quantity = $product->get_stock_quantity();
+        return $quantity !== null ? $quantity : '';
+    }
+    
+    /**
+     * Get formatted product type
+     */
+    private function get_formatted_product_type($product) {
+        $type = $product->get_type();
+        $product_types = wc_get_product_types();
+        return isset($product_types[$type]) ? $product_types[$type] : $type;
+    }
+    
+    /**
+     * Get product rating
+     */
+    private function get_product_rating($product) {
+        $rating = $product->get_average_rating();
+        return $rating ? number_format($rating, 1) : '';
+    }
+    
+    /**
+     * Get product review count
+     */
+    private function get_product_review_count($product) {
+        return $product->get_review_count();
+    }
+    
+    /**
+     * Get formatted sale price
+     */
+    private function get_formatted_sale_price($product) {
+        $sale_price = $product->get_sale_price();
+        return $sale_price ? wc_price($sale_price) : '';
+    }
+    
+    /**
+     * Get formatted regular price
+     */
+    private function get_formatted_regular_price($product) {
+        $regular_price = $product->get_regular_price();
+        return $regular_price ? wc_price($regular_price) : '';
+    }
+    
+    /**
+     * Get featured status
+     */
+    private function get_featured_status($product) {
+        return $product->is_featured() ? __('Yes', 'smart-product-tabs') : __('No', 'smart-product-tabs');
+    }
+    
+    /**
+     * Get sale status
+     */
+    private function get_sale_status($product) {
+        return $product->is_on_sale() ? __('Yes', 'smart-product-tabs') : __('No', 'smart-product-tabs');
     }
     
     /**
@@ -535,5 +659,60 @@ class SPT_Frontend {
         }
         
         return array_merge($wc_tabs, $custom_tabs);
+    }
+    
+    /**
+     * Get rule by ID
+     */
+    private function get_rule_by_id($rule_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'spt_rules';
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $rule_id));
+    }
+    
+    /**
+     * Clear rules cache
+     */
+    public function clear_rules_cache() {
+        wp_cache_delete('spt_active_rules');
+    }
+    
+    /**
+     * Get available merge tags for documentation
+     */
+    public function get_available_merge_tags() {
+        return array(
+            'product_info' => array(
+                '{product_name}' => __('Product name', 'smart-product-tabs'),
+                '{product_sku}' => __('Product SKU', 'smart-product-tabs'),
+                '{product_type}' => __('Product type (simple, variable, etc.)', 'smart-product-tabs'),
+                '{product_category}' => __('Product categories', 'smart-product-tabs'),
+                '{product_tags}' => __('Product tags', 'smart-product-tabs'),
+                '{product_short_description}' => __('Short description', 'smart-product-tabs'),
+                '{product_featured}' => __('Featured status (Yes/No)', 'smart-product-tabs'),
+                '{product_on_sale}' => __('Sale status (Yes/No)', 'smart-product-tabs'),
+            ),
+            'pricing' => array(
+                '{product_price}' => __('Current price', 'smart-product-tabs'),
+                '{product_regular_price}' => __('Regular price', 'smart-product-tabs'),
+                '{product_sale_price}' => __('Sale price', 'smart-product-tabs'),
+            ),
+            'inventory' => array(
+                '{product_stock_status}' => __('Stock status', 'smart-product-tabs'),
+                '{product_stock_quantity}' => __('Stock quantity', 'smart-product-tabs'),
+            ),
+            'physical' => array(
+                '{product_weight}' => __('Product weight with unit', 'smart-product-tabs'),
+                '{product_dimensions}' => __('Product dimensions', 'smart-product-tabs'),
+            ),
+            'reviews' => array(
+                '{product_rating}' => __('Average rating', 'smart-product-tabs'),
+                '{product_review_count}' => __('Number of reviews', 'smart-product-tabs'),
+            ),
+            'custom' => array(
+                '{custom_field_[key]}' => __('Custom field value (replace [key] with field name)', 'smart-product-tabs'),
+                '{attribute_[name]}' => __('Product attribute value (replace [name] with attribute name)', 'smart-product-tabs'),
+            )
+        );
     }
 }

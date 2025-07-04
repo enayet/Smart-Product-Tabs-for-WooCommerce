@@ -290,7 +290,6 @@ class SPT_Admin {
                             <option value="all" <?php selected($condition_type, 'all'); ?>><?php _e('All Products', 'smart-product-tabs'); ?></option>
                             <optgroup label="<?php _e('Product Properties', 'smart-product-tabs'); ?>">
                                 <option value="category" <?php selected($condition_type, 'category'); ?>><?php _e('Product Category', 'smart-product-tabs'); ?></option>
-                                <option value="attribute" <?php selected($condition_type, 'attribute'); ?>><?php _e('Product Attribute', 'smart-product-tabs'); ?></option>
                                 <option value="tags" <?php selected($condition_type, 'tags'); ?>><?php _e('Product Tags', 'smart-product-tabs'); ?></option>
                                 <option value="product_type" <?php selected($condition_type, 'product_type'); ?>><?php _e('Product Type', 'smart-product-tabs'); ?></option>
                             </optgroup>
@@ -496,7 +495,7 @@ class SPT_Admin {
     }
     
     /**
-     * Render condition fields with proper category hierarchy
+     * Render condition fields without attribute options
      */
     private function render_condition_fields($conditions = array()) {
         ?>
@@ -506,25 +505,6 @@ class SPT_Admin {
                 <?php echo $this->get_hierarchical_category_options($conditions); ?>
             </select>
             <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple categories', 'smart-product-tabs'); ?></p>
-        </div>
-        
-        <div class="condition-field" data-condition="attribute" style="display:none;">
-            <label for="condition_attribute"><?php _e('Attribute:', 'smart-product-tabs'); ?></label>
-            <select name="condition_attribute" id="condition_attribute" style="width: 200px;">
-                <option value=""><?php _e('Select Attribute', 'smart-product-tabs'); ?></option>
-                <?php
-                $attributes = wc_get_attribute_taxonomies();
-                foreach ($attributes as $attribute) {
-                    $selected = isset($conditions['attribute']) ? selected($conditions['attribute'], $attribute->attribute_name, false) : '';
-                    echo '<option value="' . esc_attr($attribute->attribute_name) . '" ' . $selected . '>' . esc_html($attribute->attribute_label) . '</option>';
-                }
-                ?>
-            </select>
-            <br><br>
-            <label for="condition_attribute_value"><?php _e('Value:', 'smart-product-tabs'); ?></label>
-            <input type="text" name="condition_attribute_value" id="condition_attribute_value" style="width: 200px;" 
-                   value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>" 
-                   placeholder="<?php _e('Attribute value', 'smart-product-tabs'); ?>">
         </div>
         
         <div class="condition-field" data-condition="price_range" style="display:none;">
@@ -779,7 +759,7 @@ class SPT_Admin {
     }
     
     /**
-     * Enhanced prepare_conditions method to handle all condition types
+     * Enhanced prepare_conditions method to handle all condition types (without attributes)
      */
     private function prepare_conditions($post_data) {
         $condition_type = sanitize_text_field($post_data['condition_type']);
@@ -790,12 +770,6 @@ class SPT_Admin {
             case 'category':
                 $conditions['value'] = isset($post_data['condition_category']) ? array_map('intval', $post_data['condition_category']) : array();
                 $conditions['operator'] = 'in'; // Default operator
-                break;
-                
-            case 'attribute':
-                $conditions['attribute'] = sanitize_text_field($post_data['condition_attribute'] ?? '');
-                $conditions['value'] = sanitize_text_field($post_data['condition_attribute_value'] ?? '');
-                $conditions['operator'] = 'equals';
                 break;
                 
             case 'price_range':
@@ -840,7 +814,7 @@ class SPT_Admin {
     }
     
     /**
-     * Enhanced format_conditions method for better display - FIXED VERSION
+     * Enhanced format_conditions method for better display (without attributes)
      */
     private function format_conditions($conditions_json) {
         $conditions = json_decode($conditions_json, true);
@@ -869,22 +843,6 @@ class SPT_Admin {
                     '<span class="condition-category">%s: %s</span>',
                     __('Category', 'smart-product-tabs'),
                     !empty($category_names) ? implode(', ', $category_names) : __('Invalid categories', 'smart-product-tabs')
-                );
-                
-            case 'attribute':
-                $attribute_name = $conditions['attribute'] ?? '';
-                $attribute_value = $conditions['value'] ?? '';
-                
-                // Handle array values properly
-                if (is_array($attribute_value)) {
-                    $attribute_value = implode(', ', $attribute_value);
-                }
-                
-                return sprintf(
-                    '<span class="condition-attribute">%s: %s = %s</span>',
-                    __('Attribute', 'smart-product-tabs'),
-                    esc_html($attribute_name),
-                    esc_html($attribute_value)
                 );
                 
             case 'price_range':

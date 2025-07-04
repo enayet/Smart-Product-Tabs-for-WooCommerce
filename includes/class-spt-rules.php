@@ -68,9 +68,6 @@ class SPT_Rules {
             case 'category':
                 return $this->check_category_condition($product_id, $condition);
                 
-            case 'attribute':
-                return $this->check_attribute_condition($product_id, $condition);
-                
             case 'price_range':
                 return $this->check_price_condition($product_id, $condition);
                 
@@ -136,83 +133,6 @@ class SPT_Rules {
                 
             default:
                 return !empty(array_intersect($required_categories, $product_category_ids));
-        }
-    }
-    
-
-    /**
-     * Check product attribute condition
-     */
-    private function check_attribute_condition($product_id, $condition) {
-        $attribute_name = $condition['attribute'] ?? '';
-        $attribute_value = $condition['value'] ?? '';
-        $operator = $condition['operator'] ?? 'equals';
-        
-        if (empty($attribute_name)) {
-            return true;
-        }
-        
-        $product = wc_get_product($product_id);
-        if (!$product) {
-            return false;
-        }
-        
-        $attribute = $product->get_attribute($attribute_name);
-        
-        if (empty($attribute)) {
-            return $operator === 'not_equals' || $operator === 'empty';
-        }
-        
-        // Handle array values for 'in' operations
-        if (is_array($attribute_value)) {
-            switch ($operator) {
-                case 'equals':
-                case 'in':
-                    return in_array($attribute, $attribute_value);
-                case 'not_equals':
-                case 'not_in':
-                    return !in_array($attribute, $attribute_value);
-                case 'contains':
-                    foreach ($attribute_value as $val) {
-                        if (strpos($attribute, $val) !== false) {
-                            return true;
-                        }
-                    }
-                    return false;
-                case 'not_contains':
-                    foreach ($attribute_value as $val) {
-                        if (strpos($attribute, $val) !== false) {
-                            return false;
-                        }
-                    }
-                    return true;
-                default:
-                    return in_array($attribute, $attribute_value);
-            }
-        }
-        
-        // Handle single values
-        switch ($operator) {
-            case 'equals':
-                return $attribute === $attribute_value;
-                
-            case 'not_equals':
-                return $attribute !== $attribute_value;
-                
-            case 'contains':
-                return strpos($attribute, $attribute_value) !== false;
-                
-            case 'not_contains':
-                return strpos($attribute, $attribute_value) === false;
-                
-            case 'empty':
-                return empty($attribute);
-                
-            case 'not_empty':
-                return !empty($attribute);
-                
-            default:
-                return $attribute === $attribute_value;
         }
     }
     
@@ -527,13 +447,12 @@ class SPT_Rules {
     }
     
     /**
-     * Get all available condition types
+     * Get all available condition types (without attributes)
      */
     public function get_condition_types() {
         return array(
             'all' => __('All Products', 'smart-product-tabs'),
             'category' => __('Product Category', 'smart-product-tabs'),
-            'attribute' => __('Product Attribute', 'smart-product-tabs'),
             'price_range' => __('Price Range', 'smart-product-tabs'),
             'stock_status' => __('Stock Status', 'smart-product-tabs'),
             'custom_field' => __('Custom Field', 'smart-product-tabs'),
@@ -545,7 +464,7 @@ class SPT_Rules {
     }
     
     /**
-     * Get available operators for a condition type
+     * Get available operators for a condition type (without attributes)
      */
     public function get_condition_operators($condition_type) {
         $operators = array();
@@ -560,7 +479,6 @@ class SPT_Rules {
                 );
                 break;
                 
-            case 'attribute':
             case 'custom_field':
                 $operators = array(
                     'equals' => __('Equals', 'smart-product-tabs'),

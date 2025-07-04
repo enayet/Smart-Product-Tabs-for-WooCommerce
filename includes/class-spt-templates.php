@@ -36,9 +36,9 @@ class SPT_Templates {
             wp_mkdir_p($this->templates_dir);
         }
     }
-    
+
     /**
-     * Get built-in templates
+     * Get built-in templates (updated without attributes)
      */
     public function get_builtin_templates() {
         return array(
