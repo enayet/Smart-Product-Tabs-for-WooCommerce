@@ -521,9 +521,15 @@ class SPT_Admin {
         
         <div class="condition-field" data-condition="stock_status" style="display:none;">
             <select name="condition_stock_status">
-                <option value="instock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'instock', false) : ''; ?>><?php _e('In Stock', 'smart-product-tabs'); ?></option>
-                <option value="outofstock" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'outofstock', false) : ''; ?>><?php _e('Out of Stock', 'smart-product-tabs'); ?></option>
-                <option value="onbackorder" <?php echo isset($conditions['value']) ? selected($conditions['value'], 'onbackorder', false) : ''; ?>><?php _e('On Backorder', 'smart-product-tabs'); ?></option>
+                <?php
+                $stock_value = isset($conditions['value']) ? $conditions['value'] : 'instock';
+                if (is_array($stock_value)) {
+                    $stock_value = 'instock';
+                }
+                ?>
+                <option value="instock" <?php selected($stock_value, 'instock'); ?>><?php _e('In Stock', 'smart-product-tabs'); ?></option>
+                <option value="outofstock" <?php selected($stock_value, 'outofstock'); ?>><?php _e('Out of Stock', 'smart-product-tabs'); ?></option>
+                <option value="onbackorder" <?php selected($stock_value, 'onbackorder'); ?>><?php _e('On Backorder', 'smart-product-tabs'); ?></option>
             </select>
         </div>
         
@@ -583,15 +589,27 @@ class SPT_Admin {
         
         <div class="condition-field" data-condition="featured" style="display:none;">
             <select name="condition_featured">
-                <option value="1" <?php echo isset($conditions['value']) ? selected($conditions['value'], 1, false) : ''; ?>><?php _e('Is Featured', 'smart-product-tabs'); ?></option>
-                <option value="0" <?php echo isset($conditions['value']) ? selected($conditions['value'], 0, false) : ''; ?>><?php _e('Is Not Featured', 'smart-product-tabs'); ?></option>
+                <?php
+                $featured_value = isset($conditions['value']) ? $conditions['value'] : '';
+                if (is_array($featured_value)) {
+                    $featured_value = '';
+                }
+                ?>
+                <option value="1" <?php selected($featured_value, '1'); ?>><?php _e('Is Featured', 'smart-product-tabs'); ?></option>
+                <option value="0" <?php selected($featured_value, '0'); ?>><?php _e('Is Not Featured', 'smart-product-tabs'); ?></option>
             </select>
         </div>
         
         <div class="condition-field" data-condition="sale" style="display:none;">
             <select name="condition_sale">
-                <option value="1" <?php echo isset($conditions['value']) ? selected($conditions['value'], 1, false) : ''; ?>><?php _e('On Sale', 'smart-product-tabs'); ?></option>
-                <option value="0" <?php echo isset($conditions['value']) ? selected($conditions['value'], 0, false) : ''; ?>><?php _e('Not On Sale', 'smart-product-tabs'); ?></option>
+                <?php
+                $sale_value = isset($conditions['value']) ? $conditions['value'] : '';
+                if (is_array($sale_value)) {
+                    $sale_value = '';
+                }
+                ?>
+                <option value="1" <?php selected($sale_value, '1'); ?>><?php _e('On Sale', 'smart-product-tabs'); ?></option>
+                <option value="0" <?php selected($sale_value, '0'); ?>><?php _e('Not On Sale', 'smart-product-tabs'); ?></option>
             </select>
         </div>
         <?php
