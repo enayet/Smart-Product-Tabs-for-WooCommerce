@@ -1,6 +1,6 @@
 <?php
 /**
- * Analytics System for Smart Product Tabs
+ * FIXED Analytics System with Better Error Handling and Debugging
  */
 
 // Prevent direct access
@@ -25,60 +25,199 @@ class SPT_Analytics {
         add_action('init', array($this, 'init'));
         add_action('spt_cleanup_analytics', array($this, 'cleanup_old_data'));
         add_action('wp_ajax_spt_get_analytics_data', array($this, 'ajax_get_analytics_data'));
+        
+        // Ensure table exists
+        $this->maybe_create_table();
     }
     
     /**
      * Initialize
      */
     public function init() {
-        // Schedule cleanup if not already scheduled
         if (!wp_next_scheduled('spt_cleanup_analytics')) {
             wp_schedule_event(time(), 'daily', 'spt_cleanup_analytics');
         }
     }
     
     /**
-     * Track tab view
+     * Ensure analytics table exists
+     */
+    private function maybe_create_table() {
+        global $wpdb;
+        
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
+        
+        if ($table_exists != $this->table_name) {
+            $this->create_analytics_table();
+        }
+    }
+    
+    /**
+     * Create analytics table
+     */
+    private function create_analytics_table() {
+        global $wpdb;
+        
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        $sql = "CREATE TABLE {$this->table_name} (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            tab_key varchar(100) NOT NULL,
+            product_id int(11) NOT NULL,
+            views int(11) DEFAULT 0,
+            date date NOT NULL,
+            PRIMARY KEY (id),
+            KEY idx_tab_date (tab_key, date),
+            KEY idx_product_date (product_id, date),
+            KEY idx_date (date),
+            UNIQUE KEY unique_tab_product_date (tab_key, product_id, date)
+        ) $charset_collate;";
+        
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+        
+        // Verify table was created
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
+        if ($table_exists != $this->table_name) {
+            error_log('SPT Analytics: Failed to create table ' . $this->table_name);
+        } else {
+            error_log('SPT Analytics: Table created successfully: ' . $this->table_name);
+        }
+    }
+    
+    /**
+     * FIXED: Track tab view with comprehensive error handling and debugging
      */
     public function track_tab_view($tab_key, $product_id) {
+        // Debug start
+        error_log('SPT Analytics: track_tab_view called with tab_key=' . $tab_key . ', product_id=' . $product_id);
+        
         // Check if analytics is enabled
         if (!get_option('spt_enable_analytics', 1)) {
+            error_log('SPT Analytics: Tracking disabled in settings');
             return false;
         }
         
         // Don't track admin users or bots
-        if (is_admin() || $this->is_bot()) {
+        if ($this->is_bot()) {
+            error_log('SPT Analytics: Skipping tracking - admin user or bot detected');
+            return false;
+        }
+        
+        // Validate inputs
+        if (empty($tab_key) || empty($product_id)) {
+            error_log('SPT Analytics: Invalid parameters - tab_key: "' . $tab_key . '", product_id: "' . $product_id . '"');
             return false;
         }
         
         global $wpdb;
-        $today = current_time('Y-m-d');
         
-        // Try to update existing record first
-        $updated = $wpdb->query($wpdb->prepare(
-            "UPDATE {$this->table_name} 
-             SET views = views + 1 
-             WHERE tab_key = %s AND product_id = %d AND date = %s",
-            $tab_key,
-            $product_id,
-            $today
-        ));
-        
-        // If no existing record, insert new one
-        if ($updated === 0) {
-            $wpdb->insert(
-                $this->table_name,
-                array(
-                    'tab_key' => $tab_key,
-                    'product_id' => $product_id,
-                    'views' => 1,
-                    'date' => $today
-                ),
-                array('%s', '%d', '%d', '%s')
-            );
+        // Check if table exists
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
+        if ($table_exists != $this->table_name) {
+            error_log('SPT Analytics: Table does not exist: ' . $this->table_name);
+            // Try to create it
+            $this->create_analytics_table();
+            
+            // Check again
+            $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
+            if ($table_exists != $this->table_name) {
+                error_log('SPT Analytics: Failed to create table after retry');
+                return false;
+            }
         }
         
-        return true;
+        $today = current_time('Y-m-d');
+        
+        // Clean tab key (remove # and tab- prefix if present)
+        $tab_key = str_replace(array('#', 'tab-'), '', $tab_key);
+        
+        error_log("SPT Analytics: Attempting to track - Tab: {$tab_key}, Product: {$product_id}, Date: {$today}");
+        
+        // Try to insert or update using INSERT ... ON DUPLICATE KEY UPDATE
+        $sql = $wpdb->prepare(
+            "INSERT INTO {$this->table_name} (tab_key, product_id, views, date) 
+             VALUES (%s, %d, 1, %s) 
+             ON DUPLICATE KEY UPDATE views = views + 1",
+            $tab_key,
+            intval($product_id),
+            $today
+        );
+        
+        error_log('SPT Analytics: SQL Query: ' . $sql);
+        
+        $result = $wpdb->query($sql);
+        
+        if ($result === false) {
+            error_log('SPT Analytics: Database error - ' . $wpdb->last_error);
+            error_log('SPT Analytics: Last query: ' . $wpdb->last_query);
+            
+            // Try alternative approach - check if record exists first
+            $existing = $wpdb->get_row($wpdb->prepare(
+                "SELECT id, views FROM {$this->table_name} WHERE tab_key = %s AND product_id = %d AND date = %s",
+                $tab_key,
+                intval($product_id),
+                $today
+            ));
+            
+            if ($existing) {
+                // Update existing record
+                $update_result = $wpdb->update(
+                    $this->table_name,
+                    array('views' => $existing->views + 1),
+                    array('id' => $existing->id),
+                    array('%d'),
+                    array('%d')
+                );
+                
+                if ($update_result !== false) {
+                    error_log("SPT Analytics: Successfully updated existing record (ID: {$existing->id})");
+                    return true;
+                } else {
+                    error_log('SPT Analytics: Failed to update existing record - ' . $wpdb->last_error);
+                    return false;
+                }
+            } else {
+                // Insert new record
+                $insert_result = $wpdb->insert(
+                    $this->table_name,
+                    array(
+                        'tab_key' => $tab_key,
+                        'product_id' => intval($product_id),
+                        'views' => 1,
+                        'date' => $today
+                    ),
+                    array('%s', '%d', '%d', '%s')
+                );
+                
+                if ($insert_result !== false) {
+                    error_log("SPT Analytics: Successfully inserted new record (ID: {$wpdb->insert_id})");
+                    return true;
+                } else {
+                    error_log('SPT Analytics: Failed to insert new record - ' . $wpdb->last_error);
+                    return false;
+                }
+            }
+        } else {
+            // Success with ON DUPLICATE KEY UPDATE
+            error_log("SPT Analytics: Successfully tracked view for tab: {$tab_key} (affected rows: {$result})");
+            
+            // Verify the data was actually saved
+            $verification = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$this->table_name} WHERE tab_key = %s AND product_id = %d AND date = %s",
+                $tab_key,
+                intval($product_id),
+                $today
+            ));
+            
+            if ($verification) {
+                error_log("SPT Analytics: Verification successful - Record ID: {$verification->id}, Views: {$verification->views}");
+                return true;
+            } else {
+                error_log('SPT Analytics: Verification failed - record not found after insert');
+                return false;
+            }
+        }
     }
     
     /**
@@ -142,7 +281,7 @@ class SPT_Analytics {
     }
     
     /**
-     * Get overall analytics summary
+     * Get overall analytics summary with better data handling
      */
     public function get_analytics_summary($days = 30) {
         global $wpdb;
@@ -151,7 +290,7 @@ class SPT_Analytics {
         
         // Total views
         $total_views = $wpdb->get_var($wpdb->prepare(
-            "SELECT SUM(views) FROM {$this->table_name} WHERE date >= %s",
+            "SELECT COALESCE(SUM(views), 0) FROM {$this->table_name} WHERE date >= %s",
             $date_from
         ));
         
@@ -169,7 +308,7 @@ class SPT_Analytics {
         
         // Average views per day
         $avg_daily_views = $wpdb->get_var($wpdb->prepare(
-            "SELECT AVG(daily_views) FROM (
+            "SELECT COALESCE(AVG(daily_views), 0) FROM (
                 SELECT date, SUM(views) as daily_views 
                 FROM {$this->table_name} 
                 WHERE date >= %s 
@@ -179,10 +318,10 @@ class SPT_Analytics {
         ));
         
         return array(
-            'total_views' => intval($total_views),
-            'unique_products' => intval($unique_products),
-            'active_tabs' => intval($active_tabs),
-            'avg_daily_views' => floatval($avg_daily_views),
+            'total_views' => intval($total_views ?: 0),
+            'unique_products' => intval($unique_products ?: 0),
+            'active_tabs' => intval($active_tabs ?: 0),
+            'avg_daily_views' => floatval($avg_daily_views ?: 0),
             'period_days' => $days
         );
     }
@@ -233,7 +372,7 @@ class SPT_Analytics {
         
         $date_from = date('Y-m-d', strtotime("-{$days} days"));
         
-        // Tab engagement rate (products with tab views vs total products)
+        // Tab engagement rate
         $products_with_views = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name} WHERE date >= %s",
             $date_from
@@ -247,7 +386,7 @@ class SPT_Analytics {
         
         // Average tabs per product view
         $avg_tabs_per_product = $wpdb->get_var($wpdb->prepare(
-            "SELECT AVG(tabs_count) FROM (
+            "SELECT COALESCE(AVG(tabs_count), 0) FROM (
                 SELECT product_id, COUNT(DISTINCT tab_key) as tabs_count
                 FROM {$this->table_name}
                 WHERE date >= %s
@@ -269,7 +408,7 @@ class SPT_Analytics {
         
         return array(
             'engagement_rate' => round($engagement_rate, 2),
-            'avg_tabs_per_product' => round(floatval($avg_tabs_per_product), 2),
+            'avg_tabs_per_product' => round(floatval($avg_tabs_per_product ?: 0), 2),
             'most_active_day' => $most_active_day ? $most_active_day->date : null,
             'most_active_day_views' => $most_active_day ? intval($most_active_day->total_views) : 0
         );
@@ -294,6 +433,27 @@ class SPT_Analytics {
              ORDER BY date ASC",
             $date_from
         ));
+    }
+    
+    /**
+     * Check if current request is from a bot
+     */
+    private function is_bot() {
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        
+        $bot_patterns = array(
+            'bot', 'crawler', 'spider', 'crawling', 'facebook', 'google',
+            'baidu', 'bing', 'msn', 'duckduckbot', 'teoma', 'slurp',
+            'yandex', 'lighthouse', 'pagespeed'
+        );
+        
+        foreach ($bot_patterns as $pattern) {
+            if (stripos($user_agent, $pattern) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -361,61 +521,11 @@ class SPT_Analytics {
             $cutoff_date
         ));
         
-        // Log cleanup if any data was deleted
         if ($deleted > 0) {
             error_log("SPT Analytics: Cleaned up {$deleted} old records older than {$cutoff_date}");
         }
         
         return $deleted;
-    }
-    
-    /**
-     * Check if current request is from a bot
-     */
-    private function is_bot() {
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        
-        $bot_patterns = array(
-            'bot', 'crawler', 'spider', 'crawling', 'facebook', 'google',
-            'baidu', 'bing', 'msn', 'duckduckbot', 'teoma', 'slurp',
-            'yandex', 'lighthouse', 'pagespeed'
-        );
-        
-        foreach ($bot_patterns as $pattern) {
-            if (stripos($user_agent, $pattern) !== false) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Get tab comparison data
-     */
-    public function get_tab_comparison($tab_keys = array(), $days = 30) {
-        if (empty($tab_keys)) {
-            return array();
-        }
-        
-        global $wpdb;
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
-        $placeholders = implode(',', array_fill(0, count($tab_keys), '%s'));
-        
-        $query_params = array_merge($tab_keys, array($date_from));
-        
-        return $wpdb->get_results($wpdb->prepare(
-            "SELECT tab_key, 
-                    SUM(views) as total_views,
-                    COUNT(DISTINCT product_id) as unique_products,
-                    COUNT(DISTINCT date) as active_days,
-                    AVG(views) as avg_daily_views
-             FROM {$this->table_name}
-             WHERE tab_key IN ($placeholders) AND date >= %s
-             GROUP BY tab_key
-             ORDER BY total_views DESC",
-            $query_params
-        ));
     }
     
     /**
@@ -462,43 +572,6 @@ class SPT_Analytics {
     }
     
     /**
-     * Get analytics data for admin dashboard
-     */
-    public function get_dashboard_data() {
-        return array(
-            'summary' => $this->get_analytics_summary(30),
-            'popular_tabs' => $this->get_popular_tabs(5, 30),
-            'top_products' => $this->get_top_products(5, 30),
-            'engagement' => $this->get_engagement_metrics(30)
-        );
-    }
-    
-    /**
-     * Generate analytics report
-     */
-    public function generate_report($days = 30) {
-        $summary = $this->get_analytics_summary($days);
-        $popular_tabs = $this->get_popular_tabs(10, $days);
-        $top_products = $this->get_top_products(10, $days);
-        $engagement = $this->get_engagement_metrics($days);
-        $daily_data = $this->get_daily_analytics($days);
-        
-        return array(
-            'period' => array(
-                'days' => $days,
-                'start_date' => date('Y-m-d', strtotime("-{$days} days")),
-                'end_date' => date('Y-m-d')
-            ),
-            'summary' => $summary,
-            'popular_tabs' => $popular_tabs,
-            'top_products' => $top_products,
-            'engagement' => $engagement,
-            'daily_analytics' => $daily_data,
-            'generated_at' => current_time('mysql')
-        );
-    }
-    
-    /**
      * Reset all analytics data
      */
     public function reset_analytics() {
@@ -533,4 +606,36 @@ class SPT_Analytics {
         
         return $result ? $result : (object) array('record_count' => 0, 'size_mb' => 0);
     }
+    
+    /**
+     * Debug method to test analytics directly
+     */
+    public function debug_test_tracking() {
+        error_log('SPT Analytics: Starting debug test');
+        
+        // Test with simple data
+        $result = $this->track_tab_view('debug_test', 1);
+        
+        error_log('SPT Analytics: Debug test result: ' . ($result ? 'SUCCESS' : 'FAILED'));
+        
+        return $result;
+    }
+    
+    /**
+     * Get current table status
+     */
+    public function get_table_status() {
+        global $wpdb;
+        
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'") === $this->table_name;
+        $record_count = $table_exists ? $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name}") : 0;
+        
+        return array(
+            'table_exists' => $table_exists,
+            'table_name' => $this->table_name,
+            'record_count' => $record_count,
+            'last_error' => $wpdb->last_error
+        );
+    }
 }
+?>

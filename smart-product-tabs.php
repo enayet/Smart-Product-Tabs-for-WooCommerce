@@ -55,6 +55,9 @@ class Smart_Product_Tabs {
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         add_action('plugins_loaded', array($this, 'load_textdomain'));
+        
+        // Add debug hook for testing
+        add_action('wp_ajax_spt_force_table_creation', array($this, 'force_table_creation'));
     }
     
     /**
@@ -148,6 +151,9 @@ class Smart_Product_Tabs {
         if (!wp_next_scheduled('spt_cleanup_analytics')) {
             wp_schedule_event(time(), 'daily', 'spt_cleanup_analytics');
         }
+        
+        // Set activation flag for debugging
+        update_option('spt_activated', time());
     }
     
     /**
@@ -159,7 +165,7 @@ class Smart_Product_Tabs {
     }
     
     /**
-     * Create database tables
+     * FIXED: Create database tables with better error handling
      */
     private function create_tables() {
         global $wpdb;
@@ -181,23 +187,25 @@ class Smart_Product_Tabs {
             is_active tinyint(1) DEFAULT 1,
             mobile_hidden tinyint(1) DEFAULT 0,
             created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            KEY idx_active_priority (is_active, priority)
         ) $charset_collate;";
         
         // Tab settings table
         $table_settings = $wpdb->prefix . 'spt_tab_settings';
         $sql_settings = "CREATE TABLE $table_settings (
             id int(11) NOT NULL AUTO_INCREMENT,
-            tab_key varchar(100) NOT NULL UNIQUE,
+            tab_key varchar(100) NOT NULL,
             tab_type enum('default', 'custom') NOT NULL,
             custom_title varchar(255),
             is_enabled tinyint(1) DEFAULT 1,
             sort_order int(11) DEFAULT 10,
             mobile_hidden tinyint(1) DEFAULT 0,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            UNIQUE KEY unique_tab_key (tab_key)
         ) $charset_collate;";
         
-        // Analytics table
+        // FIXED: Analytics table with proper constraints
         $table_analytics = $wpdb->prefix . 'spt_analytics';
         $sql_analytics = "CREATE TABLE $table_analytics (
             id int(11) NOT NULL AUTO_INCREMENT,
@@ -206,13 +214,57 @@ class Smart_Product_Tabs {
             views int(11) DEFAULT 0,
             date date NOT NULL,
             PRIMARY KEY (id),
-            KEY idx_tab_date (tab_key, date)
+            KEY idx_tab_date (tab_key, date),
+            KEY idx_product_date (product_id, date),
+            KEY idx_date (date),
+            UNIQUE KEY unique_tab_product_date (tab_key, product_id, date)
         ) $charset_collate;";
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql_rules);
-        dbDelta($sql_settings);
-        dbDelta($sql_analytics);
+        
+        // Create tables and log any errors
+        $result1 = dbDelta($sql_rules);
+        $result2 = dbDelta($sql_settings);
+        $result3 = dbDelta($sql_analytics);
+        
+        // Debug logging
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('SPT: Table creation results:');
+            error_log('Rules: ' . print_r($result1, true));
+            error_log('Settings: ' . print_r($result2, true));
+            error_log('Analytics: ' . print_r($result3, true));
+        }
+        
+        // Verify tables were created
+        $tables_created = array();
+        $tables_created['rules'] = $wpdb->get_var("SHOW TABLES LIKE '$table_rules'") === $table_rules;
+        $tables_created['settings'] = $wpdb->get_var("SHOW TABLES LIKE '$table_settings'") === $table_settings;
+        $tables_created['analytics'] = $wpdb->get_var("SHOW TABLES LIKE '$table_analytics'") === $table_analytics;
+        
+        // Store creation status
+        update_option('spt_tables_created', $tables_created);
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('SPT: Table verification: ' . print_r($tables_created, true));
+        }
+    }
+    
+    /**
+     * Force table creation (for debugging)
+     */
+    public function force_table_creation() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Access denied');
+            return;
+        }
+        
+        $this->create_tables();
+        $status = get_option('spt_tables_created', array());
+        
+        wp_send_json_success(array(
+            'message' => 'Tables recreation attempted',
+            'status' => $status
+        ));
     }
     
     /**
@@ -223,6 +275,13 @@ class Smart_Product_Tabs {
         
         $table = $wpdb->prefix . 'spt_tab_settings';
         
+        // Check if table exists before inserting
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table'") === $table;
+        if (!$table_exists) {
+            error_log('SPT: Cannot add default settings - table does not exist');
+            return;
+        }
+        
         // Default WooCommerce tabs
         $default_tabs = array(
             array('description', 'default', 'Description', 1, 10, 0),
@@ -231,15 +290,26 @@ class Smart_Product_Tabs {
         );
         
         foreach ($default_tabs as $tab) {
-            $wpdb->replace($table, array(
-                'tab_key' => $tab[0],
-                'tab_type' => $tab[1],
-                'custom_title' => $tab[2],
-                'is_enabled' => $tab[3],
-                'sort_order' => $tab[4],
-                'mobile_hidden' => $tab[5]
+            $existing = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $table WHERE tab_key = %s",
+                $tab[0]
             ));
+            
+            if (!$existing) {
+                $wpdb->insert($table, array(
+                    'tab_key' => $tab[0],
+                    'tab_type' => $tab[1],
+                    'custom_title' => $tab[2],
+                    'is_enabled' => $tab[3],
+                    'sort_order' => $tab[4],
+                    'mobile_hidden' => $tab[5]
+                ));
+            }
         }
+        
+        // Set default options
+        add_option('spt_enable_analytics', 1);
+        add_option('spt_analytics_retention_days', 90);
     }
     
     /**
@@ -255,7 +325,54 @@ class Smart_Product_Tabs {
     public function load_textdomain() {
         load_plugin_textdomain('smart-product-tabs', false, dirname(plugin_basename(__FILE__)) . '/languages/');
     }
+    
+    /**
+     * Get plugin status for debugging
+     */
+    public static function get_debug_info() {
+        global $wpdb;
+        
+        $info = array(
+            'version' => SPT_VERSION,
+            'wordpress_version' => get_bloginfo('version'),
+            'woocommerce_version' => defined('WC_VERSION') ? WC_VERSION : 'Not installed',
+            'php_version' => PHP_VERSION,
+            'tables_created' => get_option('spt_tables_created', array()),
+            'analytics_enabled' => get_option('spt_enable_analytics', 1),
+            'activated_at' => get_option('spt_activated', 'Unknown')
+        );
+        
+        // Check actual table existence
+        $tables = array('spt_rules', 'spt_tab_settings', 'spt_analytics');
+        foreach ($tables as $table) {
+            $full_table_name = $wpdb->prefix . $table;
+            $info['tables_exist'][$table] = $wpdb->get_var("SHOW TABLES LIKE '$full_table_name'") === $full_table_name;
+        }
+        
+        return $info;
+    }
 }
 
 // Initialize the plugin
 Smart_Product_Tabs::get_instance();
+
+// Add debug function for easy access
+if (!function_exists('spt_debug_info')) {
+    function spt_debug_info() {
+        if (current_user_can('manage_options')) {
+            return Smart_Product_Tabs::get_debug_info();
+        }
+        return 'Access denied';
+    }
+}
+
+// Add admin notice for debugging if tables aren't created
+add_action('admin_notices', function() {
+    if (!current_user_can('manage_options')) return;
+    
+    $tables_status = get_option('spt_tables_created', array());
+    if (!empty($tables_status) && in_array(false, $tables_status, true)) {
+        echo '<div class="notice notice-warning"><p><strong>SPT Debug:</strong> Some database tables may not have been created properly. Check the debug page.</p></div>';
+    }
+});
+?>
