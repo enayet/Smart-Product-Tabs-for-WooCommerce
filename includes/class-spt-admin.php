@@ -18,6 +18,9 @@ class SPT_Admin {
         add_action('admin_init', array($this, 'handle_form_submissions'));
         add_action('wp_ajax_spt_update_tab_order', array($this, 'ajax_update_tab_order'));
         add_action('admin_notices', array($this, 'admin_notices'));
+        
+        add_action('wp_ajax_spt_reset_analytics', array($this, 'ajax_reset_analytics'));
+        add_action('admin_init', array($this, 'handle_analytics_export'));
     }
     
     /**
@@ -53,7 +56,31 @@ class SPT_Admin {
         if (isset($_POST['spt_save_default_tabs']) && wp_verify_nonce($_POST['spt_default_tabs_nonce'], 'spt_save_default_tabs')) {
             $this->save_default_tabs();
         }
+        
+        
+        // Handle analytics settings (add this to the existing method)
+        if (isset($_POST['save_analytics_settings']) && wp_verify_nonce($_POST['_wpnonce'], 'spt_analytics_settings')) {
+            $this->save_analytics_settings();
+        }        
+        
     }
+    
+    
+    /**
+     * Save analytics settings
+     */
+    private function save_analytics_settings() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+        }
+
+        update_option('spt_enable_analytics', isset($_POST['spt_enable_analytics']) ? 1 : 0);
+        update_option('spt_analytics_retention_days', intval($_POST['spt_analytics_retention_days']));
+
+        wp_redirect(admin_url('admin.php?page=smart-product-tabs&tab=analytics&spt_message=' . 
+                    urlencode(__('Analytics settings saved successfully', 'smart-product-tabs'))));
+        exit;
+    }    
     
     /**
      * Main admin page router
@@ -1059,20 +1086,251 @@ class SPT_Admin {
         <?php
     }
     
+    
     /**
-     * Render analytics tab
+     * Render analytics tab - FIXED VERSION
+     * Replace the render_analytics_tab() method in class-spt-admin.php with this implementation
      */
     private function render_analytics_tab() {
+        // Get analytics instance
+        $analytics = new SPT_Analytics();
+
+        // Get dashboard data
+        $summary = $analytics->get_analytics_summary(30);
+        $popular_tabs = $analytics->get_popular_tabs(10, 30);
+        $top_products = $analytics->get_top_products(5, 30);
+        $engagement = $analytics->get_engagement_metrics(30);
+        $daily_data = $analytics->get_daily_analytics(30);
+
         ?>
         <div class="spt-analytics">
-            <h2><?php _e('Analytics', 'smart-product-tabs'); ?></h2>
-            <p><?php _e('Track tab performance and user engagement.', 'smart-product-tabs'); ?></p>
-            
-            <div class="analytics-content">
-                <!-- Analytics content will be handled by SPT_Analytics class -->
+            <div class="analytics-header">
+                <h2><?php _e('Analytics Dashboard', 'smart-product-tabs'); ?></h2>
+                <div class="analytics-controls">
+                    <select id="analytics-period">
+                        <option value="7"><?php _e('Last 7 days', 'smart-product-tabs'); ?></option>
+                        <option value="30" selected><?php _e('Last 30 days', 'smart-product-tabs'); ?></option>
+                        <option value="90"><?php _e('Last 90 days', 'smart-product-tabs'); ?></option>
+                    </select>
+                    <button type="button" class="button" id="refresh-analytics">
+                        <?php _e('Refresh', 'smart-product-tabs'); ?>
+                    </button>
+                    <button type="button" class="button" id="export-analytics">
+                        <?php _e('Export Data', 'smart-product-tabs'); ?>
+                    </button>
+                </div>
             </div>
+
+            <!-- Summary Cards -->
+            <div class="analytics-summary">
+                <div class="analytics-card">
+                    <h3><?php _e('Total Views', 'smart-product-tabs'); ?></h3>
+                    <div class="metric-value"><?php echo number_format($summary['total_views']); ?></div>
+                    <div class="metric-change"><?php _e('Last 30 days', 'smart-product-tabs'); ?></div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3><?php _e('Unique Products', 'smart-product-tabs'); ?></h3>
+                    <div class="metric-value"><?php echo number_format($summary['unique_products']); ?></div>
+                    <div class="metric-change"><?php _e('With tab views', 'smart-product-tabs'); ?></div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3><?php _e('Active Tabs', 'smart-product-tabs'); ?></h3>
+                    <div class="metric-value"><?php echo number_format($summary['active_tabs']); ?></div>
+                    <div class="metric-change"><?php _e('Different tabs viewed', 'smart-product-tabs'); ?></div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3><?php _e('Avg Daily Views', 'smart-product-tabs'); ?></h3>
+                    <div class="metric-value"><?php echo number_format($summary['avg_daily_views'], 1); ?></div>
+                    <div class="metric-change"><?php _e('Per day average', 'smart-product-tabs'); ?></div>
+                </div>
+
+                <div class="analytics-card">
+                    <h3><?php _e('Engagement Rate', 'smart-product-tabs'); ?></h3>
+                    <div class="metric-value"><?php echo number_format($engagement['engagement_rate'], 1); ?>%</div>
+                    <div class="metric-change"><?php _e('Products with views', 'smart-product-tabs'); ?></div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="analytics-charts">
+                <div class="chart-container">
+                    <h4><?php _e('Popular Tabs (Last 30 Days)', 'smart-product-tabs'); ?></h4>
+                    <?php if (!empty($popular_tabs)): ?>
+                        <div class="chart-bars">
+                            <?php 
+                            $max_views = max(array_column($popular_tabs, 'total_views'));
+                            foreach ($popular_tabs as $tab): 
+                                $percentage = $max_views > 0 ? ($tab->total_views / $max_views) * 100 : 0;
+                            ?>
+                            <div class="chart-bar">
+                                <span class="bar-label"><?php echo esc_html($tab->tab_key); ?></span>
+                                <div class="bar-fill" style="width: <?php echo $percentage; ?>%;"></div>
+                                <span class="bar-value"><?php echo number_format($tab->total_views); ?></span>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="chart-placeholder">
+                            <p><?php _e('No data available yet. Tab views will appear here once users interact with your product tabs.', 'smart-product-tabs'); ?></p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="chart-container">
+                    <h4><?php _e('Top Performing Products', 'smart-product-tabs'); ?></h4>
+                    <?php if (!empty($top_products)): ?>
+                        <div class="chart-bars">
+                            <?php 
+                            $max_views = max(array_column($top_products, 'total_views'));
+                            foreach ($top_products as $product): 
+                                $percentage = $max_views > 0 ? ($product->total_views / $max_views) * 100 : 0;
+                            ?>
+                            <div class="chart-bar">
+                                <span class="bar-label"><?php echo esc_html(wp_trim_words($product->product_name, 4)); ?></span>
+                                <div class="bar-fill" style="width: <?php echo $percentage; ?>%;"></div>
+                                <span class="bar-value"><?php echo number_format($product->total_views); ?></span>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="chart-placeholder">
+                            <p><?php _e('No product data available yet.', 'smart-product-tabs'); ?></p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Daily Analytics Chart -->
+            <?php if (!empty($daily_data)): ?>
+            <div class="chart-container" style="margin-top: 30px;">
+                <h4><?php _e('Daily Analytics Trend', 'smart-product-tabs'); ?></h4>
+                <div class="daily-chart">
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php _e('Date', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Total Views', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Unique Tabs', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Unique Products', 'smart-product-tabs'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach (array_slice($daily_data, -10) as $day): ?>
+                            <tr>
+                                <td><?php echo esc_html($day->date); ?></td>
+                                <td><?php echo number_format($day->total_views); ?></td>
+                                <td><?php echo number_format($day->unique_tabs); ?></td>
+                                <td><?php echo number_format($day->unique_products); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Analytics Settings -->
+            <div class="analytics-settings" style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 6px;">
+                <h4><?php _e('Analytics Settings', 'smart-product-tabs'); ?></h4>
+                <form method="post" action="">
+                    <?php wp_nonce_field('spt_analytics_settings'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php _e('Enable Analytics', 'smart-product-tabs'); ?></th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="spt_enable_analytics" value="1" <?php checked(get_option('spt_enable_analytics', 1)); ?>>
+                                    <?php _e('Track tab views and performance metrics', 'smart-product-tabs'); ?>
+                                </label>
+                                <p class="description"><?php _e('Disable this to stop collecting analytics data.', 'smart-product-tabs'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php _e('Data Retention', 'smart-product-tabs'); ?></th>
+                            <td>
+                                <select name="spt_analytics_retention_days">
+                                    <option value="30" <?php selected(get_option('spt_analytics_retention_days', 90), 30); ?>>30 days</option>
+                                    <option value="90" <?php selected(get_option('spt_analytics_retention_days', 90), 90); ?>>90 days</option>
+                                    <option value="365" <?php selected(get_option('spt_analytics_retention_days', 90), 365); ?>>1 year</option>
+                                </select>
+                                <p class="description"><?php _e('How long to keep analytics data before automatic cleanup.', 'smart-product-tabs'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <p class="submit">
+                        <input type="submit" name="save_analytics_settings" class="button-primary" value="<?php _e('Save Settings', 'smart-product-tabs'); ?>">
+                        <button type="button" class="button" id="reset-analytics" style="margin-left: 10px;">
+                            <?php _e('Reset All Data', 'smart-product-tabs'); ?>
+                        </button>
+                    </p>
+                </form>
+            </div>
+
+            <!-- Debug Information (only for admins when WP_DEBUG is on) -->
+            <?php if (WP_DEBUG && current_user_can('manage_options')): ?>
+            <div class="analytics-debug" style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                <h4><?php _e('Debug Information', 'smart-product-tabs'); ?></h4>
+                <?php
+                global $wpdb;
+                $table_stats = $analytics->get_table_size();
+                $total_records = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}spt_analytics");
+                ?>
+                <p><strong><?php _e('Database Records:', 'smart-product-tabs'); ?></strong> <?php echo number_format($total_records); ?></p>
+                <p><strong><?php _e('Table Size:', 'smart-product-tabs'); ?></strong> <?php echo $table_stats->size_mb; ?> MB</p>
+                <p><strong><?php _e('Analytics Enabled:', 'smart-product-tabs'); ?></strong> <?php echo get_option('spt_enable_analytics', 1) ? 'Yes' : 'No'; ?></p>
+            </div>
+            <?php endif; ?>
         </div>
+
+        <script>
+        jQuery(document).ready(function($) {
+            // Handle period changes
+            $('#analytics-period').on('change', function() {
+                var period = $(this).val();
+                window.location.href = '?page=smart-product-tabs&tab=analytics&period=' + period;
+            });
+
+            // Handle refresh button
+            $('#refresh-analytics').on('click', function() {
+                location.reload();
+            });
+
+            // Handle reset analytics
+            $('#reset-analytics').on('click', function() {
+                if (confirm('<?php _e('Are you sure you want to reset all analytics data? This cannot be undone.', 'smart-product-tabs'); ?>')) {
+                    // Add AJAX call to reset analytics
+                    $.post(ajaxurl, {
+                        action: 'spt_reset_analytics',
+                        nonce: '<?php echo wp_create_nonce('spt_reset_analytics'); ?>'
+                    }, function(response) {
+                        if (response.success) {
+                            alert('<?php _e('Analytics data has been reset.', 'smart-product-tabs'); ?>');
+                            location.reload();
+                        } else {
+                            alert('<?php _e('Failed to reset analytics data.', 'smart-product-tabs'); ?>');
+                        }
+                    });
+                }
+            });
+
+            // Handle export analytics
+            $('#export-analytics').on('click', function() {
+                var period = $('#analytics-period').val();
+                window.open('?page=smart-product-tabs&spt_action=export_analytics&period=' + period + '&format=csv&_wpnonce=<?php echo wp_create_nonce('spt_export_analytics'); ?>');
+            });
+        });
+        </script>
         <?php
+
+        // Handle form submissions
+        if (isset($_POST['save_analytics_settings']) && wp_verify_nonce($_POST['_wpnonce'], 'spt_analytics_settings')) {
+            update_option('spt_enable_analytics', isset($_POST['spt_enable_analytics']) ? 1 : 0);
+            update_option('spt_analytics_retention_days', intval($_POST['spt_analytics_retention_days']));
+            echo '<div class="notice notice-success"><p>' . __('Analytics settings saved.', 'smart-product-tabs') . '</p></div>';
+        }
     }
     
     /**
@@ -1146,4 +1404,62 @@ class SPT_Admin {
             echo '<div class="notice notice-error is-dismissible"><p>' . esc_html($error) . '</p></div>';
         }
     }
+    
+    
+    
+    
+    /**
+     * AJAX: Reset analytics data
+     */
+    public function ajax_reset_analytics() {
+        check_ajax_referer('spt_reset_analytics', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+
+        $analytics = new SPT_Analytics();
+        $result = $analytics->reset_analytics();
+
+        if ($result) {
+            wp_send_json_success(__('Analytics data has been reset successfully.', 'smart-product-tabs'));
+        } else {
+            wp_send_json_error(__('Failed to reset analytics data.', 'smart-product-tabs'));
+        }
+    }    
+    
+    
+    /**
+     * Handle analytics export
+     */
+    public function handle_analytics_export() {
+        if (isset($_GET['spt_action']) && $_GET['spt_action'] === 'export_analytics' && 
+            wp_verify_nonce($_GET['_wpnonce'], 'spt_export_analytics')) {
+
+            if (!current_user_can('manage_woocommerce')) {
+                wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+            }
+
+            $period = isset($_GET['period']) ? intval($_GET['period']) : 30;
+            $format = isset($_GET['format']) ? sanitize_text_field($_GET['format']) : 'csv';
+
+            $analytics = new SPT_Analytics();
+            $export_data = $analytics->export_analytics($format, $period);
+
+            if ($format === 'csv') {
+                header('Content-Type: text/csv');
+                header('Content-Disposition: attachment; filename="spt-analytics-' . date('Y-m-d') . '.csv"');
+                echo $export_data;
+            } else {
+                header('Content-Type: application/json');
+                header('Content-Disposition: attachment; filename="spt-analytics-' . date('Y-m-d') . '.json"');
+                echo $export_data;
+            }
+
+            exit;
+        }
+    }    
+    
+    
 }

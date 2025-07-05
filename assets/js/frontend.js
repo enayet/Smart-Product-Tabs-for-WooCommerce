@@ -1,5 +1,6 @@
 /**
  * Frontend JavaScript for Smart Product Tabs
+ * Optimized and streamlined version with enhanced analytics tracking
  */
 
 (function($) {
@@ -15,10 +16,8 @@
          */
         config: {
             trackViews: true,
-            lazyLoad: true,
             animationSpeed: 300,
-            mobileBreakpoint: 768,
-            accordionMode: false
+            mobileBreakpoint: 768
         },
 
         /**
@@ -28,8 +27,7 @@
             this.loadConfig();
             this.bindEvents();
             this.initMobileOptimization();
-            this.initAnalyticsTracking();
-            this.initLazyLoading();
+            this.initEnhancedTracking();
             this.initAccessibility();
             this.handleDeepLinks();
         },
@@ -50,14 +48,11 @@
          * Bind events
          */
         bindEvents: function() {
-            // Tab click events
+            // Tab click events with enhanced tracking
             $(document).on('click', '.woocommerce-tabs .tabs li a', this.handleTabClick);
             
             // Mobile accordion toggle
             $(document).on('click', '.spt-mobile-tab-header', this.toggleMobileTab);
-            
-            // Lazy loading trigger
-            $(document).on('click', '.spt-lazy-tab', this.loadTabContent);
             
             // Window resize for mobile optimization
             $(window).on('resize', this.debounce(this.handleResize, 250));
@@ -72,19 +67,20 @@
         },
 
         /**
-         * Handle tab click
+         * Enhanced handle tab click with better tracking
          */
         handleTabClick: function(e) {
             var $tab = $(this);
             var $tabPanel = $($tab.attr('href'));
             
-            // Track tab view
+            // Track tab view BEFORE other processing
             SPTFrontend.trackTabView($tab);
             
-            // Handle lazy loading
-            if ($tabPanel.hasClass('spt-lazy-content') && !$tabPanel.data('loaded')) {
-                SPTFrontend.loadTabContent.call($tabPanel[0]);
-            }
+            // Add visual feedback
+            $tab.addClass('spt-tracking');
+            setTimeout(function() {
+                $tab.removeClass('spt-tracking');
+            }, 500);
             
             // Update URL hash for deep linking
             if ($tab.attr('href').indexOf('#tab-') === 0) {
@@ -96,7 +92,7 @@
         },
 
         /**
-         * Track tab view
+         * Enhanced track tab view with better error handling
          */
         trackTabView: function($tab) {
             if (!this.config.trackViews) {
@@ -116,6 +112,14 @@
                 return;
             }
             
+            // Mark as tracked immediately to prevent duplicates
+            sessionStorage.setItem(trackingKey, '1');
+            
+            // Debug logging
+            if (window.console && window.console.log && window.location.search.indexOf('spt_debug=1') !== -1) {
+                console.log('SPT: Tracking view for tab:', tabKey, 'product:', productId);
+            }
+            
             $.ajax({
                 url: this.config.ajaxUrl,
                 type: 'POST',
@@ -126,9 +130,16 @@
                     nonce: this.config.nonce
                 },
                 success: function(response) {
-                    if (response.success) {
-                        sessionStorage.setItem(trackingKey, '1');
+                    if (window.console && window.console.log && window.location.search.indexOf('spt_debug=1') !== -1) {
+                        console.log('SPT: View tracked successfully', response);
                     }
+                },
+                error: function(xhr, status, error) {
+                    if (window.console && window.console.error) {
+                        console.error('SPT: Failed to track view:', error);
+                    }
+                    // Remove the tracking flag so it can be retried
+                    sessionStorage.removeItem(trackingKey);
                 }
             });
         },
@@ -151,9 +162,6 @@
             if (this.isMobile()) {
                 this.enableMobileMode();
             }
-            
-            // Check for mobile-hidden tabs
-            this.handleMobileHiddenTabs();
         },
 
         /**
@@ -181,51 +189,7 @@
             }
             
             $tabsContainer.addClass('spt-mobile-enabled');
-            
-            // Convert tabs to accordion on mobile if enabled
-            if (this.config.accordionMode) {
-                this.convertToAccordion($tabsContainer);
-            }
-            
-            // Optimize tab navigation for mobile
             this.optimizeTabNavigation($tabsContainer);
-        },
-
-        /**
-         * Convert tabs to accordion for mobile
-         */
-        convertToAccordion: function($container) {
-            var $tabs = $container.find('.tabs li');
-            var $panels = $container.find('.woocommerce-Tabs-panel');
-            
-            var $accordion = $('<div class="spt-mobile-accordion">');
-            
-            $tabs.each(function(index) {
-                var $tab = $(this);
-                var $link = $tab.find('a');
-                var tabId = $link.attr('href');
-                var $panel = $(tabId);
-                
-                if ($panel.length) {
-                    var $accordionItem = $(`
-                        <div class="spt-accordion-item" data-tab="${tabId}">
-                            <div class="spt-mobile-tab-header">
-                                <span class="tab-title">${$link.text()}</span>
-                                <span class="tab-toggle">+</span>
-                            </div>
-                            <div class="spt-mobile-tab-content">
-                                ${$panel.html()}
-                            </div>
-                        </div>
-                    `);
-                    
-                    $accordion.append($accordionItem);
-                }
-            });
-            
-            // Hide original tabs on mobile
-            $container.find('.tabs, .woocommerce-Tabs-panel').hide();
-            $container.append($accordion);
         },
 
         /**
@@ -235,7 +199,6 @@
             var $tabsList = $container.find('.tabs');
             
             if ($tabsList.length) {
-                // Add swipe/scroll functionality
                 $tabsList.addClass('spt-mobile-tabs');
                 
                 // Add scroll indicators if needed
@@ -266,15 +229,6 @@
         },
 
         /**
-         * Handle mobile hidden tabs
-         */
-        handleMobileHiddenTabs: function() {
-            if (this.isMobile()) {
-                $('.spt-mobile-hidden').hide();
-            }
-        },
-
-        /**
          * Toggle mobile tab (accordion mode)
          */
         toggleMobileTab: function(e) {
@@ -302,7 +256,7 @@
                 $toggle.text('−');
                 $item.addClass('active');
                 
-                // Track view
+                // Track view for accordion
                 var tabKey = $item.data('tab');
                 if (tabKey) {
                     SPTFrontend.trackTabView($('<a href="' + tabKey + '">'));
@@ -332,13 +286,16 @@
                 
                 if (Math.abs(deltaX) > threshold) {
                     if (deltaX > 0) {
-                        // Swipe left - next tab
                         SPTFrontend.navigateTab('next');
                     } else {
-                        // Swipe right - previous tab
                         SPTFrontend.navigateTab('prev');
                     }
                 }
+            });
+
+            // Enhanced mobile tracking
+            $tabsContainer.on('touchstart', '.tabs a', function() {
+                SPTFrontend.trackTabView($(this));
             });
         },
 
@@ -364,50 +321,6 @@
             if ($targetTab.length) {
                 $targetTab.find('a').trigger('click');
             }
-        },
-
-        /**
-         * Initialize lazy loading
-         */
-        initLazyLoading: function() {
-            if (!this.config.lazyLoad) {
-                return;
-            }
-            
-            // Mark non-active tabs for lazy loading
-            $('.woocommerce-Tabs-panel').not('.active').each(function() {
-                var $panel = $(this);
-                if (!$panel.hasClass('spt-lazy-content')) {
-                    $panel.addClass('spt-lazy-content');
-                    $panel.data('original-content', $panel.html());
-                    $panel.html('<div class="spt-loading-placeholder">Click to load content...</div>');
-                }
-            });
-        },
-
-        /**
-         * Load tab content (lazy loading)
-         */
-        loadTabContent: function() {
-            var $panel = $(this);
-            
-            if ($panel.data('loaded')) {
-                return;
-            }
-            
-            // Show loading indicator
-            $panel.html('<div class="spt-loading">Loading...</div>');
-            
-            // Simulate content loading (replace with actual AJAX call if needed)
-            setTimeout(function() {
-                var originalContent = $panel.data('original-content');
-                $panel.html(originalContent);
-                $panel.data('loaded', true);
-                $panel.removeClass('spt-lazy-content');
-                
-                // Trigger content loaded event
-                $(document).trigger('spt:content-loaded', [$panel]);
-            }, 500);
         },
 
         /**
@@ -494,11 +407,9 @@
             var $tab = $('.woocommerce-tabs .tabs a[href="' + hash + '"]');
             
             if ($tab.length) {
-                // Small delay to ensure page is fully loaded
                 setTimeout(function() {
                     $tab.trigger('click');
                     
-                    // Scroll to tabs if needed
                     if (SPTFrontend.isMobile()) {
                         $('html, body').animate({
                             scrollTop: $('.woocommerce-tabs').offset().top - 100
@@ -531,9 +442,6 @@
             } else if (!isMobile && wasMobile) {
                 SPTFrontend.disableMobileMode();
             }
-            
-            // Update mobile hidden tabs
-            SPTFrontend.handleMobileHiddenTabs();
         },
 
         /**
@@ -548,9 +456,49 @@
             
             // Show original tabs
             $tabsContainer.find('.tabs, .woocommerce-Tabs-panel').show();
+        },
+
+        /**
+         * Initialize enhanced tracking
+         */
+        initEnhancedTracking: function() {
+            // Track initial page load (for default active tab)
+            var $activeTab = $('.woocommerce-tabs .tabs li.active a');
+            if ($activeTab.length) {
+                setTimeout(function() {
+                    SPTFrontend.trackTabView($activeTab);
+                }, 1000);
+            }
             
-            // Show mobile-hidden tabs on desktop
-            $('.spt-mobile-hidden').show();
+            // Add debug info for development
+            if (this.config.trackViews && window.location.search.indexOf('spt_debug=1') !== -1) {
+                console.log('SPT: Enhanced tracking initialized');
+                setTimeout(function() {
+                    SPTFrontend.debugTracking();
+                }, 2000);
+            }
+        },
+
+        /**
+         * Debug method to check tracking configuration
+         */
+        debugTracking: function() {
+            if (!window.console) return;
+            
+            console.log('SPT Tracking Debug:');
+            console.log('- Tracking enabled:', this.config.trackViews);
+            console.log('- Product ID:', this.config.productId);
+            console.log('- AJAX URL:', this.config.ajaxUrl);
+            console.log('- Nonce:', this.config.nonce);
+            console.log('- Available tabs:', $('.woocommerce-tabs .tabs li a').length);
+            
+            // Test tracking for first tab
+            var $firstTab = $('.woocommerce-tabs .tabs li a').first();
+            if ($firstTab.length) {
+                console.log('- First tab key:', this.getTabKey($firstTab));
+                console.log('- Test tracking call...');
+                this.trackTabView($firstTab);
+            }
         },
 
         /**
@@ -602,27 +550,6 @@
                 return true;
             }
             return false;
-        },
-
-        /**
-         * Get tab content
-         */
-        getTabContent: function(tabKey) {
-            var $panel = $('#' + tabKey);
-            return $panel.length ? $panel.html() : null;
-        },
-
-        /**
-         * Update tab content
-         */
-        updateTabContent: function(tabKey, content) {
-            var $panel = $('#' + tabKey);
-            if ($panel.length) {
-                $panel.html(content);
-                $(document).trigger('spt:content-updated', [$panel, content]);
-                return true;
-            }
-            return false;
         }
     };
 
@@ -669,132 +596,12 @@
     };
 
     /**
-     * Enhanced Tab Features
-     */
-    var SPTEnhanced = {
-        
-        /**
-         * Initialize enhanced features
-         */
-        init: function() {
-            this.initTabBadges();
-            this.initTabTooltips();
-            this.initTabAnimations();
-            this.initTabSearch();
-        },
-
-        /**
-         * Initialize tab badges (notifications, counts, etc.)
-         */
-        initTabBadges: function() {
-            $('.woocommerce-tabs .tabs a').each(function() {
-                var $tab = $(this);
-                var badge = $tab.data('badge');
-                
-                if (badge) {
-                    $tab.append('<span class="spt-tab-badge">' + badge + '</span>');
-                }
-            });
-        },
-
-        /**
-         * Initialize tab tooltips
-         */
-        initTabTooltips: function() {
-            $('.woocommerce-tabs .tabs a[title]').each(function() {
-                var $tab = $(this);
-                var title = $tab.attr('title');
-                
-                if (title) {
-                    $tab.on('mouseenter', function() {
-                        SPTEnhanced.showTooltip($tab, title);
-                    }).on('mouseleave', function() {
-                        SPTEnhanced.hideTooltip();
-                    });
-                }
-            });
-        },
-
-        /**
-         * Show tooltip
-         */
-        showTooltip: function($element, text) {
-            var $tooltip = $('<div class="spt-tooltip">' + text + '</div>');
-            $('body').append($tooltip);
-            
-            var offset = $element.offset();
-            $tooltip.css({
-                top: offset.top - $tooltip.outerHeight() - 10,
-                left: offset.left + ($element.outerWidth() / 2) - ($tooltip.outerWidth() / 2)
-            }).fadeIn(200);
-        },
-
-        /**
-         * Hide tooltip
-         */
-        hideTooltip: function() {
-            $('.spt-tooltip').fadeOut(200, function() {
-                $(this).remove();
-            });
-        },
-
-        /**
-         * Initialize tab animations
-         */
-        initTabAnimations: function() {
-            // Add smooth transitions for tab content
-            $('.woocommerce-Tabs-panel').css({
-                'transition': 'opacity 0.3s ease-in-out',
-                'opacity': '0'
-            });
-            
-            // Show active tab with animation
-            $('.woocommerce-Tabs-panel.active').css('opacity', '1');
-            
-            // Handle tab switching animations
-            $(document).on('spt:tab-activated', function(e, $tab, $panel) {
-                $('.woocommerce-Tabs-panel').css('opacity', '0');
-                $panel.css('opacity', '1');
-            });
-        },
-
-        /**
-         * Initialize tab search functionality
-         */
-        initTabSearch: function() {
-            if ($('.spt-tab-search').length) {
-                $('.spt-tab-search input').on('input', function() {
-                    var query = $(this).val().toLowerCase();
-                    SPTEnhanced.filterTabs(query);
-                });
-            }
-        },
-
-        /**
-         * Filter tabs based on search query
-         */
-        filterTabs: function(query) {
-            $('.woocommerce-tabs .tabs li').each(function() {
-                var $tab = $(this);
-                var text = $tab.find('a').text().toLowerCase();
-                
-                if (text.indexOf(query) !== -1 || query === '') {
-                    $tab.show();
-                } else {
-                    $tab.hide();
-                }
-            });
-        }
-    };
-
-    /**
      * Initialize everything when document is ready
      */
     $(document).ready(function() {
         // Only initialize on product pages with tabs
         if ($('.woocommerce-tabs').length) {
             SPTFrontend.init();
-            SPTEnhanced.init();
             
             // Make SPTFrontend globally accessible for debugging
             window.SPTFrontend = SPTFrontend;
