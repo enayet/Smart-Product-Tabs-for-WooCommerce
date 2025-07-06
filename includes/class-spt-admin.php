@@ -45,24 +45,22 @@ class SPT_Admin {
         if (isset($_POST['spt_save_rule']) && wp_verify_nonce($_POST['spt_rule_nonce'], 'spt_save_rule')) {
             $this->save_rule();
         }
-        
+
         // Handle rule delete
         if (isset($_GET['spt_action']) && $_GET['spt_action'] === 'delete_rule' && 
             isset($_GET['rule_id']) && wp_verify_nonce($_GET['_wpnonce'], 'spt_delete_rule_' . $_GET['rule_id'])) {
             $this->delete_rule($_GET['rule_id']);
         }
-        
+
         // Handle default tabs settings
         if (isset($_POST['spt_save_default_tabs']) && wp_verify_nonce($_POST['spt_default_tabs_nonce'], 'spt_save_default_tabs')) {
             $this->save_default_tabs();
         }
-        
-        
-        // Handle analytics settings (add this to the existing method)
+
+        // Handle analytics settings (moved from removed settings tab)
         if (isset($_POST['save_analytics_settings']) && wp_verify_nonce($_POST['_wpnonce'], 'spt_analytics_settings')) {
             $this->save_analytics_settings();
         }        
-        
     }
     
     
@@ -109,7 +107,7 @@ class SPT_Admin {
         ?>
         <div class="wrap">
             <h1><?php _e('Smart Product Tabs', 'smart-product-tabs'); ?></h1>
-            
+
             <nav class="nav-tab-wrapper">
                 <a href="?page=smart-product-tabs&tab=rules" class="nav-tab <?php echo $active_tab === 'rules' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Tab Rules', 'smart-product-tabs'); ?>
@@ -123,11 +121,8 @@ class SPT_Admin {
                 <a href="?page=smart-product-tabs&tab=analytics" class="nav-tab <?php echo $active_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Analytics', 'smart-product-tabs'); ?>
                 </a>
-                <a href="?page=smart-product-tabs&tab=settings" class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
-                    <?php _e('Settings', 'smart-product-tabs'); ?>
-                </a>
             </nav>
-            
+
             <div class="tab-content">
                 <?php
                 switch ($active_tab) {
@@ -142,9 +137,6 @@ class SPT_Admin {
                         break;
                     case 'analytics':
                         $this->render_analytics_tab();
-                        break;
-                    case 'settings':
-                        $this->render_settings_tab();
                         break;
                     default:
                         $this->render_rules_tab();
@@ -1154,27 +1146,54 @@ class SPT_Admin {
                 </div>
             </div>
 
-            <!-- Charts Section -->
+            <!-- Enhanced Charts Section with Better Layout -->
+            <!-- Simplified Charts Section -->
             <div class="analytics-charts">
                 <div class="chart-container">
                     <h4><?php _e('Popular Tabs (Last 30 Days)', 'smart-product-tabs'); ?></h4>
                     <?php if (!empty($popular_tabs)): ?>
-                        <div class="chart-bars">
-                            <?php 
-                            $max_views = max(array_column($popular_tabs, 'total_views'));
-                            foreach ($popular_tabs as $tab): 
-                                $percentage = $max_views > 0 ? ($tab->total_views / $max_views) * 100 : 0;
-                            ?>
-                            <div class="chart-bar">
-                                <span class="bar-label"><?php echo esc_html($tab->tab_key); ?></span>
-                                <div class="bar-fill" style="width: <?php echo $percentage; ?>%;"></div>
-                                <span class="bar-value"><?php echo number_format($tab->total_views); ?></span>
-                            </div>
-                            <?php endforeach; ?>
+                        <div class="enhanced-chart-table">
+                            <table class="wp-list-table widefat fixed striped">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70%;"><?php _e('Tab Name', 'smart-product-tabs'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Views', 'smart-product-tabs'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Products', 'smart-product-tabs'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $max_views = max(array_column($popular_tabs, 'total_views'));
+                                    foreach ($popular_tabs as $tab): 
+                                        // Only show custom tabs (skip default WooCommerce tabs)
+                                        if ($tab->tab_type !== 'custom') {
+                                            continue;
+                                        }
+                                        $percentage = $max_views > 0 ? ($tab->total_views / $max_views) * 100 : 0;
+                                    ?>
+                                    <tr>
+                                        <td class="tab-name-cell">
+                                            <div class="tab-name-container">
+                                                <strong class="tab-display-name"><?php echo esc_html($tab->display_name); ?></strong>
+                                                <div class="tab-progress-bar">
+                                                    <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <span class="metric-number"><?php echo number_format($tab->total_views); ?></span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <span class="metric-number"><?php echo number_format($tab->products_count); ?></span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     <?php else: ?>
                         <div class="chart-placeholder">
-                            <p><?php _e('No data available yet. Tab views will appear here once users interact with your product tabs.', 'smart-product-tabs'); ?></p>
+                            <p><?php _e('No custom tab data available yet. Tab views will appear here once users interact with your custom product tabs.', 'smart-product-tabs'); ?></p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1182,18 +1201,47 @@ class SPT_Admin {
                 <div class="chart-container">
                     <h4><?php _e('Top Performing Products', 'smart-product-tabs'); ?></h4>
                     <?php if (!empty($top_products)): ?>
-                        <div class="chart-bars">
-                            <?php 
-                            $max_views = max(array_column($top_products, 'total_views'));
-                            foreach ($top_products as $product): 
-                                $percentage = $max_views > 0 ? ($product->total_views / $max_views) * 100 : 0;
-                            ?>
-                            <div class="chart-bar">
-                                <span class="bar-label"><?php echo esc_html(wp_trim_words($product->product_name, 4)); ?></span>
-                                <div class="bar-fill" style="width: <?php echo $percentage; ?>%;"></div>
-                                <span class="bar-value"><?php echo number_format($product->total_views); ?></span>
-                            </div>
-                            <?php endforeach; ?>
+                        <div class="enhanced-chart-table">
+                            <table class="wp-list-table widefat fixed striped">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70%;"><?php _e('Product Name', 'smart-product-tabs'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Views', 'smart-product-tabs'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Tabs', 'smart-product-tabs'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $max_views = max(array_column($top_products, 'total_views'));
+                                    foreach ($top_products as $product): 
+                                        $percentage = $max_views > 0 ? ($product->total_views / $max_views) * 100 : 0;
+                                        $status_class = $product->product_status === 'publish' ? 'product-active' : 'product-inactive';
+                                    ?>
+                                    <tr>
+                                        <td class="product-name-cell">
+                                            <div class="product-name-container">
+                                                <?php if ($product->product_url && $product->product_status === 'publish'): ?>
+                                                    <a href="<?php echo esc_url($product->product_url); ?>" target="_blank" class="product-link">
+                                                        <strong><?php echo esc_html(wp_trim_words($product->product_name, 10)); ?></strong>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <strong class="<?php echo $status_class; ?>"><?php echo esc_html(wp_trim_words($product->product_name, 10)); ?></strong>
+                                                <?php endif; ?>
+                                                <div class="product-progress-bar">
+                                                    <div class="progress-fill" style="width: <?php echo $percentage; ?>%;"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <span class="metric-number"><?php echo number_format($product->total_views); ?></span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <span class="metric-number"><?php echo number_format($product->tabs_viewed); ?></span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     <?php else: ?>
                         <div class="chart-placeholder">
@@ -1220,7 +1268,7 @@ class SPT_Admin {
                         <tbody>
                             <?php foreach (array_slice($daily_data, -10) as $day): ?>
                             <tr>
-                                <td><?php echo esc_html($day->date); ?></td>
+                                <td><?php echo esc_html(date('M j, Y', strtotime($day->date))); ?></td>
                                 <td><?php echo number_format($day->total_views); ?></td>
                                 <td><?php echo number_format($day->unique_tabs); ?></td>
                                 <td><?php echo number_format($day->unique_products); ?></td>
@@ -1232,7 +1280,7 @@ class SPT_Admin {
             </div>
             <?php endif; ?>
 
-            <!-- Analytics Settings -->
+            <!-- Analytics Settings (moved from removed settings tab) -->
             <div class="analytics-settings" style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 6px;">
                 <h4><?php _e('Analytics Settings', 'smart-product-tabs'); ?></h4>
                 <form method="post" action="">
@@ -1301,7 +1349,6 @@ class SPT_Admin {
             // Handle reset analytics
             $('#reset-analytics').on('click', function() {
                 if (confirm('<?php _e('Are you sure you want to reset all analytics data? This cannot be undone.', 'smart-product-tabs'); ?>')) {
-                    // Add AJAX call to reset analytics
                     $.post(ajaxurl, {
                         action: 'spt_reset_analytics',
                         nonce: '<?php echo wp_create_nonce('spt_reset_analytics'); ?>'
@@ -1324,13 +1371,6 @@ class SPT_Admin {
         });
         </script>
         <?php
-
-        // Handle form submissions
-        if (isset($_POST['save_analytics_settings']) && wp_verify_nonce($_POST['_wpnonce'], 'spt_analytics_settings')) {
-            update_option('spt_enable_analytics', isset($_POST['spt_enable_analytics']) ? 1 : 0);
-            update_option('spt_analytics_retention_days', intval($_POST['spt_analytics_retention_days']));
-            echo '<div class="notice notice-success"><p>' . __('Analytics settings saved.', 'smart-product-tabs') . '</p></div>';
-        }
     }
     
     /**

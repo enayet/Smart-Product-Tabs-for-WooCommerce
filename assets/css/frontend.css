@@ -108,7 +108,7 @@
     background: #fff;
     border: 1px solid #e1e1e1;
     border-top: none;
-    padding: 30px;
+    padding: 30px!important;
     margin: 0;
     display: none;
     min-height: 200px;

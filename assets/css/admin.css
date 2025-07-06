@@ -1200,3 +1200,456 @@
         break-inside: avoid;
     }
 }
+
+
+/**
+ * Enhanced Analytics CSS - Better Table Layout and Alignment
+ * Add this to: assets/css/admin.css
+ */
+
+/* ===== ENHANCED ANALYTICS TABLES ===== */
+
+.enhanced-chart-table {
+    margin: 15px 0;
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.enhanced-chart-table table {
+    margin: 0;
+    border: none;
+}
+
+.enhanced-chart-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    padding: 12px 15px;
+    border-bottom: 2px solid #e1e1e1;
+}
+
+.enhanced-chart-table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.enhanced-chart-table tr:last-child td {
+    border-bottom: none;
+}
+
+.enhanced-chart-table tr:hover {
+    background: #f8f9fa;
+}
+
+/* ===== TAB NAME STYLING ===== */
+
+.tab-name-cell {
+    position: relative;
+}
+
+.tab-name-container {
+    position: relative;
+    width: 100%;
+}
+
+.tab-display-name {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.tab-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0073aa, #005a87);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* ===== PRODUCT NAME STYLING ===== */
+
+.product-name-cell {
+    position: relative;
+}
+
+.product-name-container {
+    position: relative;
+    width: 100%;
+}
+
+.product-link {
+    text-decoration: none;
+    color: #0073aa;
+    display: block;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.product-link:hover {
+    color: #005a87;
+    text-decoration: underline;
+}
+
+.product-active {
+    color: #333;
+    display: block;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.product-inactive {
+    color: #999;
+    display: block;
+    margin-bottom: 5px;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.product-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ===== METRIC NUMBERS ===== */
+
+.metric-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.price-display {
+    font-size: 14px;
+    font-weight: 500;
+    color: #27ae60;
+}
+
+.no-price {
+    color: #999;
+    font-style: italic;
+}
+
+/* ===== TAB TYPE BADGES ===== */
+
+.tab-type-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.spt-custom-tab {
+    background: #e7f3ff;
+    color: #0073aa;
+    border: 1px solid #b3d9ff;
+}
+
+.spt-default-tab {
+    background: #f0f0f0;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+/* ===== ANALYTICS CHARTS IMPROVEMENTS ===== */
+
+.analytics-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.chart-container {
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+/* ===== ANALYTICS SUMMARY CARDS ===== */
+
+.analytics-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.analytics-card {
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.analytics-card h3 {
+    margin: 0 0 10px 0;
+    color: #666;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0073aa;
+    margin-bottom: 5px;
+    line-height: 1;
+}
+
+.metric-change {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+}
+
+/* ===== DAILY ANALYTICS TABLE ===== */
+
+.daily-chart table {
+    background: #fff;
+}
+
+.daily-chart th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    padding: 12px;
+}
+
+.daily-chart td {
+    text-align: center;
+    padding: 10px 12px;
+    font-weight: 500;
+}
+
+/* ===== ANALYTICS SETTINGS ===== */
+
+.analytics-settings {
+    margin-top: 30px;
+    background: #f9f9f9;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+    padding: 20px;
+}
+
+.analytics-settings h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e1e1e1;
+}
+
+.analytics-settings .form-table {
+    margin-top: 0;
+}
+
+.analytics-settings .form-table th {
+    width: 200px;
+    font-weight: 600;
+    color: #333;
+}
+
+.analytics-settings .description {
+    margin-top: 5px;
+    font-style: italic;
+    color: #666;
+    font-size: 13px;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+@media screen and (max-width: 1200px) {
+    .analytics-charts {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .analytics-summary {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .enhanced-chart-table th,
+    .enhanced-chart-table td {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .tab-display-name {
+        font-size: 13px;
+    }
+    
+    .metric-number {
+        font-size: 14px;
+    }
+    
+    .analytics-card {
+        padding: 15px;
+    }
+    
+    .metric-value {
+        font-size: 24px;
+    }
+    
+    .chart-container {
+        padding: 15px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .enhanced-chart-table {
+        overflow-x: auto;
+    }
+    
+    .enhanced-chart-table table {
+        min-width: 500px;
+    }
+    
+    .analytics-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .analytics-card {
+        padding: 12px;
+    }
+    
+    .metric-value {
+        font-size: 20px;
+    }
+}
+
+/* ===== LOADING AND EMPTY STATES ===== */
+
+.chart-placeholder {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 2px dashed #ddd;
+}
+
+.chart-placeholder p {
+    margin: 0;
+    font-style: italic;
+}
+
+/* ===== DEBUG INFORMATION ===== */
+
+.analytics-debug {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 0 4px 4px 0;
+}
+
+.analytics-debug h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #856404;
+}
+
+.analytics-debug p {
+    margin: 5px 0;
+    color: #856404;
+}
+
+/* ===== HOVER EFFECTS AND ANIMATIONS ===== */
+
+.enhanced-chart-table tr {
+    transition: background-color 0.2s ease;
+}
+
+.progress-fill {
+    animation: progressLoad 1s ease-out;
+}
+
+@keyframes progressLoad {
+    from {
+        width: 0;
+    }
+    to {
+        width: var(--final-width, 100%);
+    }
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+
+.tab-type-badge:focus,
+.product-link:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-fill,
+    .analytics-card,
+    .enhanced-chart-table tr {
+        transition: none;
+        animation: none;
+    }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+
+@media (prefers-contrast: high) {
+    .enhanced-chart-table {
+        border: 2px solid #000;
+    }
+    
+    .tab-type-badge {
+        border-width: 2px;
+    }
+    
+    .progress-fill {
+        background: #000;
+    }
+}

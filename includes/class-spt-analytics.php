@@ -225,10 +225,10 @@ class SPT_Analytics {
      */
     public function get_popular_tabs($limit = 10, $days = 30) {
         global $wpdb;
-        
+
         $date_from = date('Y-m-d', strtotime("-{$days} days"));
-        
-        return $wpdb->get_results($wpdb->prepare(
+
+        $results = $wpdb->get_results($wpdb->prepare(
             "SELECT tab_key, SUM(views) as total_views, COUNT(DISTINCT product_id) as products_count
              FROM {$this->table_name}
              WHERE date >= %s
@@ -238,7 +238,69 @@ class SPT_Analytics {
             $date_from,
             $limit
         ));
+
+        // Enhance results with tab titles
+        foreach ($results as &$result) {
+            $result->display_name = $this->get_tab_display_name($result->tab_key);
+            $result->tab_type = $this->get_tab_type($result->tab_key);
+        }
+
+        return $results;
     }
+    
+    
+    /**
+     * Get display name for tab key
+     */
+    private function get_tab_display_name($tab_key) {
+        global $wpdb;
+
+        // Check if it's a custom SPT tab (format: spt_X)
+        if (preg_match('/^spt_(\d+)$/', $tab_key, $matches)) {
+            $rule_id = $matches[1];
+            $rules_table = $wpdb->prefix . 'spt_rules';
+
+            $rule_title = $wpdb->get_var($wpdb->prepare(
+                "SELECT tab_title FROM $rules_table WHERE id = %d",
+                $rule_id
+            ));
+
+            if ($rule_title) {
+                return $rule_title . ' (' . $tab_key . ')';
+            }
+        }
+
+        // Check default WooCommerce tabs
+        $default_tabs = array(
+            'description' => __('Description', 'smart-product-tabs'),
+            'additional_information' => __('Additional Information', 'smart-product-tabs'),
+            'reviews' => __('Reviews', 'smart-product-tabs')
+        );
+
+        if (isset($default_tabs[$tab_key])) {
+            return $default_tabs[$tab_key];
+        }
+
+        // Fallback to formatted tab key
+        return ucwords(str_replace(array('_', '-'), ' ', $tab_key)) . ' (' . $tab_key . ')';
+    }  
+    
+    
+    /**
+     * Get tab type (custom or default)
+     */
+    private function get_tab_type($tab_key) {
+        if (preg_match('/^spt_\d+$/', $tab_key)) {
+            return 'custom';
+        }
+
+        $default_tabs = array('description', 'additional_information', 'reviews');
+        if (in_array($tab_key, $default_tabs)) {
+            return 'default';
+        }
+
+        return 'unknown';
+    }    
     
     /**
      * Get tab performance for specific period
@@ -331,9 +393,9 @@ class SPT_Analytics {
      */
     public function get_top_products($limit = 10, $days = 30) {
         global $wpdb;
-        
+
         $date_from = date('Y-m-d', strtotime("-{$days} days"));
-        
+
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT product_id, SUM(views) as total_views, 
                     COUNT(DISTINCT tab_key) as tabs_viewed,
@@ -346,7 +408,7 @@ class SPT_Analytics {
             $date_from,
             $limit
         ));
-        
+
         // Enhance with product data
         foreach ($results as &$result) {
             $product = wc_get_product($result->product_id);
@@ -354,13 +416,15 @@ class SPT_Analytics {
                 $result->product_name = $product->get_name();
                 $result->product_url = $product->get_permalink();
                 $result->product_price = $product->get_price();
+                $result->product_status = $product->get_status();
             } else {
                 $result->product_name = __('Product Not Found', 'smart-product-tabs');
                 $result->product_url = '';
                 $result->product_price = 0;
+                $result->product_status = 'not_found';
             }
         }
-        
+
         return $results;
     }
     
@@ -637,5 +701,36 @@ class SPT_Analytics {
             'last_error' => $wpdb->last_error
         );
     }
+    
+    
+    
+    public function get_daily_analytics_enhanced($days = 30) {
+        global $wpdb;
+
+        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT date, 
+                    SUM(views) as total_views,
+                    COUNT(DISTINCT tab_key) as unique_tabs,
+                    COUNT(DISTINCT product_id) as unique_products,
+                    GROUP_CONCAT(DISTINCT tab_key ORDER BY tab_key) as active_tabs
+             FROM {$this->table_name}
+             WHERE date >= %s
+             GROUP BY date
+             ORDER BY date ASC",
+            $date_from
+        ));
+
+        // Format dates for better display
+        foreach ($results as &$result) {
+            $result->formatted_date = date('M j, Y', strtotime($result->date));
+            $result->day_of_week = date('l', strtotime($result->date));
+        }
+
+        return $results;
+    }    
+    
+    
 }
 ?>
