@@ -1440,6 +1440,10 @@ class SPT_Admin {
 
         <script>
         jQuery(document).ready(function($) { 
+            
+            
+            
+            var sptNonce = (typeof spt_ajax !== 'undefined') ? spt_ajax.nonce : '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>';
 
             // File upload form
             $('.template-upload-form').on('submit', function(e) {
@@ -1447,7 +1451,7 @@ class SPT_Admin {
 
                 var formData = new FormData(this);
                 formData.append('action', 'spt_import_template');
-                formData.append('nonce', '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>');
+                formData.append('nonce', sptNonce); // Use the variable
 
                 var $submitBtn = $(this).find('input[type="submit"]');
                 $submitBtn.prop('disabled', true).val('Uploading...');
@@ -1489,7 +1493,7 @@ class SPT_Admin {
                         action: 'spt_export_rules',
                         include_settings: includeSettings ? '1' : '0',
                         export_format: exportFormat,
-                        nonce: '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>'
+                        nonce: sptNonce // Use the variable
                     },
                     success: function(response) {
                         if (response.success) {
@@ -1554,7 +1558,7 @@ class SPT_Admin {
                     data: {
                         action: 'spt_get_template_preview',
                         template_key: templateKey,
-                        nonce: getSptNonce()
+                        nonce: sptNonce // Use the consistent nonce variable
                     },
                     success: function(response) {
                         if (response.success) {
@@ -1762,7 +1766,7 @@ class SPT_Admin {
                     data: {
                         action: 'spt_install_builtin_template',
                         template_key: templateKey,
-                        nonce: getSptNonce()
+                        nonce: sptNonce // Use the consistent nonce variable
                     },
                     success: function(response) {
                         if (response.success) {
