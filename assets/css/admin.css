@@ -1979,6 +1979,7 @@
 }
 
 /* Modal Styling */
+/* Modal Backdrop */
 .spt-modal,
 .spt-export-modal {
     position: fixed;
@@ -1994,29 +1995,43 @@
     animation: fadeIn 0.3s ease;
 }
 
+/* Modal Content Container - SINGLE SCROLL BAR HERE */
 .spt-modal-content,
 .spt-export-content {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     max-width: 80%;
-    max-height: 80%;
-    overflow: auto;
+    width: 90%;
+    max-height: 85vh;
+    /* ONLY overflow here for single scroll bar */
+    overflow-y: auto;
+    overflow-x: hidden;
     animation: slideIn 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
+/* Modal Header - Fixed at top */
 .spt-modal-header {
-    padding: 20px 20px 0 20px;
+    padding: 20px 20px 15px 20px;
     border-bottom: 1px solid #eee;
     position: relative;
+    /* Fixed header - no scroll */
+    flex-shrink: 0;
+    background: #fff;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
 }
 
 .spt-modal-header h3 {
-    margin: 0 0 15px 0;
+    margin: 0;
     color: #23282d;
     font-size: 20px;
+    padding-right: 40px; /* Space for close button */
 }
 
+/* Modal Close Button */
 .spt-modal-close {
     position: absolute;
     top: 15px;
@@ -2041,24 +2056,34 @@
     color: #333;
 }
 
+/* Modal Body - Scrollable content area */
 .spt-modal-body {
     padding: 20px;
+    /* NO overflow here - let parent handle scrolling */
+    flex: 1;
+    min-height: 0; /* Allow flexbox to shrink */
 }
 
+/* Modal Footer - Fixed at bottom */
 .spt-modal-footer {
     padding: 15px 20px;
     border-top: 1px solid #eee;
     text-align: right;
     background: #f8f9fa;
+    /* Fixed footer - no scroll */
+    flex-shrink: 0;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .spt-modal-footer .button {
     margin-left: 10px;
 }
 
-/* Template Preview Styling */
+/* Template Preview Content */
 .template-preview-details {
-    max-width: 600px;
+    max-width: 100%;
+    /* Remove max-width constraint */
 }
 
 .template-preview-details p {
@@ -2071,42 +2096,93 @@
     font-weight: 600;
 }
 
+/* Tabs Preview List - NO SCROLL BAR HERE */
 .tabs-preview-list {
     margin-top: 15px;
+    /* REMOVED: max-height and overflow-y to prevent extra scroll bars */
 }
 
+/* Individual tab items */
 .tab-preview-item {
-    background: #f8f9fa;
+    background: #f9f9f9;
     border: 1px solid #e1e1e1;
-    border-radius: 4px;
+    border-radius: 6px;
     padding: 15px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.tab-preview-item:hover {
+    background: #f0f0f0;
+    border-color: #0073aa;
 }
 
 .tab-preview-item h5 {
     margin: 0 0 10px 0;
     color: #0073aa;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
 }
 
 .tab-preview-item p {
-    margin: 5px 0;
+    margin: 8px 0;
     font-size: 13px;
     color: #666;
 }
 
+.tab-preview-item strong {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Loading Overlay for Modal */
+.spt-modal-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 8px;
+}
+
+.spt-modal-loading-content {
+    text-align: center;
+    color: #666;
+}
+
+.spt-modal-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+/* Spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* Export Modal Specific */
 .spt-export-content textarea {
-    width: 600px;
-    height: 400px;
+    width: 100%;
+    min-height: 400px;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 10px;
     background: #f9f9f9;
-    resize: none;
+    resize: vertical;
+    box-sizing: border-box;
 }
 
 /* Loading States */
@@ -2173,6 +2249,7 @@
     border: 1px solid #ffeaa7;
 }
 
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -2190,61 +2267,47 @@
     }
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-.loading-pulse {
-    animation: pulse 1.5s infinite;
-}
-
 /* Responsive Design */
-@media screen and (max-width: 768px) {
-    .import-export-section {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .template-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .template-actions {
-        flex-direction: column;
-    }
-    
+/* Responsive modal fixes */
+@media (max-width: 768px) {
     .spt-modal-content,
     .spt-export-content {
         max-width: 95%;
-        max-height: 95%;
-        margin: 10px;
+        width: 95%;
+        max-height: 90vh;
+        margin: 20px 10px;
     }
     
-    .spt-export-content textarea {
-        width: 100%;
-        height: 300px;
-    }
-    
-    .saved-templates {
-        overflow-x: auto;
-    }
-    
-    .saved-templates table {
-        min-width: 600px;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .template-meta {
-        flex-direction: column;
-        gap: 5px;
-        text-align: center;
+    .spt-modal-header,
+    .spt-modal-body,
+    .spt-modal-footer {
+        padding: 15px;
     }
     
     .spt-modal-header h3 {
         font-size: 18px;
-        margin-right: 30px;
+        padding-right: 35px;
+    }
+    
+    .tab-preview-item {
+        padding: 12px;
+    }
+    
+    .spt-export-content textarea {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .spt-modal-content,
+    .spt-export-content {
+        max-width: 98%;
+        width: 98%;
+        margin: 10px 5px;
+    }
+    
+    .spt-modal-header h3 {
+        font-size: 16px;
     }
     
     .spt-modal-footer {
@@ -2256,4 +2319,50 @@
         display: block;
         width: 100%;
     }
+}
+
+
+
+/* CRITICAL: Override any existing modal styles that might cause multiple scroll bars */
+#template-preview-modal .spt-modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+#template-preview-modal .spt-modal-body {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 1 !important;
+}
+
+#template-preview-modal .tabs-preview-list {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Hide any unwanted close buttons in preview content */
+#template-preview-modal .template-preview-details .close,
+#template-preview-modal .template-preview-details .modal-close,
+#template-preview-modal .template-preview-details .preview-close {
+    display: none !important;
+}
+
+/* Ensure modal header and footer stay fixed */
+#template-preview-modal .spt-modal-header {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: #fff !important;
+}
+
+#template-preview-modal .spt-modal-footer {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 10 !important;
+    background: #f8f9fa !important;
 }

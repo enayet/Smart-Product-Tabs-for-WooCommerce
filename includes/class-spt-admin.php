@@ -1252,16 +1252,23 @@ class SPT_Admin {
             </div>
             <?php endif; ?>
 
-            <!-- Template Preview Modal -->
+            <!-- Enhanced Template Preview Modal with Single Scroll -->
             <div id="template-preview-modal" class="spt-modal" style="display: none;">
                 <div class="spt-modal-content">
+                    <!-- Fixed Header -->
                     <div class="spt-modal-header">
-                        <h3 id="preview-template-title"></h3>
-                        <button type="button" class="spt-modal-close">&times;</button>
+                        <h3 id="preview-template-title"><?php _e('Template Preview', 'smart-product-tabs'); ?></h3>
+                        <button type="button" class="spt-modal-close" aria-label="<?php _e('Close', 'smart-product-tabs'); ?>">&times;</button>
                     </div>
+
+                    <!-- Scrollable Body -->
                     <div class="spt-modal-body">
-                        <div id="preview-template-content"></div>
+                        <div id="preview-template-content">
+                            <!-- Content will be populated via AJAX -->
+                        </div>
                     </div>
+
+                    <!-- Fixed Footer -->
                     <div class="spt-modal-footer">
                         <button type="button" class="button-primary" id="install-from-preview">
                             <?php _e('Install This Template', 'smart-product-tabs'); ?>
@@ -1432,42 +1439,7 @@ class SPT_Admin {
         </style>
 
         <script>
-        jQuery(document).ready(function($) {
-            // Template installation
-            $('.template-install').on('click', function() {
-                var templateKey = $(this).data('template-key');
-                var templateName = $(this).data('template-name');
-
-                if (!confirm('Install template "' + templateName + '"? This will add new tab rules to your site.')) {
-                    return;
-                }
-
-                $(this).prop('disabled', true).text('Installing...');
-
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'spt_install_builtin_template',
-                        template_key: templateKey,
-                        nonce: '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            alert('Template installed successfully! ' + response.data.imported + ' rules imported.');
-                            location.reload();
-                        } else {
-                            alert('Error: ' + response.data);
-                        }
-                    },
-                    error: function() {
-                        alert('An error occurred. Please try again.');
-                    },
-                    complete: function() {
-                        $('.template-install').prop('disabled', false).text('Install Template');
-                    }
-                });
-            });
+        jQuery(document).ready(function($) { 
 
             // File upload form
             $('.template-upload-form').on('submit', function(e) {
@@ -1559,116 +1531,278 @@ class SPT_Admin {
             
             
             
-        // Template preview functionality
-        $('.template-preview-btn').on('click', function() {
-            var templateKey = $(this).data('template-key');
+        
+            // Template preview functionality with fixes
+            $('.template-preview-btn').on('click', function() {
+                var templateKey = $(this).data('template-key');
+                var $modal = $('#template-preview-modal');
 
-            // Get template data via AJAX
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'spt_get_template_preview',
-                    template_key: templateKey,
-                    nonce: '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        var template = response.data;
+                // SOLUTION 1: Clear previous content immediately
+                $('#preview-template-title').text('Loading...');
+                $('#preview-template-content').html('');
 
-                        // Populate modal content
-                        $('#preview-template-title').text(template.name);
+                // SOLUTION 2: Show loading state with preloader
+                showModalLoading($modal);
 
-                        var content = '<div class="template-preview-details">';
-                        content += '<p><strong>Description:</strong> ' + template.description + '</p>';
-                        content += '<p><strong>Version:</strong> ' + template.version + '</p>';
-                        content += '<p><strong>Author:</strong> ' + template.author + '</p>';
-                        content += '<p><strong>Number of Tabs:</strong> ' + template.tabs_count + '</p>';
+                // Show modal immediately with loading state
+                $modal.show();
 
-                        if (template.categories && template.categories.length > 0) {
-                            content += '<p><strong>Categories:</strong> ' + template.categories.join(', ') + '</p>';
-                        }
+                // Get template data via AJAX
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'spt_get_template_preview',
+                        template_key: templateKey,
+                        nonce: getSptNonce()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var template = response.data;
 
-                        content += '<h4>Tabs Included:</h4>';
-                        content += '<div class="tabs-preview-list">';
+                            // SOLUTION 3: Clear loading and populate with fresh content
+                            hideModalLoading($modal);
 
-                        if (template.rules && template.rules.length > 0) {
-                            template.rules.forEach(function(rule, index) {
-                                content += '<div class="tab-preview-item">';
-                                content += '<h5>' + (index + 1) + '. ' + rule.tab_title + '</h5>';
-                                content += '<p><strong>Conditions:</strong> ' + formatConditions(rule.conditions) + '</p>';
-                                content += '<p><strong>Priority:</strong> ' + rule.priority + '</p>';
+                            // Populate modal content
+                            $('#preview-template-title').text(template.name);
 
-                                // Show preview of content (truncated)
-                                var contentPreview = rule.tab_content.replace(/<[^>]*>/g, ''); // Strip HTML
-                                if (contentPreview.length > 200) {
-                                    contentPreview = contentPreview.substring(0, 200) + '...';
-                                }
-                                content += '<p><strong>Content Preview:</strong> ' + contentPreview + '</p>';
-                                content += '</div>';
+                            var content = '<div class="template-preview-details">';
+                            content += '<p><strong>Description:</strong> ' + (template.description || 'No description available') + '</p>';
+                            content += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
+                            content += '<p><strong>Author:</strong> ' + (template.author || 'Unknown') + '</p>';
+                            content += '<p><strong>Number of Tabs:</strong> ' + (template.tabs_count || 0) + '</p>';
+
+                            if (template.categories && template.categories.length > 0) {
+                                content += '<p><strong>Categories:</strong> ' + template.categories.join(', ') + '</p>';
+                            }
+
+                            content += '<h4>Tabs Included:</h4>';
+                            content += '<div class="tabs-preview-list">';
+
+                            if (template.rules && template.rules.length > 0) {
+                                template.rules.forEach(function(rule, index) {
+                                    content += '<div class="tab-preview-item">';
+                                    content += '<h5>' + (index + 1) + '. ' + (rule.tab_title || 'Untitled Tab') + '</h5>';
+                                    content += '<p><strong>Conditions:</strong> ' + formatConditions(rule.conditions) + '</p>';
+                                    content += '<p><strong>Priority:</strong> ' + (rule.priority || 10) + '</p>';
+
+                                    // Show preview of content (truncated)
+                                    var contentPreview = '';
+                                    if (rule.tab_content) {
+                                        contentPreview = rule.tab_content.replace(/<[^>]*>/g, ''); // Strip HTML
+                                        if (contentPreview.length > 200) {
+                                            contentPreview = contentPreview.substring(0, 200) + '...';
+                                        }
+                                    }
+                                    content += '<p><strong>Content Preview:</strong> ' + (contentPreview || 'No content preview available') + '</p>';
+                                    content += '</div>';
+                                });
+                            } else {
+                                content += '<p>No tab rules found in this template.</p>';
+                            }
+
+                            content += '</div>';
+                            content += '</div>';
+
+                            $('#preview-template-content').html(content);
+
+                            // Set up install button
+                            $('#install-from-preview').off('click').on('click', function() {
+                                $modal.hide();
+                                // Trigger the install for this template
+                                $('.template-install[data-template-key="' + templateKey + '"]').click();
                             });
+
                         } else {
-                            content += '<p>No tab rules found in this template.</p>';
+                            hideModalLoading($modal);
+                            $('#preview-template-content').html('<p class="error">Error loading template preview: ' + (response.data || 'Unknown error') + '</p>');
                         }
-
-                        content += '</div>';
-                        content += '</div>';
-
-                        $('#preview-template-content').html(content);
-
-                        // Set up install button
-                        $('#install-from-preview').off('click').on('click', function() {
-                            $('#template-preview-modal').hide();
-                            // Trigger the install for this template
-                            $('.template-install[data-template-key="' + templateKey + '"]').click();
-                        });
-
-                        // Show modal
-                        $('#template-preview-modal').show();
-                    } else {
-                        alert('Error loading template preview: ' + response.data);
+                    },
+                    error: function(xhr, status, error) {
+                        hideModalLoading($modal);
+                        $('#preview-template-content').html('<p class="error">Failed to load template preview. Please try again.</p>');
+                        console.error('Template preview error:', error);
                     }
-                },
-                error: function() {
-                    alert('Failed to load template preview.');
+                });
+            });
+
+            // Enhanced modal close functionality
+            $('.spt-modal-close').on('click', function() {
+                var $modal = $(this).closest('.spt-modal');
+                hideModal($modal);
+            });
+
+            // Close modal when clicking outside
+            $('.spt-modal').on('click', function(e) {
+                if (e.target === this) {
+                    hideModal($(this));
                 }
             });
-        });
+
+            // Escape key to close modal
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    var $visibleModal = $('.spt-modal:visible');
+                    if ($visibleModal.length) {
+                        hideModal($visibleModal);
+                    }
+                }
+            });
+
+            // Helper function to get the correct nonce
+            function getSptNonce() {
+                // Try multiple possible nonce variable names
+                if (typeof spt_admin_modal !== 'undefined' && spt_admin_modal.nonce) {
+                    return spt_admin_modal.nonce;
+                }
+                if (typeof spt_ajax_nonce !== 'undefined') {
+                    return spt_ajax_nonce;
+                }
+                if (typeof spt_admin !== 'undefined' && spt_admin.nonce) {
+                    return spt_admin.nonce;
+                }
+                if (typeof ajaxurl !== 'undefined') {
+                    // Look for nonce in existing forms or elements
+                    var nonceInput = $('input[name*="nonce"], input[name*="_wpnonce"]').first();
+                    if (nonceInput.length) {
+                        return nonceInput.val();
+                    }
+                }
+
+                console.warn('SPT: No nonce found. AJAX requests may fail.');
+                return '';
+            }
+
+            // Helper function to show loading state in modal
+            function showModalLoading($modal) {
+                var $content = $modal.find('.spt-modal-content');
+
+                // Remove existing loading overlay
+                $content.find('.spt-modal-loading').remove();
+
+                // Add loading overlay
+                var $loading = $('<div class="spt-modal-loading">' +
+                    '<div class="spt-modal-loading-content">' +
+                        '<div class="spt-modal-loading-spinner"></div>' +
+                        '<div>Loading template preview...</div>' +
+                    '</div>' +
+                '</div>');
+
+                $content.css('position', 'relative').append($loading);
+            }
+
+            // Helper function to hide loading state
+            function hideModalLoading($modal) {
+                $modal.find('.spt-modal-loading').remove();
+            }
+
+            // Helper function to hide modal with cleanup
+            function hideModal($modal) {
+                // Clear any loading states
+                hideModalLoading($modal);
+
+                // SOLUTION 4: Clear content to prevent showing previous template
+                $modal.find('#preview-template-title').text('');
+                $modal.find('#preview-template-content').html('');
+
+                // Hide modal
+                $modal.hide();
+            }
+
+            // Helper function to format conditions (if not already defined)
+            function formatConditions(conditions) {
+                if (!conditions) {
+                    return 'All Products';
+                }
+
+                try {
+                    var conditionsObj = typeof conditions === 'string' ? JSON.parse(conditions) : conditions;
+
+                    if (!conditionsObj || typeof conditionsObj !== 'object') {
+                        return 'All Products';
+                    }
+
+                    var type = conditionsObj.type || 'all';
+                    var value = conditionsObj.value || '';
+                    var operator = conditionsObj.operator || 'equals';
+
+                    switch (type) {
+                        case 'product_id':
+                            return 'Product ID ' + operator + ' ' + value;
+                        case 'product_category':
+                            return 'Product Category ' + operator + ' ' + value;
+                        case 'product_tag':
+                            return 'Product Tag ' + operator + ' ' + value;
+                        case 'product_type':
+                            return 'Product Type: ' + value;
+                        case 'all':
+                        default:
+                            return 'All Products';
+                    }
+                } catch (e) {
+                    return 'All Products';
+                }
+            }
+
+            // Template installation with improved error handling
+            $('.template-install').on('click', function() {
+                var templateKey = $(this).data('template-key');
+                var templateName = $(this).data('template-name');
+                var $button = $(this);
+
+                if (!confirm('Install template "' + templateName + '"? This will add new tab rules to your site.')) {
+                    return;
+                }
+
+                $button.prop('disabled', true).text('Installing...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'spt_install_builtin_template',
+                        template_key: templateKey,
+                        nonce: getSptNonce()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Template installed successfully! ' + response.data.imported + ' rules imported.');
+                            location.reload();
+                        } else {
+                            alert('Error: ' + (response.data || 'Unknown error occurred'));
+                            $button.prop('disabled', false).text('Install');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('An error occurred. Please try again.');
+                        console.error('Template installation error:', error);
+                        $button.prop('disabled', false).text('Install');
+                    }
+                });
+            });
+
+            // Additional: Remove any unwanted close buttons that might be in the preview content
+            // This addresses the cross button issue mentioned
+            $(document).on('DOMNodeInserted', function(e) {
+                var $target = $(e.target);
+
+                // Remove any unwanted close buttons that might appear in preview content
+                if ($target.hasClass('template-preview-details') || $target.closest('.template-preview-details').length) {
+                    $target.find('.close, .modal-close, .preview-close').not('.spt-modal-close').remove();
+                }
+            });
+
+          
+            
+            
+            
+            
+            
             
             
         });            
 
-        // Function to format conditions for display
-        function formatConditions(conditionsJson) {
-            try {
-                var conditions = JSON.parse(conditionsJson);
-
-                switch(conditions.type) {
-                    case 'all':
-                        return 'All Products';
-                    case 'category':
-                        return 'Category-based condition';
-                    case 'price_range':
-                        return 'Price:  + (conditions.min || 0) + ' -  + (conditions.max || '∞');
-                    case 'stock_status':
-                        return 'Stock Status: ' + (conditions.value || 'In Stock');
-                    case 'custom_field':
-                        return 'Custom Field: ' + (conditions.key || 'undefined');
-                    case 'product_type':
-                        return 'Product Type condition';
-                    case 'tags':
-                        return 'Product Tags condition';
-                    case 'featured':
-                        return conditions.value ? 'Featured Products' : 'Non-Featured Products';
-                    case 'sale':
-                        return conditions.value ? 'On Sale Products' : 'Regular Price Products';
-                    default:
-                        return 'Custom condition: ' + conditions.type;
-                }
-            } catch(e) {
-                return 'All Products';
-            }
-        }            
+          
             
             
             

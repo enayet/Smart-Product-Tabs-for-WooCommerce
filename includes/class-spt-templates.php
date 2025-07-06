@@ -1141,77 +1141,64 @@ class SPT_Templates {
      * Add this method to your SPT_Templates class
      */
     public function ajax_get_template_preview() {
-        check_ajax_referer('spt_ajax_nonce', 'nonce');
-
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Insufficient permissions');
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'spt_ajax_nonce')) {
+            wp_send_json_error(__('Security check failed', 'smart-product-tabs'));
             return;
         }
 
-        $template_key = sanitize_text_field($_POST['template_key'] ?? '');
-        $filename = sanitize_file_name($_POST['filename'] ?? '');
+        $template_key = sanitize_text_field($_POST['template_key']);
 
-        if ($template_key) {
-            // Built-in template preview
-            $builtin_templates = $this->get_builtin_templates();
+        if (empty($template_key)) {
+            wp_send_json_error(__('Invalid template key', 'smart-product-tabs'));
+            return;
+        }
+
+        try {
+            // Get built-in templates
+            $templates_manager = new SPT_Templates();
+            $builtin_templates = $templates_manager->get_builtin_templates();
 
             if (!isset($builtin_templates[$template_key])) {
                 wp_send_json_error(__('Template not found', 'smart-product-tabs'));
                 return;
             }
 
-            $template_data = $builtin_templates[$template_key];
+            $template = $builtin_templates[$template_key];
 
-            // Load template file to get rules
-            $template_file = SPT_PLUGIN_PATH . 'assets/templates/' . $template_key . '-pack.json';
-            if (file_exists($template_file)) {
-                $file_data = $this->load_template_file($template_file);
-                if (!is_wp_error($file_data)) {
-                    $template_data['rules'] = $file_data['rules'] ?? array();
+            // Prepare template data for preview
+            $preview_data = array(
+                'name' => $template['name'],
+                'description' => $template['description'] ?? '',
+                'version' => $template['version'] ?? '1.0',
+                'author' => $template['author'] ?? 'Smart Product Tabs',
+                'tabs_count' => 0,
+                'categories' => $template['categories'] ?? array(),
+                'rules' => array()
+            );
+
+            // Load and parse template rules if available
+            if (isset($template['rules']) && is_array($template['rules'])) {
+                $preview_data['rules'] = $template['rules'];
+                $preview_data['tabs_count'] = count($template['rules']);
+            } elseif (isset($template['file']) && file_exists($template['file'])) {
+                // Load from file if rules not directly available
+                $file_content = file_get_contents($template['file']);
+                $template_data = json_decode($file_content, true);
+
+                if ($template_data && isset($template_data['rules'])) {
+                    $preview_data['rules'] = $template_data['rules'];
+                    $preview_data['tabs_count'] = count($template_data['rules']);
                 }
             }
 
-        } elseif ($filename) {
-            // Saved template preview
-            $filepath = $this->templates_dir . $filename;
-            $template_data = $this->load_template_file($filepath);
+            wp_send_json_success($preview_data);
 
-            if (is_wp_error($template_data)) {
-                wp_send_json_error($template_data->get_error_message());
-                return;
-            }
-        } else {
-            wp_send_json_error(__('No template specified', 'smart-product-tabs'));
-            return;
+        } catch (Exception $e) {
+            error_log('Template preview error: ' . $e->getMessage());
+            wp_send_json_error(__('Failed to load template preview', 'smart-product-tabs'));
         }
-
-        // Prepare preview data
-        $preview = array(
-            'name' => $template_data['name'] ?? __('Unknown Template', 'smart-product-tabs'),
-            'description' => $template_data['description'] ?? '',
-            'version' => $template_data['version'] ?? '1.0',
-            'author' => $template_data['author'] ?? '',
-            'tabs_count' => count($template_data['rules'] ?? array()),
-            'rules' => array()
-        );
-
-        // Process rules for preview
-        if (isset($template_data['rules']) && is_array($template_data['rules'])) {
-            foreach ($template_data['rules'] as $rule) {
-                $conditions_text = $this->format_conditions_preview($rule['conditions'] ?? '');
-
-                $preview['rules'][] = array(
-                    'tab_title' => $rule['tab_title'] ?? '',
-                    'conditions' => $conditions_text,
-                    'priority' => $rule['priority'] ?? 10,
-                    'tab_content' => wp_trim_words(strip_tags($rule['tab_content'] ?? ''), 30, '...'),
-                    'is_active' => $rule['is_active'] ?? 1
-                );
-            }
-        }
-
-        wp_send_json_success($preview);
-    }  
+    } 
     
     
     /**

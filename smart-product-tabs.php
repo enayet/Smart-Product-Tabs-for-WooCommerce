@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('SPT_VERSION', '1.1.6');
+define('SPT_VERSION', '1.1.7');
 define('SPT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SPT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('SPT_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -129,11 +129,20 @@ class Smart_Product_Tabs {
             wp_enqueue_style('spt-admin', SPT_PLUGIN_URL . 'assets/css/admin.css', array(), SPT_VERSION);
             wp_enqueue_script('spt-admin', SPT_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
             
-            // Localize script for AJAX
-            wp_localize_script('spt-admin', 'spt_ajax', array(
+            // CRITICAL: Localize the nonce for AJAX calls
+            wp_localize_script('spt-admin', 'spt_admin_ajax', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('spt_ajax_nonce')
-            ));
+                'nonce' => wp_create_nonce('spt_ajax_nonce'),
+                'strings' => array(
+                    'loading' => __('Loading...', 'smart-product-tabs'),
+                    'error' => __('An error occurred', 'smart-product-tabs'),
+                    'confirm_delete' => __('Are you sure?', 'smart-product-tabs'),
+                    'success' => __('Success!', 'smart-product-tabs')
+                )
+            ));            
+            
+            
+            
         }
     }
     
