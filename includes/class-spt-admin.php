@@ -1062,19 +1062,491 @@ class SPT_Admin {
     }
     
     /**
-     * Render templates tab
+     * COMPLETE Templates Tab Implementation
+     * Replace the render_templates_tab() method in class-spt-admin.php
      */
     private function render_templates_tab() {
+        // Get templates instance
+        $templates = new SPT_Templates();
+        $builtin_templates = $templates->get_builtin_templates();
+        $saved_templates = $templates->get_saved_templates();
         ?>
         <div class="spt-templates">
-            <h2><?php _e('Templates', 'smart-product-tabs'); ?></h2>
-            <p><?php _e('Import pre-built templates or export your current configuration.', 'smart-product-tabs'); ?></p>
-            
-            <div class="template-actions">
+            <div class="templates-header">
+                <h2><?php _e('Templates', 'smart-product-tabs'); ?></h2>
+                <p><?php _e('Import pre-built templates or export your current configuration.', 'smart-product-tabs'); ?></p>
+            </div>
+
+            <!-- Built-in Templates -->
+            <div class="builtin-templates-section">
                 <h3><?php _e('Built-in Templates', 'smart-product-tabs'); ?></h3>
-                <!-- Template content will be handled by SPT_Templates class -->
+                <p><?php _e('Professional templates ready to install with one click.', 'smart-product-tabs'); ?></p>
+
+                <div class="template-grid">
+                    <?php foreach ($builtin_templates as $key => $template): ?>
+                    <div class="template-card" data-template-key="<?php echo esc_attr($key); ?>">
+                        <div class="template-preview">
+                            <?php if (isset($template['preview_image'])): ?>
+                                <img src="<?php echo esc_url($template['preview_image']); ?>" alt="<?php echo esc_attr($template['name']); ?>">
+                            <?php else: ?>
+                                <div class="template-icon">
+                                    <?php 
+                                    $icons = array(
+                                        'electronics' => '⚡',
+                                        'fashion' => '👕', 
+                                        'digital' => '💾'
+                                    );
+                                    echo $icons[$key] ?? '📋';
+                                    ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="template-info">
+                            <h4><?php echo esc_html($template['name']); ?></h4>
+                            <p><?php echo esc_html($template['description']); ?></p>
+
+                            <div class="template-meta">
+                                <span class="tabs-count"><?php echo sprintf(__('%d tabs', 'smart-product-tabs'), $template['tabs_count']); ?></span>
+                                <span class="template-version">v<?php echo esc_html($template['version']); ?></span>
+                            </div>
+
+                            <div class="template-actions">
+                                <button type="button" class="button-primary template-install" 
+                                        data-template-key="<?php echo esc_attr($key); ?>"
+                                        data-template-name="<?php echo esc_attr($template['name']); ?>">
+                                    <?php _e('Install Template', 'smart-product-tabs'); ?>
+                                </button>
+                                <button type="button" class="button template-preview-btn" 
+                                        data-template-key="<?php echo esc_attr($key); ?>">
+                                    <?php _e('Preview', 'smart-product-tabs'); ?>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Import/Export Section -->
+            <div class="import-export-section">
+                <div class="import-section">
+                    <h4><?php _e('Import Template', 'smart-product-tabs'); ?></h4>
+
+                    <!-- File Upload -->
+                    <form class="template-upload-form" enctype="multipart/form-data">
+                        <table class="form-table">
+                            <tr>
+                                <th><?php _e('Upload File', 'smart-product-tabs'); ?></th>
+                                <td>
+                                    <div class="file-upload-area">
+                                        <input type="file" name="template_file" accept=".json" id="template-file-input">
+                                        <p><?php _e('Select a .json template file to upload', 'smart-product-tabs'); ?></p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><?php _e('Options', 'smart-product-tabs'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="replace_existing" value="1">
+                                        <?php _e('Replace existing rules with same names', 'smart-product-tabs'); ?>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                        <p class="submit">
+                            <input type="submit" class="button-primary" value="<?php _e('Import Template', 'smart-product-tabs'); ?>">
+                        </p>
+                    </form>
+
+                    <!-- Text Import -->
+                    <h5><?php _e('Or paste JSON data:', 'smart-product-tabs'); ?></h5>
+                    <form class="template-text-form">
+                        <textarea name="template_data" rows="8" cols="50" placeholder="<?php _e('Paste template JSON data here...', 'smart-product-tabs'); ?>"></textarea>
+                        <br><br>
+                        <label>
+                            <input type="checkbox" name="replace_existing" value="1">
+                            <?php _e('Replace existing rules', 'smart-product-tabs'); ?>
+                        </label>
+                        <br><br>
+                        <input type="submit" class="button-primary" value="<?php _e('Import from Text', 'smart-product-tabs'); ?>">
+                    </form>
+                </div>
+
+                <div class="export-section">
+                    <h4><?php _e('Export Current Rules', 'smart-product-tabs'); ?></h4>
+
+                    <form id="export-form">
+                        <table class="form-table">
+                            <tr>
+                                <th><?php _e('Export Format', 'smart-product-tabs'); ?></th>
+                                <td>
+                                    <select name="export_format" id="export_format">
+                                        <option value="file"><?php _e('Download File', 'smart-product-tabs'); ?></option>
+                                        <option value="json"><?php _e('Show JSON (copy/paste)', 'smart-product-tabs'); ?></option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><?php _e('Include Settings', 'smart-product-tabs'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" name="export_include_settings" id="export_include_settings" value="1" checked>
+                                        <?php _e('Include default tab settings', 'smart-product-tabs'); ?>
+                                    </label>
+                                    <p class="description"><?php _e('Export tab ordering and default tab customizations', 'smart-product-tabs'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                        <p class="submit">
+                            <button type="button" class="button-primary" id="export-rules">
+                                <?php _e('Export Rules', 'smart-product-tabs'); ?>
+                            </button>
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Saved Templates -->
+            <?php if (!empty($saved_templates)): ?>
+            <div class="saved-templates-section">
+                <h3><?php _e('Saved Templates', 'smart-product-tabs'); ?></h3>
+                <div class="saved-templates-list">
+                    <table class="wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th><?php _e('Template Name', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Rules', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Size', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Date', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Actions', 'smart-product-tabs'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($saved_templates as $template): ?>
+                            <tr>
+                                <td><strong><?php echo esc_html($template['name']); ?></strong></td>
+                                <td><?php echo number_format($template['rules_count']); ?></td>
+                                <td><?php echo size_format($template['size']); ?></td>
+                                <td><?php echo date('M j, Y', $template['modified']); ?></td>
+                                <td>
+                                    <a href="<?php echo admin_url('admin.php?page=smart-product-tabs&spt_action=download_template&file=' . urlencode($template['file'])); ?>" 
+                                       class="button"><?php _e('Download', 'smart-product-tabs'); ?></a>
+                                    <button type="button" class="button template-delete" 
+                                            data-file="<?php echo esc_attr($template['file']); ?>"><?php _e('Delete', 'smart-product-tabs'); ?></button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Template Preview Modal -->
+            <div id="template-preview-modal" class="spt-modal" style="display: none;">
+                <div class="spt-modal-content">
+                    <div class="spt-modal-header">
+                        <h3 id="preview-template-title"></h3>
+                        <button type="button" class="spt-modal-close">&times;</button>
+                    </div>
+                    <div class="spt-modal-body">
+                        <div id="preview-template-content"></div>
+                    </div>
+                    <div class="spt-modal-footer">
+                        <button type="button" class="button-primary" id="install-from-preview">
+                            <?php _e('Install This Template', 'smart-product-tabs'); ?>
+                        </button>
+                        <button type="button" class="button spt-modal-close">
+                            <?php _e('Close', 'smart-product-tabs'); ?>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <style>
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .template-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        .template-card:hover {
+            border-color: #0073aa;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .template-preview {
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            position: relative;
+        }
+
+        .template-icon {
+            font-size: 48px;
+        }
+
+        .template-info {
+            padding: 20px;
+        }
+
+        .template-info h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .template-info p {
+            margin: 0 0 15px 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .template-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .template-actions .button {
+            flex: 1;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .import-export-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .import-section, .export-section {
+            padding: 20px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #0073aa;
+            background: #f8f9fa;
+        }
+
+        .spt-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spt-modal-content {
+            background: #fff;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .spt-modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .spt-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .spt-modal-body {
+            padding: 20px;
+        }
+
+        .spt-modal-footer {
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .template-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .import-export-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        </style>
+
+        <script>
+        jQuery(document).ready(function($) {
+            // Template installation
+            $('.template-install').on('click', function() {
+                var templateKey = $(this).data('template-key');
+                var templateName = $(this).data('template-name');
+
+                if (!confirm('Install template "' + templateName + '"? This will add new tab rules to your site.')) {
+                    return;
+                }
+
+                $(this).prop('disabled', true).text('Installing...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'spt_install_builtin_template',
+                        template_key: templateKey,
+                        nonce: '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Template installed successfully! ' + response.data.imported + ' rules imported.');
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred. Please try again.');
+                    },
+                    complete: function() {
+                        $('.template-install').prop('disabled', false).text('Install Template');
+                    }
+                });
+            });
+
+            // File upload form
+            $('.template-upload-form').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+                formData.append('action', 'spt_import_template');
+                formData.append('nonce', '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>');
+
+                var $submitBtn = $(this).find('input[type="submit"]');
+                $submitBtn.prop('disabled', true).val('Uploading...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Import completed: ' + response.data.imported + ' rules imported, ' + response.data.skipped + ' skipped');
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        alert('Upload failed. Please try again.');
+                    },
+                    complete: function() {
+                        $submitBtn.prop('disabled', false).val('Import Template');
+                    }
+                });
+            });
+
+            // Export functionality
+            $('#export-rules').on('click', function() {
+                var includeSettings = $('#export_include_settings').is(':checked');
+                var exportFormat = $('#export_format').val();
+
+                $(this).prop('disabled', true).text('Exporting...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'spt_export_rules',
+                        include_settings: includeSettings ? '1' : '0',
+                        export_format: exportFormat,
+                        nonce: '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (exportFormat === 'file') {
+                                window.open(response.data.download_url);
+                                alert('Export completed successfully!');
+                            } else {
+                                var newWindow = window.open('', '_blank');
+                                newWindow.document.write('<pre>' + response.data.data + '</pre>');
+                                newWindow.document.title = 'Export Data - ' + response.data.filename;
+                                alert('Export data opened in new tab. Copy and save the content.');
+                            }
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        alert('Export failed. Please try again.');
+                    },
+                    complete: function() {
+                        $('#export-rules').prop('disabled', false).text('Export Rules');
+                    }
+                });
+            });
+
+            // Modal functionality
+            $('.template-preview-btn').on('click', function() {
+                var templateKey = $(this).data('template-key');
+                // Show preview modal with template details
+                $('#template-preview-modal').show();
+            });
+
+            $('.spt-modal-close').on('click', function() {
+                $('#template-preview-modal').hide();
+            });
+        });
+        </script>
         <?php
     }
     
