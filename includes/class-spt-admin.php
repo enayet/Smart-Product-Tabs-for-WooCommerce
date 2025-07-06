@@ -1545,7 +1545,125 @@ class SPT_Admin {
             $('.spt-modal-close').on('click', function() {
                 $('#template-preview-modal').hide();
             });
+
+            
+            
+            
+            
+            
+        // Template preview functionality
+        $('.template-preview-btn').on('click', function() {
+            var templateKey = $(this).data('template-key');
+
+            // Get template data via AJAX
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'spt_get_template_preview',
+                    template_key: templateKey,
+                    nonce: '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var template = response.data;
+
+                        // Populate modal content
+                        $('#preview-template-title').text(template.name);
+
+                        var content = '<div class="template-preview-details">';
+                        content += '<p><strong>Description:</strong> ' + template.description + '</p>';
+                        content += '<p><strong>Version:</strong> ' + template.version + '</p>';
+                        content += '<p><strong>Author:</strong> ' + template.author + '</p>';
+                        content += '<p><strong>Number of Tabs:</strong> ' + template.tabs_count + '</p>';
+
+                        if (template.categories && template.categories.length > 0) {
+                            content += '<p><strong>Categories:</strong> ' + template.categories.join(', ') + '</p>';
+                        }
+
+                        content += '<h4>Tabs Included:</h4>';
+                        content += '<div class="tabs-preview-list">';
+
+                        if (template.rules && template.rules.length > 0) {
+                            template.rules.forEach(function(rule, index) {
+                                content += '<div class="tab-preview-item">';
+                                content += '<h5>' + (index + 1) + '. ' + rule.tab_title + '</h5>';
+                                content += '<p><strong>Conditions:</strong> ' + formatConditions(rule.conditions) + '</p>';
+                                content += '<p><strong>Priority:</strong> ' + rule.priority + '</p>';
+
+                                // Show preview of content (truncated)
+                                var contentPreview = rule.tab_content.replace(/<[^>]*>/g, ''); // Strip HTML
+                                if (contentPreview.length > 200) {
+                                    contentPreview = contentPreview.substring(0, 200) + '...';
+                                }
+                                content += '<p><strong>Content Preview:</strong> ' + contentPreview + '</p>';
+                                content += '</div>';
+                            });
+                        } else {
+                            content += '<p>No tab rules found in this template.</p>';
+                        }
+
+                        content += '</div>';
+                        content += '</div>';
+
+                        $('#preview-template-content').html(content);
+
+                        // Set up install button
+                        $('#install-from-preview').off('click').on('click', function() {
+                            $('#template-preview-modal').hide();
+                            // Trigger the install for this template
+                            $('.template-install[data-template-key="' + templateKey + '"]').click();
+                        });
+
+                        // Show modal
+                        $('#template-preview-modal').show();
+                    } else {
+                        alert('Error loading template preview: ' + response.data);
+                    }
+                },
+                error: function() {
+                    alert('Failed to load template preview.');
+                }
+            });
         });
+            
+            
+        });            
+
+        // Function to format conditions for display
+        function formatConditions(conditionsJson) {
+            try {
+                var conditions = JSON.parse(conditionsJson);
+
+                switch(conditions.type) {
+                    case 'all':
+                        return 'All Products';
+                    case 'category':
+                        return 'Category-based condition';
+                    case 'price_range':
+                        return 'Price:  + (conditions.min || 0) + ' -  + (conditions.max || '∞');
+                    case 'stock_status':
+                        return 'Stock Status: ' + (conditions.value || 'In Stock');
+                    case 'custom_field':
+                        return 'Custom Field: ' + (conditions.key || 'undefined');
+                    case 'product_type':
+                        return 'Product Type condition';
+                    case 'tags':
+                        return 'Product Tags condition';
+                    case 'featured':
+                        return conditions.value ? 'Featured Products' : 'Non-Featured Products';
+                    case 'sale':
+                        return conditions.value ? 'On Sale Products' : 'Regular Price Products';
+                    default:
+                        return 'Custom condition: ' + conditions.type;
+                }
+            } catch(e) {
+                return 'All Products';
+            }
+        }            
+            
+            
+            
         </script>
         <?php
     }

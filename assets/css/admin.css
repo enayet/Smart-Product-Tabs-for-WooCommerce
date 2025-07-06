@@ -1653,3 +1653,94 @@
         background: #000;
     }
 }
+
+
+
+
+/* Add these styles to your admin.css or include in the template tab */
+
+.template-preview-details {
+    line-height: 1.6;
+}
+
+.template-preview-details p {
+    margin-bottom: 10px;
+    padding: 5px 0;
+}
+
+.template-preview-details h4 {
+    margin: 20px 0 15px 0;
+    color: #333;
+    border-bottom: 2px solid #0073aa;
+    padding-bottom: 5px;
+}
+
+.tabs-preview-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.tab-preview-item {
+    background: #f9f9f9;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.tab-preview-item:hover {
+    background: #f0f0f0;
+    border-color: #0073aa;
+}
+
+.tab-preview-item h5 {
+    margin: 0 0 10px 0;
+    color: #0073aa;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tab-preview-item p {
+    margin: 8px 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.tab-preview-item strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.spt-modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.spt-modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+    .spt-modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .tabs-preview-list {
+        max-height: 300px;
+    }
+    
+    .tab-preview-item {
+        padding: 10px;
+    }
+    
+    .spt-modal-header,
+    .spt-modal-body,
+    .spt-modal-footer {
+        padding: 15px;
+    }
+}

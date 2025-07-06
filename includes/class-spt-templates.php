@@ -24,6 +24,8 @@ class SPT_Templates {
         add_action('wp_ajax_spt_import_template', array($this, 'ajax_import_template'));
         add_action('wp_ajax_spt_export_rules', array($this, 'ajax_export_rules'));
         add_action('wp_ajax_spt_install_builtin_template', array($this, 'ajax_install_builtin_template'));
+        add_action('wp_ajax_spt_get_template_preview', array($this, 'ajax_get_template_preview'));
+
         add_action('init', array($this, 'init'));
     }
     
@@ -992,4 +994,52 @@ class SPT_Templates {
         
         return $this->import_template_data($template_data);
     }
+    
+    
+    
+    /**
+     * AJAX handler for template preview
+     * Add this method to your SPT_Templates class
+     */
+    public function ajax_get_template_preview() {
+        check_ajax_referer('spt_ajax_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Insufficient permissions');
+            return;
+        }
+
+        $template_key = sanitize_text_field($_POST['template_key'] ?? '');
+
+        if (empty($template_key)) {
+            wp_send_json_error(__('Template key is required', 'smart-product-tabs'));
+            return;
+        }
+
+        $builtin_templates = $this->get_builtin_templates();
+
+        if (!isset($builtin_templates[$template_key])) {
+            wp_send_json_error(__('Template not found', 'smart-product-tabs'));
+            return;
+        }
+
+        $template = $builtin_templates[$template_key];
+
+        // Prepare template data for preview
+        $preview_data = array(
+            'name' => $template['name'],
+            'description' => $template['description'],
+            'version' => $template['version'],
+            'author' => $template['author'],
+            'tabs_count' => $template['tabs_count'],
+            'categories' => $template['categories'] ?? array(),
+            'rules' => $template['rules']
+        );
+
+        wp_send_json_success($preview_data);
+    }    
+    
+    
+    
+    
 }
