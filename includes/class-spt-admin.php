@@ -61,6 +61,14 @@ class SPT_Admin {
         if (isset($_POST['save_analytics_settings']) && wp_verify_nonce($_POST['_wpnonce'], 'spt_analytics_settings')) {
             $this->save_analytics_settings();
         }        
+        
+        // Handle template download
+        if (isset($_GET['spt_action']) && $_GET['spt_action'] === 'download_template' && 
+            isset($_GET['file']) && wp_verify_nonce($_GET['_wpnonce'], 'spt_download_template')) {
+            $this->download_template_file($_GET['file']);
+        }        
+        
+        
     }
     
     
@@ -2090,6 +2098,102 @@ class SPT_Admin {
             exit;
         }
     }    
+    
+    
+    /**
+     * Download template file
+     */
+    private function download_template_file($filename) {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+        }
+
+        $filename = sanitize_file_name($filename);
+
+        // Validate filename to prevent directory traversal
+        if (strpos($filename, '..') !== false || strpos($filename, '/') !== false) {
+            wp_die(__('Invalid filename', 'smart-product-tabs'));
+        }
+
+        $templates_dir = SPT_PLUGIN_PATH . 'assets/templates/';
+        $filepath = $templates_dir . $filename;
+
+        if (!file_exists($filepath)) {
+            wp_die(__('Template file not found', 'smart-product-tabs'));
+        }
+
+        // Set headers for download
+        header('Content-Type: application/json');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($filepath));
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+
+        // Output file content
+        readfile($filepath);
+        exit;
+    }    
+    
+    
+    /**
+     * Fix 7: Update the saved templates table HTML to include proper nonce
+     * Update in class-spt-admin.php templates tab section
+     */
+    private function render_saved_templates_table($saved_templates) {
+        if (empty($saved_templates)) {
+            echo '<p>' . __('No saved templates found.', 'smart-product-tabs') . '</p>';
+            return;
+        }
+        ?>
+        <div class="saved-templates">
+            <h4><?php _e('Saved Templates', 'smart-product-tabs'); ?></h4>
+            <div class="table-responsive">
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th><?php _e('Template Name', 'smart-product-tabs'); ?></th>
+                            <th><?php _e('Description', 'smart-product-tabs'); ?></th>
+                            <th><?php _e('Rules', 'smart-product-tabs'); ?></th>
+                            <th><?php _e('Size', 'smart-product-tabs'); ?></th>
+                            <th><?php _e('Modified', 'smart-product-tabs'); ?></th>
+                            <th><?php _e('Actions', 'smart-product-tabs'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($saved_templates as $template): ?>
+                        <tr>
+                            <td><strong><?php echo esc_html($template['name']); ?></strong></td>
+                            <td><?php echo esc_html($template['description']); ?></td>
+                            <td><?php echo intval($template['rules_count']); ?></td>
+                            <td><?php echo size_format($template['size']); ?></td>
+                            <td><?php echo date('M j, Y g:i A', $template['modified']); ?></td>
+                            <td>
+                                <a href="<?php echo wp_nonce_url(
+                                    admin_url('admin.php?page=smart-product-tabs&tab=templates&spt_action=download_template&file=' . urlencode($template['file'])), 
+                                    'spt_download_template'
+                                ); ?>" class="button"><?php _e('Download', 'smart-product-tabs'); ?></a>
+
+                                <button type="button" class="button template-delete" 
+                                        data-file="<?php echo esc_attr($template['file']); ?>">
+                                    <?php _e('Delete', 'smart-product-tabs'); ?>
+                                </button>
+
+                                <button type="button" class="button template-preview" 
+                                        data-file="<?php echo esc_attr($template['file']); ?>">
+                                    <?php _e('Preview', 'smart-product-tabs'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php
+    }    
+    
+    
+    
     
     
 }

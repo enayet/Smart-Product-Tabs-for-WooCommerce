@@ -458,6 +458,7 @@
             var formData = new FormData(this);
             formData.append('action', 'spt_import_template');
             formData.append('nonce', spt_ajax.nonce);
+            formData.append('import_type', 'file');
             
             var $submitBtn = $(this).find('input[type="submit"]');
             $submitBtn.prop('disabled', true).val('Uploading...');
@@ -569,5 +570,344 @@
             SPTExport.init();
         }
     });
+    
+    
+    
+    $(document).ready(function() {
+
+        // Fix 1: Add missing text import handler
+        $('.template-text-form').on('submit', function(e) {
+            e.preventDefault();
+
+            var templateData = $(this).find('textarea[name="template_data"]').val();
+            var replaceExisting = $(this).find('input[name="replace_existing"]').is(':checked');
+            var $submitBtn = $(this).find('input[type="submit"]');
+
+            if (!templateData.trim()) {
+                alert('Please paste template JSON data');
+                return;
+            }
+
+            // Validate JSON before sending
+            try {
+                JSON.parse(templateData);
+            } catch (e) {
+                alert('Invalid JSON data. Please check your template format.');
+                return;
+            }
+
+            $submitBtn.prop('disabled', true).val('Importing...');
+
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'spt_import_template',
+                    import_type: 'text',
+                    template_data: templateData,
+                    replace_existing: replaceExisting ? '1' : '0',
+                    nonce: spt_ajax.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var message = 'Import completed: ' + response.data.imported + ' rules imported';
+                        if (response.data.skipped > 0) {
+                            message += ', ' + response.data.skipped + ' skipped';
+                        }
+                        alert(message);
+
+                        // Clear form
+                        $(this).find('textarea[name="template_data"]').val('');
+
+                        // Reload page
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.data);
+                    }
+                },
+                error: function() {
+                    alert('Import failed. Please try again.');
+                },
+                complete: function() {
+                    $submitBtn.prop('disabled', false).val('Import from Text');
+                }
+            });
+        });    
+    
+        
+        // Fix 2: Add missing delete template handler
+        $(document).on('click', '.template-delete', function(e) {
+            e.preventDefault();
+
+            var filename = $(this).data('file');
+            var $row = $(this).closest('tr');
+            var $button = $(this);
+
+            if (!confirm('Delete template "' + filename + '"? This cannot be undone.')) {
+                return;
+            }
+
+            $button.prop('disabled', true).text('Deleting...');
+
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'spt_delete_template',
+                    filename: filename,
+                    nonce: spt_ajax.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $row.fadeOut(300, function() { 
+                            $(this).remove(); 
+
+                            // Check if table is empty
+                            if ($('.saved-templates tbody tr').length === 0) {
+                                $('.saved-templates').replaceWith('<p>No saved templates found.</p>');
+                            }
+                        });
+                    } else {
+                        alert('Error: ' + response.data);
+                    }
+                },
+                error: function() {
+                    alert('Delete failed. Please try again.');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text('Delete');
+                }
+            });
+        });        
+        
+        
+        // Fix 3: Enhanced export with better error handling
+        $('#export-rules').on('click', function() {
+            var includeSettings = $('#export_include_settings').is(':checked');
+            var exportFormat = $('#export_format').val();
+            var $button = $(this);
+
+            $button.prop('disabled', true).text('Exporting...');
+
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'spt_export_rules',
+                    include_settings: includeSettings ? '1' : '0',
+                    export_format: exportFormat,
+                    nonce: spt_ajax.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        if (exportFormat === 'file' && response.data.download_url) {
+                            // Create download link
+                            var link = document.createElement('a');
+                            link.href = response.data.download_url;
+                            link.download = response.data.filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                            alert('Export file downloaded: ' + response.data.filename);
+                        } else if (response.data.data) {
+                            // Show JSON in modal or new window
+                            showExportModal(response.data.data, response.data.filename);
+                        }
+                    } else {
+                        alert('Error: ' + response.data);
+                    }
+                },
+                error: function() {
+                    alert('Export failed. Please try again.');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text('Export Rules');
+                }
+            });
+        });        
+        
+        
+        
+        // Helper function for export modal
+        function showExportModal(jsonData, filename) {
+            var modal = $('<div class="spt-export-modal">')
+                .css({
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'rgba(0,0,0,0.5)',
+                    zIndex: 100000
+                });
+
+            var content = $('<div class="spt-export-content">')
+                .css({
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: '#fff',
+                    padding: '20px',
+                    maxWidth: '80%',
+                    maxHeight: '80%',
+                    overflow: 'auto',
+                    borderRadius: '5px'
+                });
+
+            var header = $('<h3>').text('Export Data - ' + filename);
+            var textarea = $('<textarea>')
+                .val(jsonData)
+                .css({
+                    width: '600px',
+                    height: '400px',
+                    fontFamily: 'monospace',
+                    fontSize: '12px'
+                });
+
+            var closeBtn = $('<button type="button" class="button">Close</button>')
+                .on('click', function() { modal.remove(); });
+
+            var copyBtn = $('<button type="button" class="button-primary">Copy to Clipboard</button>')
+                .on('click', function() {
+                    textarea.select();
+                    document.execCommand('copy');
+                    alert('Copied to clipboard!');
+                });
+
+            content.append(header, textarea, $('<br><br>'), copyBtn, ' ', closeBtn);
+            modal.append(content);
+            $('body').append(modal);
+
+            // Click outside to close
+            modal.on('click', function(e) {
+                if (e.target === modal[0]) {
+                    modal.remove();
+                }
+            });
+        }        
+        
+        
+        
+       // Fix 4: Improve file upload with progress and validation
+        $('.template-upload-form').on('submit', function(e) {
+            e.preventDefault();
+
+            var fileInput = $(this).find('input[type="file"]')[0];
+            var replaceExisting = $(this).find('input[name="replace_existing"]').is(':checked');
+            var $submitBtn = $(this).find('input[type="submit"]');
+
+            if (!fileInput.files.length) {
+                alert('Please select a file to upload');
+                return;
+            }
+
+            var file = fileInput.files[0];
+
+            // Validate file
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                alert('Please select a JSON file');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                alert('File too large. Maximum size is 5MB');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('template_file', file);
+            formData.append('action', 'spt_import_template');
+            formData.append('import_type', 'file');
+            formData.append('replace_existing', replaceExisting ? '1' : '0');
+            formData.append('nonce', spt_ajax.nonce);
+            $submitBtn.prop('disabled', true).val('Uploading...');
+
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
+                    // Upload progress
+                    xhr.upload.addEventListener("progress", function(evt) {
+                        if (evt.lengthComputable) {
+                            var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                            $submitBtn.val('Uploading... ' + percentComplete + '%');
+                        }
+                    }, false);
+                    return xhr;
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var message = 'Import completed: ' + response.data.imported + ' rules imported';
+                        if (response.data.skipped > 0) {
+                            message += ', ' + response.data.skipped + ' skipped';
+                        }
+                        alert(message);
+
+                        // Reset form
+                        fileInput.value = '';
+
+                        // Reload page
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.data);
+                    }
+                },
+                error: function() {
+                    alert('Upload failed. Please try again.');
+                },
+                complete: function() {
+                    $submitBtn.prop('disabled', false).val('Import Template');
+                }
+            });
+        });
+    });        
+    
+    
+    // Template validation helper
+    function validateTemplateData(jsonString) {
+        try {
+            var data = JSON.parse(jsonString);
+
+            if (!data.rules || !Array.isArray(data.rules)) {
+                return { valid: false, error: 'Template must contain a rules array' };
+            }
+
+            for (var i = 0; i < data.rules.length; i++) {
+                var rule = data.rules[i];
+                if (!rule.rule_name || !rule.tab_title) {
+                    return { 
+                        valid: false, 
+                        error: 'Rule ' + (i + 1) + ' is missing required fields (rule_name, tab_title)' 
+                    };
+                }
+            }
+
+            return { valid: true, data: data };
+        } catch (e) {
+            return { valid: false, error: 'Invalid JSON format' };
+        }
+    }    
+    
+    
+    function previewTemplate(templateData) {
+        var preview = 'Template: ' + (templateData.name || 'Unknown') + '\n';
+        preview += 'Rules: ' + (templateData.rules ? templateData.rules.length : 0) + '\n\n';
+
+        if (templateData.rules) {
+            templateData.rules.forEach(function(rule, index) {
+                preview += (index + 1) + '. ' + rule.tab_title + '\n';
+            });
+        }
+
+        return preview;
+    }    
+        
+    
 
 })(jQuery);
