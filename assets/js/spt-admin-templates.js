@@ -26,9 +26,6 @@
             // Template installation
             $(document).on('click', '.template-install', this.installTemplate);
             
-            // Template deletion
-            $(document).on('click', '.template-delete', this.deleteTemplate);
-            
             // File upload import
             $(document).on('submit', '.template-upload-form', this.uploadTemplate);
             
@@ -108,58 +105,7 @@
             });
         },
 
-        /**
-         * Delete saved template
-         */
-        deleteTemplate: function(e) {
-            e.preventDefault();
-            
-            if (typeof spt_admin_ajax === 'undefined') {
-                alert('AJAX not available. Please refresh the page and try again.');
-                return;
-            }
 
-            var filename = $(this).data('file');
-            var $row = $(this).closest('tr');
-            var $button = $(this);
-
-            if (!confirm('Delete template "' + filename + '"? This cannot be undone.')) {
-                return;
-            }
-
-            $button.prop('disabled', true).text('Deleting...');
-
-            $.ajax({
-                url: spt_admin_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'spt_delete_template',
-                    filename: filename,
-                    nonce: spt_admin_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        $row.fadeOut(300, function() { 
-                            $(this).remove(); 
-
-                            // Check if table is empty
-                            if ($('.saved-templates tbody tr').length === 0) {
-                                $('.saved-templates').replaceWith('<p>No saved templates found.</p>');
-                            }
-                        });
-                        SPTTemplates.showSuccess('Template deleted successfully');
-                    } else {
-                        SPTTemplates.showError('Error: ' + response.data);
-                    }
-                },
-                error: function() {
-                    SPTTemplates.showError('Delete failed. Please try again.');
-                },
-                complete: function() {
-                    $button.prop('disabled', false).text('Delete');
-                }
-            });
-        },
 
         /**
          * Upload template file

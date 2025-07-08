@@ -19,13 +19,11 @@ class SPT_Templates {
      * Constructor
      */
     public function __construct() {
-        $this->templates_dir = SPT_PLUGIN_PATH . 'assets/templates/';
         
         add_action('wp_ajax_spt_import_template', array($this, 'ajax_import_template'));
         add_action('wp_ajax_spt_export_rules', array($this, 'ajax_export_rules'));
         add_action('wp_ajax_spt_install_builtin_template', array($this, 'ajax_install_builtin_template'));
         add_action('wp_ajax_spt_get_template_preview', array($this, 'ajax_get_template_preview'));
-        add_action('wp_ajax_spt_delete_template', array($this, 'ajax_delete_template'));
 
         add_action('init', array($this, 'init'));
     }
@@ -34,10 +32,7 @@ class SPT_Templates {
      * Initialize
      */
     public function init() {
-        // Create templates directory if it doesn't exist
-        if (!file_exists($this->templates_dir)) {
-            wp_mkdir_p($this->templates_dir);
-        }
+
     }
 
     /**
@@ -442,9 +437,6 @@ class SPT_Templates {
             // Start transaction
             $wpdb->query('START TRANSACTION');
 
-            // Create backup before import
-            $backup_created = $this->backup_current_rules();
-
             // Process rules
             if (isset($template_data['rules']) && is_array($template_data['rules'])) {
                 foreach ($template_data['rules'] as $rule_data) {
@@ -531,8 +523,7 @@ class SPT_Templates {
                 'imported' => $imported_count,
                 'updated' => $updated_count,
                 'skipped' => $skipped_count,
-                'errors' => $errors,
-                'backup_created' => !empty($backup_created)
+                'errors' => $errors
             );
 
             do_action('spt_template_imported', $template_data, $result);
@@ -547,93 +538,9 @@ class SPT_Templates {
         }
     }
     
-    /**
-     * Save template to file
-     */
-    public function save_template_file($template_data, $filename) {
-        if (!$filename) {
-            $filename = 'spt_template_' . date('Y-m-d_H-i-s') . '.json';
-        }
-        
-        // Ensure .json extension
-        if (!preg_match('/\.json$/i', $filename)) {
-            $filename .= '.json';
-        }
-        
-        $filepath = $this->templates_dir . $filename;
-        
-        $json_data = json_encode($template_data, JSON_PRETTY_PRINT);
-        
-        if (file_put_contents($filepath, $json_data)) {
-            return $filepath;
-        }
-        
-        return false;
-    }
+
     
-    /**
-     * Load template from file
-     */
-    public function load_template_file($filepath) {
-        if (!file_exists($filepath)) {
-            return new WP_Error('file_not_found', __('Template file not found', 'smart-product-tabs'));
-        }
-        
-        $content = file_get_contents($filepath);
-        $template_data = json_decode($content, true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return new WP_Error('invalid_json', __('Invalid JSON in template file', 'smart-product-tabs'));
-        }
-        
-        return $template_data;
-    }
-    
-    /**
-     * Get saved templates
-     */
-    public function get_saved_templates() {
-        $templates = array();
-        
-        if (!is_dir($this->templates_dir)) {
-            return $templates;
-        }
-        
-        $files = glob($this->templates_dir . '*.json');
-        
-        foreach ($files as $file) {
-            $template_data = $this->load_template_file($file);
-            
-            if (!is_wp_error($template_data)) {
-                $templates[] = array(
-                    'file' => basename($file),
-                    'filepath' => $file,
-                    'name' => $template_data['name'] ?? basename($file, '.json'),
-                    'description' => $template_data['description'] ?? '',
-                    'version' => $template_data['version'] ?? '1.0',
-                    'export_date' => $template_data['export_date'] ?? '',
-                    'rules_count' => count($template_data['rules'] ?? array()),
-                    'size' => filesize($file),
-                    'modified' => filemtime($file)
-                );
-            }
-        }
-        
-        return $templates;
-    }
-    
-    /**
-     * Delete template file
-     */
-    public function delete_template_file($filename) {
-        $filepath = $this->templates_dir . $filename;
-        
-        if (file_exists($filepath) && unlink($filepath)) {
-            return true;
-        }
-        
-        return false;
-    }
+
     
     /**
      * Validate template data
@@ -957,70 +864,12 @@ class SPT_Templates {
         return $template_data;
     }
     
-    /**
-     * Get template statistics
-     */
-    public function get_template_statistics() {
-        $builtin_templates = $this->get_builtin_templates();
-        $saved_templates = $this->get_saved_templates();
-        
-        return array(
-            'builtin_count' => count($builtin_templates),
-            'saved_count' => count($saved_templates),
-            'total_builtin_rules' => array_sum(array_column($builtin_templates, 'tabs_count')),
-            'total_saved_rules' => array_sum(array_column($saved_templates, 'rules_count')),
-            'templates_dir_size' => $this->get_templates_directory_size()
-        );
-    }
+
+
     
-    /**
-     * Get templates directory size
-     */
-    private function get_templates_directory_size() {
-        $size = 0;
-        
-        if (is_dir($this->templates_dir)) {
-            $files = glob($this->templates_dir . '*');
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    $size += filesize($file);
-                }
-            }
-        }
-        
-        return $size;
-    }
+
     
-    /**
-     * Backup current rules before import
-     */
-    public function backup_current_rules() {
-        $backup_data = $this->export_rules(true);
-        $backup_data['backup_type'] = 'auto_backup';
-        $backup_data['name'] = sprintf(__('Auto Backup - %s', 'smart-product-tabs'), current_time('F j, Y g:i A'));
-        
-        $filename = 'backup_' . date('Y-m-d_H-i-s') . '.json';
-        return $this->save_template_file($backup_data, $filename);
-    }
-    
-    /**
-     * Clean up old backup files
-     */
-    public function cleanup_old_backups($keep_days = 30) {
-        $cutoff_time = time() - ($keep_days * DAY_IN_SECONDS);
-        $files = glob($this->templates_dir . 'backup_*.json');
-        $deleted_count = 0;
-        
-        foreach ($files as $file) {
-            if (filemtime($file) < $cutoff_time) {
-                if (unlink($file)) {
-                    $deleted_count++;
-                }
-            }
-        }
-        
-        return $deleted_count;
-    }
+
     
     /**
      * Preview template before import
@@ -1199,39 +1048,6 @@ class SPT_Templates {
             wp_send_json_error(__('Failed to load template preview', 'smart-product-tabs'));
         }
     } 
-    
-    
-    /**
-     * Fix 2: AJAX handler for deleting templates
-     */
-    public function ajax_delete_template() {
-        check_ajax_referer('spt_ajax_nonce', 'nonce');
-
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Insufficient permissions');
-            return;
-        }
-
-        $filename = sanitize_file_name($_POST['filename'] ?? '');
-
-        if (empty($filename)) {
-            wp_send_json_error(__('No filename provided', 'smart-product-tabs'));
-            return;
-        }
-
-        // Validate filename to prevent directory traversal
-        if (strpos($filename, '..') !== false || strpos($filename, '/') !== false) {
-            wp_send_json_error(__('Invalid filename', 'smart-product-tabs'));
-            return;
-        }
-
-        $result = $this->delete_template_file($filename);
-
-        if ($result) {
-            wp_send_json_success(__('Template deleted successfully', 'smart-product-tabs'));
-        } else {
-            wp_send_json_error(__('Failed to delete template', 'smart-product-tabs'));
-        }
-    }    
+       
     
 }

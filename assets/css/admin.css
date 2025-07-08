@@ -1924,59 +1924,6 @@
     transform: translateY(-1px);
 }
 
-/* Saved Templates Table */
-.saved-templates {
-    margin-top: 30px;
-    background: #fff;
-    border: 1px solid #e1e1e1;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.saved-templates h4 {
-    margin: 0;
-    padding: 15px 20px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e1e1e1;
-    color: #23282d;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.saved-templates table {
-    margin: 0;
-    border: none;
-}
-
-.saved-templates th {
-    background: #f8f9fa;
-    color: #333;
-    font-weight: 600;
-    padding: 12px 15px;
-    border-bottom: 2px solid #e1e1e1;
-}
-
-.saved-templates td {
-    padding: 12px 15px;
-    vertical-align: middle;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.saved-templates tr:last-child td {
-    border-bottom: none;
-}
-
-.saved-templates tr:hover {
-    background: #f8f9fa;
-}
-
-.saved-templates .button {
-    margin-right: 5px;
-    font-size: 12px;
-    padding: 4px 8px;
-    height: auto;
-    line-height: 1.4;
-}
 
 /* Modal Styling */
 /* Modal Backdrop */
