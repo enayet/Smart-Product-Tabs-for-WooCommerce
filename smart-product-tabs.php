@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('SPT_VERSION', '1.1.7');
+define('SPT_VERSION', '1.1.8');
 define('SPT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SPT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('SPT_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -127,7 +127,19 @@ class Smart_Product_Tabs {
     public function enqueue_admin_assets($hook) {
         if (strpos($hook, 'woocommerce_page_smart-product-tabs') !== false) {
             wp_enqueue_style('spt-admin', SPT_PLUGIN_URL . 'assets/css/admin.css', array(), SPT_VERSION);
-            wp_enqueue_script('spt-admin', SPT_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
+            //wp_enqueue_script('spt-admin', SPT_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
+
+            
+            // Load rules JS on rule management pages
+            wp_enqueue_script('spt-admin-rules', SPT_PLUGIN_URL . 'assets/js/spt-admin-rules.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
+
+            // Load templates JS on template pages  
+            wp_enqueue_script('spt-admin-templates', SPT_PLUGIN_URL . 'assets/js/spt-admin-templates.js', array('jquery'), SPT_VERSION, true);
+
+            // Load analytics JS on analytics pages
+            wp_enqueue_script('spt-admin-analytics', SPT_PLUGIN_URL . 'assets/js/spt-admin-analytics.js', array('jquery'), SPT_VERSION, true);            
+            
+            
             
             // CRITICAL: Localize the nonce for AJAX calls
             wp_localize_script('spt-admin', 'spt_admin_ajax', array(
