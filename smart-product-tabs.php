@@ -132,6 +132,8 @@ public function enqueue_admin_assets($hook) {
     if (strpos($hook, 'woocommerce_page_smart-product-tabs') !== false) {
         wp_enqueue_style('spt-admin', SPT_PLUGIN_URL . 'assets/css/admin.css', array(), SPT_VERSION);
         
+        wp_enqueue_script('jquery-ui-sortable');
+        
         // Load rules JS on rule management pages
         wp_enqueue_script('spt-admin-rules', SPT_PLUGIN_URL . 'assets/js/spt-admin-rules.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
 

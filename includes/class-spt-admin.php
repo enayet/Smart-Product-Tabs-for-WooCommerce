@@ -734,21 +734,26 @@ class SPT_Admin {
             </form>
         </div>
         
-        <script>
-        jQuery(document).ready(function($) {
-            $('#sortable-tabs').sortable({
-                handle: '.tab-handle',
-                placeholder: 'tab-placeholder',
-                axis: 'y',
-                opacity: 0.8,
-                update: function(event, ui) {
-                    $('#sortable-tabs .tab-item').each(function(index) {
-                        $(this).find('.sort-order-input').val(index + 1);
-                    });
-                }
-            });
+    <script>
+    jQuery(document).ready(function($) {
+        $('#sortable-tabs').sortable({
+            handle: '.tab-handle',
+            placeholder: 'tab-placeholder',
+            axis: 'y',
+            opacity: 0.8,
+            tolerance: 'pointer',
+            stop: function(event, ui) {
+                $('#sortable-tabs .tab-item').each(function(index) {
+                    $(this).find('.sort-order-input').val(index + 1);
+                });
+            }
         });
-        </script>
+
+        $('#sortable-tabs .tab-item').each(function(index) {
+            $(this).find('.sort-order-input').val(index + 1);
+        });
+    });
+    </script>
         <?php
     }
     
