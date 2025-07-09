@@ -2656,3 +2656,357 @@
     z-index: 10 !important;
     background: #f8f9fa !important;
 }
+
+
+
+/* Installation Confirmation Modal */
+.install-confirmation-modal {
+    max-width: 600px;
+    width: 90%;
+}
+
+.install-warning-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.warning-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: #ffc107;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #856404;
+    font-size: 24px;
+}
+
+.warning-icon .dashicons {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
+.warning-message h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.warning-message p {
+    margin: 0 0 10px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.warning-list {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+.warning-list li {
+    margin: 8px 0;
+    color: #d63384;
+    font-weight: 500;
+}
+
+.recommendation {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e7f3ff;
+    border-left: 4px solid #0073aa;
+    border-radius: 4px;
+}
+
+.recommendation p {
+    margin: 0;
+    color: #0073aa;
+    font-size: 14px;
+}
+
+/* Installation Progress Modal */
+.install-progress-modal {
+    max-width: 500px;
+    width: 90%;
+}
+
+.install-progress-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.progress-spinner {
+    margin: 0 auto 30px auto;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.install-progress-content h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.install-progress-content p {
+    margin: 0 0 30px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.step.active {
+    opacity: 1;
+}
+
+.step-number {
+    width: 28px;
+    height: 28px;
+    background: #e0e0e0;
+    color: #666;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+    background: #0073aa;
+    color: #fff;
+}
+
+.step-text {
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.step.active .step-text {
+    color: #333;
+    font-weight: 500;
+}
+
+/* Installation Success Modal */
+.install-success-modal {
+    max-width: 550px;
+    width: 90%;
+}
+
+.success-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.success-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: #28a745;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.success-icon .dashicons {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
+.success-message h4 {
+    margin: 0 0 10px 0;
+    color: #155724;
+    font-size: 18px;
+}
+
+.success-message p {
+    margin: 0 0 10px 0;
+    color: #155724;
+    line-height: 1.5;
+}
+
+/* Installation Error Modal */
+.install-error-modal {
+    max-width: 550px;
+    width: 90%;
+}
+
+.error-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.error-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: #dc3545;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.error-icon .dashicons {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+}
+
+.error-message h4 {
+    margin: 0 0 10px 0;
+    color: #721c24;
+    font-size: 18px;
+}
+
+.error-message p {
+    margin: 0 0 10px 0;
+    color: #721c24;
+    line-height: 1.5;
+}
+
+/* Modal Footer Enhancements */
+.spt-modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.spt-modal-footer .button {
+    min-width: 120px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.spt-modal-footer .button-primary {
+    background: #0073aa;
+    border-color: #0073aa;
+    color: #fff;
+}
+
+.spt-modal-footer .button-primary:hover {
+    background: #005a87;
+    border-color: #005a87;
+    transform: translateY(-1px);
+}
+
+.spt-modal-footer .button-secondary {
+    background: #f3f5f6;
+    border-color: #ddd;
+    color: #555;
+}
+
+.spt-modal-footer .button-secondary:hover {
+    background: #e8eaeb;
+    border-color: #ccc;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .install-confirmation-modal,
+    .install-progress-modal,
+    .install-success-modal,
+    .install-error-modal {
+        max-width: 95%;
+        width: 95%;
+    }
+    
+    .install-warning-content,
+    .success-content,
+    .error-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .spt-modal-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .spt-modal-footer .button {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .install-confirmation-modal,
+    .install-progress-modal,
+    .install-success-modal,
+    .install-error-modal {
+        max-width: 98%;
+        width: 98%;
+    }
+    
+    .progress-steps {
+        max-width: 250px;
+    }
+    
+    .step-text {
+        font-size: 13px;
+    }
+}

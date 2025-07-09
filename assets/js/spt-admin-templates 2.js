@@ -1,21 +1,17 @@
 /**
  * Smart Product Tabs - Admin Templates JavaScript
  * Enhanced functionality for template preview and installation
- * Fixed for WordPress jQuery compatibility
  */
 
-(function($) {
-    'use strict';
+jQuery(document).ready(function($) {
     
-    // Ensure DOM is ready
-    $(document).ready(function() {
-        // Initialize template functionality
-        if (typeof SPTTemplates !== 'undefined') {
-            SPTTemplates.init();
-        }
-    });
 
-})(jQuery);
+    
+
+
+
+    // Initialize template functionality
+    SPTTemplates.init();
 
 /**
  * Main Templates Object
@@ -34,8 +30,6 @@ var SPTTemplates = {
      * Bind all event handlers
      */
     bindEvents: function() {
-        var $ = jQuery; // Ensure jQuery is available
-        
         // Template preview buttons
         $(document).on('click', '.template-preview-btn', this.handlePreview);
         
@@ -54,8 +48,6 @@ var SPTTemplates = {
      * Setup modal event handlers
      */
     setupModalHandlers: function() {
-        var $ = jQuery; // Ensure jQuery is available
-        
         // Modal close handlers
         $(document).on('click', '.spt-modal-close, #close-preview', function() {
             $('#template-preview-modal').hide();
@@ -80,7 +72,6 @@ var SPTTemplates = {
      * Handle template preview
      */
     handlePreview: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
         e.preventDefault();
         
         var templateKey = $(this).data('template-key');
@@ -152,23 +143,62 @@ var SPTTemplates = {
      * Handle template installation
      */
     handleInstall: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
         e.preventDefault();
-
+        
         var templateKey = $(this).data('template-key');
         var templateName = $(this).data('template-name') || 'this template';
         var $button = $(this);
         var $card = $button.closest('.template-card');
-
-        // Show enhanced confirmation modal instead of simple confirm()
-        SPTTemplates.showInstallConfirmationModal(templateKey, templateName, $button, $card);
+        
+        // Confirmation dialog
+        if (!confirm('Install "' + templateName + '"?\n\nThis will add new tab rules to your site.')) {
+            return;
+        }
+        
+        // Show loading state
+        $button.prop('disabled', true).text('Installing...');
+        $card.addClass('loading');
+        
+        $.ajax({
+            url: SPTTemplates.getAjaxUrl(),
+            type: 'POST',
+            data: {
+                action: 'spt_install_builtin_template',
+                template_key: templateKey,
+                nonce: SPTTemplates.getAjaxNonce()
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Show success message
+                    SPTTemplates.showSuccessMessage('Template installed successfully! ' + (response.data.imported || '0') + ' rules imported.');
+                    
+                    // Reload page after delay
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    SPTTemplates.showErrorMessage('Installation failed: ' + (response.data || 'Unknown error'));
+                }
+            },
+            error: function(xhr, status, error) {
+                SPTTemplates.showErrorMessage('Installation failed. Please try again.\nError: ' + error);
+            },
+            complete: function() {
+                $button.prop('disabled', false).text('Install Template');
+                $card.removeClass('loading');
+            }
+        });
     },
+    
+    
+
+    
+    
     
     /**
      * Handle file import
      */
     handleFileImport: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
         e.preventDefault();
         
         var fileInput = $('#template_file')[0];
@@ -214,7 +244,6 @@ var SPTTemplates = {
      * Handle text import
      */
     handleTextImport: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
         e.preventDefault();
         
         var templateText = $('#template_text').val().trim();
@@ -257,7 +286,6 @@ var SPTTemplates = {
      * Handle export
      */
     handleExport: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
         e.preventDefault();
         
         var $button = $(this);
@@ -387,18 +415,13 @@ var SPTTemplates = {
         if (typeof spt_admin_ajax !== 'undefined' && spt_admin_ajax.ajax_url) {
             return spt_admin_ajax.ajax_url;
         }
-        if (typeof ajaxurl !== 'undefined') {
-            return ajaxurl;
-        }
-        return '/wp-admin/admin-ajax.php';
+        return ajaxurl || '/wp-admin/admin-ajax.php';
     },
     
     /**
      * Get AJAX nonce with fallback
      */
     getAjaxNonce: function() {
-        var $ = jQuery; // Ensure jQuery is available
-        
         if (typeof spt_admin_ajax !== 'undefined' && spt_admin_ajax.nonce) {
             return spt_admin_ajax.nonce;
         }
@@ -414,7 +437,6 @@ var SPTTemplates = {
      * Show success message
      */
     showSuccessMessage: function(message) {
-        var $ = jQuery; // Ensure jQuery is available
         var $notice = $('<div class="notice notice-success is-dismissible"><p>' + message + '</p></div>');
         $('.spt-templates, .wrap').first().prepend($notice);
         
@@ -427,301 +449,14 @@ var SPTTemplates = {
      * Show error message
      */
     showErrorMessage: function(message) {
-        var $ = jQuery; // Ensure jQuery is available
         var $notice = $('<div class="notice notice-error is-dismissible"><p>' + message + '</p></div>');
         $('.spt-templates, .wrap').first().prepend($notice);
         
         setTimeout(function() {
             $notice.fadeOut();
         }, 8000);
-    },
-
-    /**
-     * Show enhanced confirmation modal for template installation
-     */
-    showInstallConfirmationModal: function(templateKey, templateName, $button, $card) {
-        var $ = jQuery; // Ensure jQuery is available
-        
-        var modalHtml = 
-            '<div id="install-confirmation-modal" class="spt-modal" style="display: block;">' +
-                '<div class="spt-modal-content install-confirmation-modal">' +
-                    '<div class="spt-modal-header">' +
-                        '<h3>⚠️ Confirm Template Installation</h3>' +
-                        '<button type="button" class="spt-modal-close" aria-label="Close">&times;</button>' +
-                    '</div>' +
-                    
-                    '<div class="spt-modal-body">' +
-                        '<div class="install-warning-content">' +
-                            '<div class="warning-icon">' +
-                                '<span class="dashicons dashicons-warning"></span>' +
-                            '</div>' +
-                            
-                            '<div class="warning-message">' +
-                                '<h4>Install "' + templateName + '"?</h4>' +
-                                '<p>This action will:</p>' +
-                                '<ul class="warning-list">' +
-                                    '<li><strong>Remove ALL existing custom tabs</strong> from your site</li>' +
-                                    '<li>Install new tab rules from the "' + templateName + '" template</li>' +
-                                    '<li>This action cannot be undone</li>' +
-                                '</ul>' +
-                                
-                                '<div class="recommendation">' +
-                                    '<p><strong>💡 Recommendation:</strong> Export your current tab configuration before proceeding to create a backup.</p>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    
-                    '<div class="spt-modal-footer">' +
-                        '<button type="button" class="button button-secondary" id="cancel-install">' +
-                            'Cancel' +
-                        '</button>' +
-                        '<button type="button" class="button button-primary" id="export-first">' +
-                            'Export First' +
-                        '</button>' +
-                        '<button type="button" class="button button-primary install-confirm-btn" ' +
-                                'data-template-key="' + templateKey + '" ' +
-                                'data-template-name="' + templateName + '"' +
-                                'style="background-color: #d63384; border-color: #d63384;">' +
-                            'Install & Remove Existing' +
-                        '</button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        
-        // Remove existing modal if present
-        $('#install-confirmation-modal').remove();
-        
-        // Add modal to page
-        $('body').append(modalHtml);
-        
-        // Bind modal events
-        SPTTemplates.bindInstallModalEvents($button, $card);
-    },
-
-    /**
-     * Bind events for the installation confirmation modal
-     */
-    bindInstallModalEvents: function($originalButton, $originalCard) {
-        var $ = jQuery; // Ensure jQuery is available
-        var $modal = $('#install-confirmation-modal');
-        
-        // Close modal handlers
-        $modal.on('click', '.spt-modal-close, #cancel-install', function() {
-            $modal.remove();
-        });
-        
-        // Close on backdrop click
-        $modal.on('click', function(e) {
-            if (e.target === this) {
-                $modal.remove();
-            }
-        });
-        
-        // Export first button
-        $modal.on('click', '#export-first', function() {
-            $modal.remove();
-            // Trigger existing export functionality
-            $('#export-rules').click();
-        });
-        
-        // Confirm installation button
-        $modal.on('click', '.install-confirm-btn', function() {
-            var templateKey = $(this).data('template-key');
-            var templateName = $(this).data('template-name');
-            
-            $modal.remove();
-            
-            // Proceed with installation
-            SPTTemplates.proceedWithInstallation(templateKey, templateName, $originalButton, $originalCard);
-        });
-    },
-
-    /**
-     * Proceed with actual template installation
-     */
-    proceedWithInstallation: function(templateKey, templateName, $button, $card) {
-        var $ = jQuery; // Ensure jQuery is available
-        
-        // Show loading state
-        $button.prop('disabled', true).text('Installing...');
-        $card.addClass('loading');
-        
-        // Show installation progress modal
-        SPTTemplates.showInstallationProgressModal(templateName);
-        
-        $.ajax({
-            url: SPTTemplates.getAjaxUrl(),
-            type: 'POST',
-            data: {
-                action: 'spt_install_builtin_template',
-                template_key: templateKey,
-                nonce: SPTTemplates.getAjaxNonce()
-            },
-            success: function(response) {
-                if (response.success) {
-                    SPTTemplates.showInstallationSuccessModal(templateName, response.data.imported || 0);
-                } else {
-                    SPTTemplates.showInstallationErrorModal(response.data || 'Installation failed');
-                }
-            },
-            error: function(xhr, status, error) {
-                SPTTemplates.showInstallationErrorModal('Installation failed. Please try again.');
-            },
-            complete: function() {
-                $button.prop('disabled', false).text('Install');
-                $card.removeClass('loading');
-            }
-        });
-    },
-
-    /**
-     * Show installation progress modal
-     */
-    showInstallationProgressModal: function(templateName) {
-        var $ = jQuery; // Ensure jQuery is available
-        
-        var progressHtml = 
-            '<div id="install-progress-modal" class="spt-modal" style="display: block;">' +
-                '<div class="spt-modal-content install-progress-modal">' +
-                    '<div class="spt-modal-body">' +
-                        '<div class="install-progress-content">' +
-                            '<div class="progress-spinner">' +
-                                '<div class="spinner"></div>' +
-                            '</div>' +
-                            '<h4>Installing "' + templateName + '"...</h4>' +
-                            '<p>Please wait while we remove existing tabs and install the new template.</p>' +
-                            '<div class="progress-steps">' +
-                                '<div class="step active">' +
-                                    '<span class="step-number">1</span>' +
-                                    '<span class="step-text">Removing existing custom tabs</span>' +
-                                '</div>' +
-                                '<div class="step">' +
-                                    '<span class="step-number">2</span>' +
-                                    '<span class="step-text">Installing template rules</span>' +
-                                '</div>' +
-                                '<div class="step">' +
-                                    '<span class="step-number">3</span>' +
-                                    '<span class="step-text">Finalizing installation</span>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        
-        $('#install-progress-modal').remove();
-        $('body').append(progressHtml);
-        
-        // Animate progress steps
-        setTimeout(function() {
-            $('.progress-steps .step').eq(1).addClass('active');
-        }, 1000);
-        
-        setTimeout(function() {
-            $('.progress-steps .step').eq(2).addClass('active');
-        }, 2000);
-    },
-
-    /**
-     * Show installation success modal
-     */
-    showInstallationSuccessModal: function(templateName, importedCount) {
-        var $ = jQuery; // Ensure jQuery is available
-        
-        $('#install-progress-modal').remove();
-        
-        var successHtml = 
-            '<div id="install-success-modal" class="spt-modal" style="display: block;">' +
-                '<div class="spt-modal-content install-success-modal">' +
-                    '<div class="spt-modal-header">' +
-                        '<h3>✅ Installation Successful</h3>' +
-                        '<button type="button" class="spt-modal-close" aria-label="Close">&times;</button>' +
-                    '</div>' +
-                    
-                    '<div class="spt-modal-body">' +
-                        '<div class="success-content">' +
-                            '<div class="success-icon">' +
-                                '<span class="dashicons dashicons-yes-alt"></span>' +
-                            '</div>' +
-                            
-                            '<div class="success-message">' +
-                                '<h4>"' + templateName + '" installed successfully!</h4>' +
-                                '<p><strong>' + importedCount + '</strong> tab rules have been imported.</p>' +
-                                '<p>Your existing custom tabs have been removed and replaced with the new template.</p>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    
-                    '<div class="spt-modal-footer">' +
-                        '<button type="button" class="button button-primary" id="view-installed-tabs">' +
-                            'View Installed Tabs' +
-                        '</button>' +
-                        '<button type="button" class="button button-secondary" id="close-success">' +
-                            'Close' +
-                        '</button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        
-        $('body').append(successHtml);
-        
-        // Bind success modal events
-        $('#install-success-modal').on('click', '.spt-modal-close, #close-success', function() {
-            $('#install-success-modal').remove();
-            location.reload(); // Refresh to show updated tabs
-        });
-        
-        $('#install-success-modal').on('click', '#view-installed-tabs', function() {
-            $('#install-success-modal').remove();
-            // Redirect to tab rules page
-            window.location.href = 'admin.php?page=spt-tab-rules';
-        });
-    },
-
-    /**
-     * Show installation error modal
-     */
-    showInstallationErrorModal: function(errorMessage) {
-        var $ = jQuery; // Ensure jQuery is available
-        
-        $('#install-progress-modal').remove();
-        
-        var errorHtml = 
-            '<div id="install-error-modal" class="spt-modal" style="display: block;">' +
-                '<div class="spt-modal-content install-error-modal">' +
-                    '<div class="spt-modal-header">' +
-                        '<h3>❌ Installation Failed</h3>' +
-                        '<button type="button" class="spt-modal-close" aria-label="Close">&times;</button>' +
-                    '</div>' +
-                    
-                    '<div class="spt-modal-body">' +
-                        '<div class="error-content">' +
-                            '<div class="error-icon">' +
-                                '<span class="dashicons dashicons-warning"></span>' +
-                            '</div>' +
-                            
-                            '<div class="error-message">' +
-                                '<h4>Template installation failed</h4>' +
-                                '<p><strong>Error:</strong> ' + errorMessage + '</p>' +
-                                '<p>Your existing tabs have not been modified. Please try again or contact support.</p>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    
-                    '<div class="spt-modal-footer">' +
-                        '<button type="button" class="button button-primary" id="close-error">' +
-                            'Close' +
-                        '</button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-        
-        $('body').append(errorHtml);
-        
-        // Bind error modal events
-        $('#install-error-modal').on('click', '.spt-modal-close, #close-error', function() {
-            $('#install-error-modal').remove();
-        });
     }
 };
+    
+    
+    });
