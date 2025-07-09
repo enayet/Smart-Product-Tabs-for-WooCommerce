@@ -19,6 +19,7 @@ class SPT_Templates {
      * Constructor
      */
     public function __construct() {
+        $this->templates_dir = SPT_PLUGIN_PATH . 'assets/templates/';
         
         add_action('wp_ajax_spt_import_template', array($this, 'ajax_import_template'));
         add_action('wp_ajax_spt_export_rules', array($this, 'ajax_export_rules'));
@@ -40,359 +41,104 @@ class SPT_Templates {
     }
 
     /**
-     * Get built-in templates (updated without attributes)
+     * Get built-in templates from JSON files
      */
     public function get_builtin_templates() {
-        return array(
-            'electronics' => array(
-                'name' => __('Electronics Store Pack', 'smart-product-tabs'),
-                'description' => __('Perfect for electronics stores with Specifications, Warranty, and Support tabs', 'smart-product-tabs'),
-                'version' => '1.0',
-                'author' => 'Smart Product Tabs',
-                'preview_image' => SPT_PLUGIN_URL . 'assets/images/electronics-preview.png',
-                'tabs_count' => 4,
-                'categories' => array('Electronics', 'Technology'),
-                'rules' => array(
-                    array(
-                        'rule_name' => 'Electronics Specifications',
-                        'tab_title' => 'Specifications',
-                        'tab_content' => '<h3>Product Specifications</h3>
-                                        <table class="shop_attributes">
-                                            <tr><td><strong>Brand:</strong></td><td>{custom_field_brand}</td></tr>
-                                            <tr><td><strong>Model:</strong></td><td>{custom_field_model}</td></tr>
-                                            <tr><td><strong>SKU:</strong></td><td>{product_sku}</td></tr>
-                                            <tr><td><strong>Weight:</strong></td><td>{product_weight}</td></tr>
-                                            <tr><td><strong>Dimensions:</strong></td><td>{product_dimensions}</td></tr>
-                                        </table>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('electronics', 'computers', 'phones'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 15,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    ),
-                    array(
-                        'rule_name' => 'Electronics Warranty',
-                        'tab_title' => 'Warranty & Support',
-                        'tab_content' => '<h3>Warranty Information</h3>
-                                        <p><strong>Manufacturer Warranty:</strong> 1 Year</p>
-                                        <p><strong>Extended Warranty:</strong> Available for purchase</p>
-                                        <h3>Support</h3>
-                                        <ul>
-                                            <li>24/7 Technical Support</li>
-                                            <li>Online Troubleshooting Guides</li>
-                                            <li>Repair Service Centers</li>
-                                            <li>Replacement Parts Available</li>
-                                        </ul>
-                                        <p><strong>Support Contact:</strong> support@yourstore.com</p>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('electronics', 'computers', 'phones'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 25,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    ),
-                    array(
-                        'rule_name' => 'Electronics Manual',
-                        'tab_title' => 'User Manual',
-                        'tab_content' => '<h3>User Manual & Documentation</h3>
-                                        <p>Download the complete user manual for {product_name}</p>
-                                        <ul>
-                                            <li><a href="#" target="_blank">Quick Start Guide (PDF)</a></li>
-                                            <li><a href="#" target="_blank">Complete User Manual (PDF)</a></li>
-                                            <li><a href="#" target="_blank">Safety Instructions (PDF)</a></li>
-                                            <li><a href="#" target="_blank">Video Tutorials</a></li>
-                                        </ul>
-                                        <p><em>Note: Replace the # links with actual manual download links</em></p>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('electronics', 'computers', 'phones'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 35,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    ),
-                    array(
-                        'rule_name' => 'Electronics Compatibility',
-                        'tab_title' => 'Compatibility',
-                        'tab_content' => '<h3>Compatibility Information</h3>
-                                        <p><strong>Compatible Systems:</strong></p>
-                                        <ul>
-                                            <li>Windows 10/11</li>
-                                            <li>macOS 10.15+</li>
-                                            <li>Linux Ubuntu 18.04+</li>
-                                            <li>Android 8.0+</li>
-                                            <li>iOS 12.0+</li>
-                                        </ul>
-                                        <p><strong>System Requirements:</strong></p>
-                                        <ul>
-                                            <li>Minimum 4GB RAM</li>
-                                            <li>USB 3.0 Port</li>
-                                            <li>Internet Connection Required</li>
-                                        </ul>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('electronics', 'computers', 'phones'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 45,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    )
-                )
-            ),
-            'fashion' => array(
-                'name' => __('Fashion Store Pack', 'smart-product-tabs'),
-                'description' => __('Perfect for clothing stores with Size Guide, Care Instructions, and Materials tabs', 'smart-product-tabs'),
-                'version' => '1.0',
-                'author' => 'Smart Product Tabs',
-                'preview_image' => SPT_PLUGIN_URL . 'assets/images/fashion-preview.png',
-                'tabs_count' => 3,
-                'categories' => array('Fashion', 'Clothing', 'Apparel'),
-                'rules' => array(
-                    array(
-                        'rule_name' => 'Fashion Size Guide',
-                        'tab_title' => 'Size Guide',
-                        'tab_content' => '<h3>Size Guide for {product_name}</h3>
-                                        <div class="size-guide-table">
-                                            <table>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Size</th>
-                                                        <th>Chest (in)</th>
-                                                        <th>Waist (in)</th>
-                                                        <th>Hip (in)</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr><td>XS</td><td>32-34</td><td>26-28</td><td>34-36</td></tr>
-                                                    <tr><td>S</td><td>34-36</td><td>28-30</td><td>36-38</td></tr>
-                                                    <tr><td>M</td><td>36-38</td><td>30-32</td><td>38-40</td></tr>
-                                                    <tr><td>L</td><td>38-40</td><td>32-34</td><td>40-42</td></tr>
-                                                    <tr><td>XL</td><td>40-42</td><td>34-36</td><td>42-44</td></tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <p><strong>How to Measure:</strong></p>
-                                        <ul>
-                                            <li><strong>Chest:</strong> Measure around the fullest part of your chest</li>
-                                            <li><strong>Waist:</strong> Measure around your natural waistline</li>
-                                            <li><strong>Hip:</strong> Measure around the fullest part of your hips</li>
-                                        </ul>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('clothing', 'fashion', 'apparel'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 15,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    ),
-                    array(
-                        'rule_name' => 'Fashion Care Instructions',
-                        'tab_title' => 'Care Instructions',
-                        'tab_content' => '<h3>Care Instructions</h3>
-                                        <div class="care-instructions">
-                                            <p><strong>Material:</strong> {custom_field_material}</p>
-                                            <h4>Washing Instructions:</h4>
-                                            <ul>
-                                                <li>Machine wash cold (30°C max)</li>
-                                                <li>Use mild detergent</li>
-                                                <li>Wash with similar colors</li>
-                                                <li>Do not bleach</li>
-                                            </ul>
-                                            <h4>Drying Instructions:</h4>
-                                            <ul>
-                                                <li>Tumble dry low heat</li>
-                                                <li>Remove promptly</li>
-                                                <li>Can be line dried</li>
-                                            </ul>
-                                            <h4>Ironing:</h4>
-                                            <ul>
-                                                <li>Iron on low to medium heat</li>
-                                                <li>Iron inside out to protect print/design</li>
-                                                <li>Use pressing cloth if needed</li>
-                                            </ul>
-                                            <h4>Storage:</h4>
-                                            <ul>
-                                                <li>Store in cool, dry place</li>
-                                                <li>Hang or fold neatly</li>
-                                                <li>Avoid direct sunlight</li>
-                                            </ul>
-                                        </div>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('clothing', 'fashion', 'apparel'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 25,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    ),
-                    array(
-                        'rule_name' => 'Fashion Materials',
-                        'tab_title' => 'Materials & Features',
-                        'tab_content' => '<h3>Materials & Features</h3>
-                                        <div class="materials-info">
-                                            <h4>Material Composition:</h4>
-                                            <p>{custom_field_material_composition}</p>
-                                            
-                                            <h4>Key Features:</h4>
-                                            <ul>
-                                                <li>Breathable fabric</li>
-                                                <li>Moisture-wicking properties</li>
-                                                <li>Wrinkle-resistant</li>
-                                                <li>Fade-resistant colors</li>
-                                                <li>Pre-shrunk</li>
-                                            </ul>
-                                            
-                                            <h4>Sustainability:</h4>
-                                            <ul>
-                                                <li>Eco-friendly manufacturing process</li>
-                                                <li>Sustainable materials</li>
-                                                <li>Fair trade certified</li>
-                                                <li>Recyclable packaging</li>
-                                            </ul>
-                                            
-                                            <h4>Country of Origin:</h4>
-                                            <p>{custom_field_country_of_origin}</p>
-                                        </div>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('clothing', 'fashion', 'apparel'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 35,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    )
-                )
-            ),
-            'digital' => array(
-                'name' => __('Digital Products Pack', 'smart-product-tabs'),
-                'description' => __('Perfect for digital downloads with System Requirements, License, and Download tabs', 'smart-product-tabs'),
-                'version' => '1.0',
-                'author' => 'Smart Product Tabs',
-                'preview_image' => SPT_PLUGIN_URL . 'assets/images/digital-preview.png',
-                'tabs_count' => 3,
-                'categories' => array('Digital', 'Software', 'Downloads'),
-                'rules' => array(
-                    array(
-                        'rule_name' => 'Digital Requirements',
-                        'tab_title' => 'System Requirements',
-                        'tab_content' => '<h3>System Requirements</h3>
-                                        <div class="system-requirements">
-                                            <h4>Minimum Requirements:</h4>
-                                            <ul>
-                                                <li><strong>Operating System:</strong> Windows 10 / macOS 10.14 / Ubuntu 18.04</li>
-                                                <li><strong>Processor:</strong> Intel Core i3 or AMD equivalent</li>
-                                                <li><strong>Memory:</strong> 4 GB RAM</li>
-                                                <li><strong>Storage:</strong> 2 GB available space</li>
-                                                <li><strong>Graphics:</strong> DirectX 11 compatible</li>
-                                                <li><strong>Network:</strong> Internet connection required for activation</li>
-                                            </ul>
-                                            
-                                            <h4>Recommended Requirements:</h4>
-                                            <ul>
-                                                <li><strong>Operating System:</strong> Windows 11 / macOS 12+ / Ubuntu 20.04</li>
-                                                <li><strong>Processor:</strong> Intel Core i5 or AMD Ryzen 5</li>
-                                                <li><strong>Memory:</strong> 8 GB RAM</li>
-                                                <li><strong>Storage:</strong> 5 GB available space (SSD recommended)</li>
-                                                <li><strong>Graphics:</strong> Dedicated graphics card</li>
-                                            </ul>
-                                        </div>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('digital', 'software', 'downloads'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 15,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    ),
-                    array(
-                        'rule_name' => 'Digital License',
-                        'tab_title' => 'License & Terms',
-                        'tab_content' => '<h3>License Information</h3>
-                                        <div class="license-info">
-                                            <p><strong>License Type:</strong> Single User License</p>
-                                            <p><strong>Valid For:</strong> Lifetime</p>
-                                            
-                                            <h4>What You Can Do:</h4>
-                                            <ul>
-                                                <li>Install on up to 3 devices</li>
-                                                <li>Use for personal or commercial projects</li>
-                                                <li>Receive free updates for 1 year</li>
-                                                <li>Access to customer support</li>
-                                            </ul>
-                                            
-                                            <h4>Restrictions:</h4>
-                                            <ul>
-                                                <li>Cannot redistribute or resell</li>
-                                                <li>Cannot share license with others</li>
-                                                <li>Cannot reverse engineer</li>
-                                            </ul>
-                                            
-                                            <h4>Refund Policy:</h4>
-                                            <p>30-day money-back guarantee. If you are not satisfied with your purchase, 
-                                            contact us within 30 days for a full refund.</p>
-                                            
-                                            <p><a href="#" target="_blank">View Full License Agreement</a></p>
-                                        </div>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('digital', 'software', 'downloads'), 'operator' => 'in')),
-                        'user_role_condition' => 'all',
-                        'priority' => 25,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    ),
-                    array(
-                        'rule_name' => 'Digital Download',
-                        'tab_title' => 'Download & Installation',
-                        'tab_content' => '<h3>Download & Installation Guide</h3>
-                                        <div class="download-info">
-                                            <h4>After Purchase:</h4>
-                                            <ol>
-                                                <li>You will receive a download link via email</li>
-                                                <li>Download link is valid for 7 days</li>
-                                                <li>You can re-download from your account page</li>
-                                                <li>Keep your license key safe</li>
-                                            </ol>
-                                            
-                                            <h4>Installation Steps:</h4>
-                                            <ol>
-                                                <li>Download the installer file</li>
-                                                <li>Run the installer as administrator</li>
-                                                <li>Follow the installation wizard</li>
-                                                <li>Enter your license key when prompted</li>
-                                                <li>Complete the activation process</li>
-                                            </ol>
-                                            
-                                            <h4>Troubleshooting:</h4>
-                                            <ul>
-                                                <li><strong>Installation fails:</strong> Try running as administrator</li>
-                                                <li><strong>License key invalid:</strong> Check for typos, copy-paste recommended</li>
-                                                <li><strong>Activation issues:</strong> Ensure internet connection</li>
-                                                <li><strong>Need help:</strong> Contact our support team</li>
-                                            </ul>
-                                            
-                                            <p><strong>Support:</strong> support@yourstore.com</p>
-                                        </div>',
-                        'content_type' => 'rich_editor',
-                        'conditions' => json_encode(array('type' => 'category', 'value' => array('digital', 'software', 'downloads'), 'operator' => 'in')),
-                        'user_role_condition' => 'logged_in',
-                        'priority' => 35,
-                        'is_active' => 1,
-                        'mobile_hidden' => 0
-                    )
-                )
-            )
+        $templates = array();
+        
+        // Define the available templates and their JSON files
+        $template_files = array(
+            'electronics' => 'electronics-pack.json',
+            'fashion' => 'fashion-pack.json', 
+            'digital' => 'digital-pack.json'
         );
+        
+        foreach ($template_files as $template_key => $filename) {
+            $file_path = $this->templates_dir . $filename;
+            
+            if (file_exists($file_path)) {
+                $json_content = file_get_contents($file_path);
+                $template_data = json_decode($json_content, true);
+                
+                if ($template_data && json_last_error() === JSON_ERROR_NONE) {
+                    // Add the template key for reference
+                    $template_data['template_key'] = $template_key;
+                    $template_data['source_file'] = $filename;
+                    
+                    // Ensure required fields exist
+                    if (!isset($template_data['name'])) {
+                        $template_data['name'] = ucfirst($template_key) . ' Template';
+                    }
+                    if (!isset($template_data['description'])) {
+                        $template_data['description'] = 'Template loaded from ' . $filename;
+                    }
+                    if (!isset($template_data['tabs_count']) && isset($template_data['rules'])) {
+                        $template_data['tabs_count'] = count($template_data['rules']);
+                    }
+                    
+                    $templates[$template_key] = $template_data;
+                } else {
+                    error_log('SPT Templates: Failed to parse JSON file: ' . $filename . ' - ' . json_last_error_msg());
+                }
+            } else {
+                error_log('SPT Templates: Template file not found: ' . $file_path);
+            }
+        }
+
+        
+        return $templates;
     }
     
     /**
-     * Install built-in template
+     * Load template from JSON file
      */
-    public function install_builtin_template($template_key) {
-        $templates = $this->get_builtin_templates();
+    public function load_template_from_file($template_key) {
+        $template_files = array(
+            'electronics' => 'electronics-pack.json',
+            'fashion' => 'fashion-pack.json', 
+            'digital' => 'digital-pack.json'
+        );
         
-        if (!isset($templates[$template_key])) {
-            return new WP_Error('invalid_template', __('Template not found', 'smart-product-tabs'));
+        if (!isset($template_files[$template_key])) {
+            return new WP_Error('invalid_template_key', __('Invalid template key', 'smart-product-tabs'));
         }
         
-        $template = $templates[$template_key];
+        $filename = $template_files[$template_key];
+        $file_path = $this->templates_dir . $filename;
         
-        return $this->import_template_data($template);
-    }
+        if (!file_exists($file_path)) {
+            return new WP_Error('file_not_found', sprintf(__('Template file not found: %s', 'smart-product-tabs'), $filename));
+        }
+        
+        $json_content = file_get_contents($file_path);
+        if ($json_content === false) {
+            return new WP_Error('file_read_error', sprintf(__('Could not read template file: %s', 'smart-product-tabs'), $filename));
+        }
+        
+        $template_data = json_decode($json_content, true);
+        if ($template_data === null || json_last_error() !== JSON_ERROR_NONE) {
+            return new WP_Error('json_parse_error', sprintf(__('Invalid JSON in template file: %s - %s', 'smart-product-tabs'), $filename, json_last_error_msg()));
+        }
+        
+        return $template_data;
+    }    
+
+    /**
+     * Install built-in template (updated to use JSON files)
+     */
+    public function install_builtin_template($template_key) {
+        // Load template data from JSON file
+        $template_data = $this->load_template_from_file($template_key);
+        
+        if (is_wp_error($template_data)) {
+            return $template_data;
+        }
+        
+        // Import the template data
+        return $this->import_template_data($template_data);
+    }    
+    
+
     
     /**
      * Export current rules to template
@@ -929,7 +675,6 @@ public function ajax_export_rules() {
      * Add this method to your SPT_Templates class
      */
     public function ajax_get_template_preview() {
-        // Verify nonce
         if (!wp_verify_nonce($_POST['nonce'] ?? '', 'spt_ajax_nonce')) {
             wp_send_json_error(__('Security check failed', 'smart-product-tabs'));
             return;
@@ -943,33 +688,29 @@ public function ajax_export_rules() {
         }
 
         try {
-            // Get built-in templates
-            $builtin_templates = $this->get_builtin_templates();
-
-            if (!isset($builtin_templates[$template_key])) {
-                error_log('SPT Templates: Template not found - ' . $template_key);
-                error_log('SPT Templates: Available templates - ' . implode(', ', array_keys($builtin_templates)));
-                wp_send_json_error(__('Template not found', 'smart-product-tabs'));
+            // Load template from JSON file
+            $template_data = $this->load_template_from_file($template_key);
+            
+            if (is_wp_error($template_data)) {
+                wp_send_json_error($template_data->get_error_message());
                 return;
             }
 
-            $template = $builtin_templates[$template_key];
-
             // Prepare template data for preview
             $preview_data = array(
-                'name' => $template['name'],
-                'description' => $template['description'] ?? '',
-                'version' => $template['version'] ?? '1.0',
-                'author' => $template['author'] ?? 'Smart Product Tabs',
+                'name' => $template_data['name'] ?? 'Unknown Template',
+                'description' => $template_data['description'] ?? '',
+                'version' => $template_data['version'] ?? '1.0',
+                'author' => $template_data['author'] ?? 'Smart Product Tabs',
                 'tabs_count' => 0,
-                'categories' => $template['categories'] ?? array(),
+                'categories' => $template_data['categories'] ?? array(),
                 'rules' => array()
             );
 
             // Load and parse template rules if available
-            if (isset($template['rules']) && is_array($template['rules'])) {
-                $preview_data['rules'] = $template['rules'];
-                $preview_data['tabs_count'] = count($template['rules']);
+            if (isset($template_data['rules']) && is_array($template_data['rules'])) {
+                $preview_data['rules'] = $template_data['rules'];
+                $preview_data['tabs_count'] = count($template_data['rules']);
             }
 
             error_log('SPT Templates: Sending preview data for ' . $template_key . ' - ' . $preview_data['tabs_count'] . ' tabs');
@@ -977,7 +718,7 @@ public function ajax_export_rules() {
 
         } catch (Exception $e) {
             error_log('SPT Templates: Preview error - ' . $e->getMessage());
-            wp_send_json_error(__('Failed to load template preview', 'smart-product-tabs'));
+            wp_send_json_error(__('Preview failed: ', 'smart-product-tabs') . $e->getMessage());
         }
     }
     
