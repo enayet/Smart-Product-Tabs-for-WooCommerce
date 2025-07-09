@@ -1083,56 +1083,61 @@ class SPT_Admin {
                 <h2><?php _e('Templates', 'smart-product-tabs'); ?></h2>
                 <p><?php _e('Import pre-built templates or export your current configuration.', 'smart-product-tabs'); ?></p>
             </div>
-
-            <!-- Built-in Templates -->
-<div class="templates-section">
-    <div class="built-in-templates">
-        <h3><?php _e('Built-in Templates', 'smart-product-tabs'); ?></h3>
-        <p><?php _e('Choose from professionally designed templates to get started quickly:', 'smart-product-tabs'); ?></p>
-
-        <div class="templates-grid">
-            <?php foreach ($builtin_templates as $key => $template): ?>
-            <div class="template-card">                
-                <div class="template-icon">
-                    <?php if (!empty($template['icon'])): ?>
-                        <i class="<?php echo esc_attr($template['icon']); ?>"></i>
-                    <?php else: ?>
-                        <div class="default-icon">
-                            <?php 
-                            // Fix: Use $key instead of undefined 'category'
-                            echo $key === 'electronics' ? '🔌' : 
-                                 ($key === 'fashion' ? '👕' : 
-                                 ($key === 'digital' ? '💻' : '📋'));
-                            ?>
-                        </div>
-                    <?php endif; ?>
-                </div>                
-
+            
+            
+        <!-- Enhanced Template Grid - Three Column Layout -->
+        <div class="template-grid">
+            <?php
+            // Get your templates data (replace this with your actual template fetching logic)
+            $templates = new SPT_Templates();
+            $templates = $templates->get_builtin_templates();
+            
+            foreach ($templates as $template_key => $template_data) :
+                $template_name = $template_data['name'] ?? 'Unnamed Template';
+                $description = $template_data['description'] ?? 'No description available';
+                $version = $template_data['version'] ?? '1.0';
+                $tabs_count = isset($template_data['rules']) ? count($template_data['rules']) : 0;
+                $icon = $template_data['icon'] ?? '📦'; // Default icon
+            ?>
+            
+            <div class="template-card">
+                <div class="template-preview">
+                    <div class="template-icon"><?php echo esc_html($icon); ?></div>
+                </div>
+                
                 <div class="template-info">
-                    <h4><?php echo esc_html($template['name']); ?></h4>
-                    <p><?php echo esc_html($template['description']); ?></p>
-
+                    <h4><?php echo esc_html($template_name); ?></h4>
+                    <p><?php echo esc_html($description); ?></p>
+                    
                     <div class="template-meta">
-                        <span class="tabs-count"><?php echo sprintf(__('%d tabs', 'smart-product-tabs'), $template['tabs_count']); ?></span>
-                        <span class="template-version">v<?php echo esc_html($template['version']); ?></span>
+                        <span><?php printf(__('Version %s', 'smart-product-tabs'), esc_html($version)); ?></span>
+                        <span class="tabs-count">
+                            <?php printf(_n('%d Tab', '%d Tabs', $tabs_count, 'smart-product-tabs'), $tabs_count); ?>
+                        </span>
                     </div>
-
+                    
                     <div class="template-actions">
-                        <button type="button" class="button-primary template-install" 
-                                data-template-key="<?php echo esc_attr($key); ?>"
-                                data-template-name="<?php echo esc_attr($template['name']); ?>">
-                            <?php _e('Install Template', 'smart-product-tabs'); ?>
-                        </button>
-                        <button type="button" class="button template-preview-btn" 
-                                data-template-key="<?php echo esc_attr($key); ?>">
+                        <button class="button button-secondary template-preview-btn" 
+                                data-template-key="<?php echo esc_attr($template_key); ?>" 
+                                data-template-name="<?php echo esc_attr($template_name); ?>">
                             <?php _e('Preview', 'smart-product-tabs'); ?>
+                        </button>
+                        <button class="button button-primary template-install" 
+                                data-template-key="<?php echo esc_attr($template_key); ?>" 
+                                data-template-name="<?php echo esc_attr($template_name); ?>">
+                            <?php _e('Install', 'smart-product-tabs'); ?>
                         </button>
                     </div>
                 </div>
             </div>
+            
             <?php endforeach; ?>
-        </div>
-    </div>
+        </div>            
+            
+
+            <!-- Built-in Templates -->
+<div class="templates-section">
+
 
     <!-- Import/Export Section -->
     <div class="import-export-section">
@@ -1205,31 +1210,36 @@ class SPT_Admin {
     </div>
 
     <!-- Enhanced Template Preview Modal -->
-    <div id="template-preview-modal" class="spt-modal" style="display: none;">
-        <div class="spt-modal-content">
-            <!-- Fixed Header -->
-            <div class="spt-modal-header">
-                <h3 id="preview-template-title"><?php _e('Template Preview', 'smart-product-tabs'); ?></h3>
-                <button type="button" class="spt-modal-close" aria-label="<?php _e('Close', 'smart-product-tabs'); ?>">&times;</button>
-            </div>
+        <!-- Enhanced Template Preview Modal -->
+        <div id="template-preview-modal" class="spt-modal" style="display: none;">
+            <div class="spt-modal-content">
+                <!-- Fixed Header -->
+                <div class="spt-modal-header">
+                    <h3 id="preview-template-title"><?php _e('Template Preview', 'smart-product-tabs'); ?></h3>
+                    <button type="button" class="spt-modal-close" aria-label="<?php _e('Close', 'smart-product-tabs'); ?>">&times;</button>
+                </div>
 
-            <!-- Scrollable Body -->
-            <div class="spt-modal-body">
-                <div id="preview-template-content">
-                    <!-- Template preview content loaded via AJAX -->
+                <!-- Scrollable Body -->
+                <div class="spt-modal-body">
+                    <div id="preview-template-content">
+                        <!-- Template preview content loaded via AJAX -->
+                    </div>
+                </div>
+
+                <!-- Fixed Footer -->
+                <div class="spt-modal-footer">
+                    <button type="button" class="button button-primary" id="install-from-preview">
+                        <?php _e('Install This Template', 'smart-product-tabs'); ?>
+                    </button>
+                    <button type="button" class="button" id="close-preview">
+                        <?php _e('Close', 'smart-product-tabs'); ?>
+                    </button>
                 </div>
             </div>
-
-            <!-- Fixed Footer -->
-            <div class="spt-modal-footer">
-                <button type="button" class="button-primary" id="install-from-preview">
-                    <?php _e('Install This Template', 'smart-product-tabs'); ?>
-                </button>
-                <button type="button" class="button" id="close-preview">
-                    <?php _e('Close', 'smart-product-tabs'); ?>
-                </button>
-            </div>
         </div>
+        
+        <!-- Hidden nonce for AJAX calls -->
+        <input type="hidden" id="spt-ajax-nonce" value="<?php echo wp_create_nonce('spt_ajax_nonce'); ?>" />
     </div>
 </div>
 

@@ -1830,23 +1830,43 @@
     outline: none;
 }
 
-/* Enhanced Template Grid */
+/* ===== ENHANCED TEMPLATE GRID - THREE COLUMN LAYOUT ===== */
+
 .template-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, 1fr); /* Force exactly 3 columns */
     gap: 25px;
     margin: 25px 0;
+    max-width: 100%;
 }
+
+/* Responsive adjustments for smaller screens */
+@media screen and (max-width: 1200px) {
+    .template-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .template-grid {
+        grid-template-columns: 1fr; /* Single column on small screens */
+        gap: 15px;
+    }
+}
+
+/* ===== ENHANCED TEMPLATE CARDS ===== */
 
 .template-card {
     background: #fff;
     border: 1px solid #e1e1e1;
     border-radius: 8px;
-    padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure consistent height */
 }
 
 .template-card:hover {
@@ -1865,11 +1885,41 @@
     background: linear-gradient(90deg, #0073aa, #00a0d2);
 }
 
+/* ===== TEMPLATE PREVIEW SECTION ===== */
+
+.template-preview {
+    height: 140px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.template-icon {
+    font-size: 48px;
+    opacity: 0.9;
+}
+
+/* ===== TEMPLATE INFO SECTION ===== */
+
+.template-info {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .template-info h4 {
     margin: 0 0 15px 0;
     color: #23282d;
     font-size: 18px;
     font-weight: 600;
+    line-height: 1.3;
 }
 
 .template-info p {
@@ -1877,7 +1927,10 @@
     color: #666;
     font-size: 14px;
     line-height: 1.6;
+    flex: 1;
 }
+
+/* ===== TEMPLATE META INFORMATION ===== */
 
 .template-meta {
     display: flex;
@@ -1899,10 +1952,13 @@
     font-weight: 500;
 }
 
+/* ===== TEMPLATE ACTIONS ===== */
+
 .template-actions {
     display: flex;
     gap: 10px;
-    margin-top: 15px;
+    margin-top: auto; /* Push to bottom */
+    padding-top: 15px;
 }
 
 .template-actions .button {
@@ -1911,11 +1967,14 @@
     justify-content: center;
     border-radius: 4px;
     transition: all 0.2s ease;
+    font-size: 13px;
+    padding: 8px 12px;
 }
 
 .template-actions .button-primary {
     background: #0073aa;
     border-color: #0073aa;
+    color: #fff;
 }
 
 .template-actions .button-primary:hover {
@@ -1924,11 +1983,21 @@
     transform: translateY(-1px);
 }
 
+.template-actions .button-secondary {
+    background: #f3f5f6;
+    border-color: #ddd;
+    color: #555;
+}
 
-/* Modal Styling */
+.template-actions .button-secondary:hover {
+    background: #e8eaeb;
+    border-color: #ccc;
+}
+
+/* ===== ENHANCED TEMPLATE PREVIEW MODAL ===== */
+
 /* Modal Backdrop */
-.spt-modal,
-.spt-export-modal {
+.spt-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -1942,29 +2011,27 @@
     animation: fadeIn 0.3s ease;
 }
 
-/* Modal Content Container - SINGLE SCROLL BAR HERE */
-.spt-modal-content,
-.spt-export-content {
+/* Modal Content Container */
+.spt-modal-content {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     max-width: 80%;
     width: 90%;
     max-height: 85vh;
-    /* ONLY overflow here for single scroll bar */
     overflow-y: auto;
     overflow-x: hidden;
     animation: slideIn 0.3s ease;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
-/* Modal Header - Fixed at top */
+/* Modal Header */
 .spt-modal-header {
     padding: 20px 20px 15px 20px;
     border-bottom: 1px solid #eee;
     position: relative;
-    /* Fixed header - no scroll */
     flex-shrink: 0;
     background: #fff;
     border-top-left-radius: 8px;
@@ -1975,7 +2042,7 @@
     margin: 0;
     color: #23282d;
     font-size: 20px;
-    padding-right: 40px; /* Space for close button */
+    padding-right: 40px;
 }
 
 /* Modal Close Button */
@@ -2003,21 +2070,20 @@
     color: #333;
 }
 
-/* Modal Body - Scrollable content area */
+/* Modal Body */
 .spt-modal-body {
     padding: 20px;
-    /* NO overflow here - let parent handle scrolling */
     flex: 1;
-    min-height: 0; /* Allow flexbox to shrink */
+    min-height: 0;
+    position: relative;
 }
 
-/* Modal Footer - Fixed at bottom */
+/* Modal Footer */
 .spt-modal-footer {
     padding: 15px 20px;
     border-top: 1px solid #eee;
     text-align: right;
     background: #f8f9fa;
-    /* Fixed footer - no scroll */
     flex-shrink: 0;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
@@ -2025,6 +2091,283 @@
 
 .spt-modal-footer .button {
     margin-left: 10px;
+}
+
+/* ===== LOADING OVERLAY FOR MODAL ===== */
+
+.spt-modal-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border-radius: 8px;
+}
+
+.spt-modal-loading-content {
+    text-align: center;
+    color: #666;
+}
+
+.spt-modal-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+.spt-modal-loading-text {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== TEMPLATE PREVIEW CONTENT ===== */
+
+.template-preview-details {
+    line-height: 1.6;
+    max-width: 100%;
+}
+
+.template-preview-details p {
+    margin: 0 0 15px 0;
+    line-height: 1.6;
+}
+
+.template-preview-details strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.template-preview-details h4 {
+    margin: 20px 0 15px 0;
+    color: #333;
+    border-bottom: 2px solid #0073aa;
+    padding-bottom: 5px;
+    font-size: 16px;
+}
+
+/* ===== TABS PREVIEW LIST ===== */
+
+.tabs-preview-list {
+    margin-top: 15px;
+}
+
+.tab-preview-item {
+    background: #f9f9f9;
+    border: 1px solid #e1e1e1;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.tab-preview-item:hover {
+    background: #f0f0f0;
+    border-color: #0073aa;
+}
+
+.tab-preview-item h5 {
+    margin: 0 0 10px 0;
+    color: #0073aa;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tab-preview-item p {
+    margin: 8px 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.tab-preview-item strong {
+    color: #333;
+    font-weight: 600;
+}
+
+/* ===== LOADING STATES FOR TEMPLATE CARDS ===== */
+
+.template-card.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.template-card.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 5;
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE MODAL FIXES ===== */
+
+@media (max-width: 768px) {
+    .spt-modal-content {
+        max-width: 95%;
+        width: 95%;
+        max-height: 90vh;
+        margin: 20px 10px;
+    }
+    
+    .spt-modal-header,
+    .spt-modal-body,
+    .spt-modal-footer {
+        padding: 15px;
+    }
+    
+    .spt-modal-header h3 {
+        font-size: 18px;
+        padding-right: 35px;
+    }
+    
+    .tab-preview-item {
+        padding: 12px;
+    }
+    
+    .template-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .template-actions .button {
+        flex: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .spt-modal-content {
+        max-width: 98%;
+        width: 98%;
+        margin: 10px 5px;
+    }
+    
+    .spt-modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .spt-modal-footer {
+        text-align: center;
+    }
+    
+    .spt-modal-footer .button {
+        margin: 5px;
+        display: block;
+        width: 100%;
+    }
+}
+
+/* ===== TEMPLATE CONTAINER IMPROVEMENTS ===== */
+
+.spt-templates {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.template-section-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.template-section-header h3 {
+    margin: 0;
+    color: #23282d;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.template-section-header p {
+    margin: 5px 0 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* ===== OVERRIDE EXISTING STYLES ===== */
+
+/* Ensure modal shows properly */
+#template-preview-modal .spt-modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+#template-preview-modal .spt-modal-body {
+    overflow: visible !important;
+    max-height: none !important;
+    flex: 1 !important;
+}
+
+#template-preview-modal .tabs-preview-list {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Hide any unwanted close buttons in preview content */
+#template-preview-modal .template-preview-details .close,
+#template-preview-modal .template-preview-details .modal-close,
+#template-preview-modal .template-preview-details .preview-close {
+    display: none !important;
+}
+
+/* Ensure modal header and footer stay fixed */
+#template-preview-modal .spt-modal-header {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: #fff !important;
+}
+
+#template-preview-modal .spt-modal-footer {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 10 !important;
+    background: #f8f9fa !important;
 }
 
 /* Template Preview Content */
