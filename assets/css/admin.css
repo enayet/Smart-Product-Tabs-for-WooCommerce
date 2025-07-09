@@ -1996,35 +1996,152 @@
 
 /* ===== ENHANCED TEMPLATE PREVIEW MODAL ===== */
 
-/* Modal Backdrop */
+/* Modal Backdrop - FIXED VERSION */
 .spt-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 100000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    z-index: 999999 !important; /* Increased z-index */
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    animation: fadeIn 0.3s ease !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
 }
 
-/* Modal Content Container */
+.spt-modal[style*="display: block"],
+.spt-modal[style*="display: flex"] {
+    display: flex !important;
+}
+
+/* Modal Content Container - FIXED VERSION */
 .spt-modal-content {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    max-width: 80%;
-    width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    animation: slideIn 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+    background: #fff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important; /* Enhanced shadow */
+    max-width: 80% !important;
+    width: 90% !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    animation: slideIn 0.3s ease !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    margin: 0 auto !important; /* Ensure centering */
+}
+
+/* Installation Confirmation Modal - FIXED VERSION */
+.install-confirmation-modal {
+    max-width: 600px !important;
+    width: 90% !important;
+}
+
+/* Installation Progress Modal - FIXED VERSION */
+.install-progress-modal {
+    max-width: 500px !important;
+    width: 90% !important;
+}
+
+/* Installation Success Modal - FIXED VERSION */
+.install-success-modal {
+    max-width: 550px !important;
+    width: 90% !important;
+}
+
+/* Installation Error Modal - FIXED VERSION */
+.install-error-modal {
+    max-width: 550px !important;
+    width: 90% !important;
+}
+
+/* Override WordPress admin styles that might interfere */
+#wpwrap .spt-modal {
+    position: fixed !important;
+    z-index: 999999 !important;
+}
+
+#wpcontent .spt-modal {
+    position: fixed !important;
+    z-index: 999999 !important;
+}
+
+.wrap .spt-modal {
+    position: fixed !important;
+    z-index: 999999 !important;
+}
+
+/* Ensure modal shows above WordPress admin bar */
+html.wp-toolbar .spt-modal {
+    z-index: 999999 !important;
+}
+
+/* Modal animations - ENHANCED */
+@keyframes fadeIn {
+    from { 
+        opacity: 0;
+        visibility: hidden;
+    }
+    to { 
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Additional responsive fixes */
+@media (max-width: 768px) {
+    .spt-modal {
+        padding: 10px !important;
+    }
+    
+    .spt-modal-content {
+        max-width: 95% !important;
+        width: 95% !important;
+        max-height: 90vh !important;
+    }
+    
+    .install-confirmation-modal,
+    .install-progress-modal,
+    .install-success-modal,
+    .install-error-modal {
+        max-width: 95% !important;
+        width: 95% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .spt-modal {
+        padding: 5px !important;
+    }
+    
+    .spt-modal-content {
+        max-width: 98% !important;
+        width: 98% !important;
+        max-height: 95vh !important;
+    }
+    
+    .install-confirmation-modal,
+    .install-progress-modal,
+    .install-success-modal,
+    .install-error-modal {
+        max-width: 98% !important;
+        width: 98% !important;
+    }
 }
 
 /* Modal Header */

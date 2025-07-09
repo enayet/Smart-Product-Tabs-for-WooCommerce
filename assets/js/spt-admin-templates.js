@@ -1,7 +1,6 @@
 /**
- * Smart Product Tabs - Admin Templates JavaScript
- * Enhanced functionality for template preview and installation
- * Fixed for WordPress jQuery compatibility
+ * FIXED Smart Product Tabs - Admin Templates JavaScript
+ * Complete replacement for assets/js/spt-admin-templates.js
  */
 
 (function($) {
@@ -18,7 +17,7 @@
 })(jQuery);
 
 /**
- * Main Templates Object
+ * FIXED Main Templates Object
  */
 var SPTTemplates = {
     
@@ -34,12 +33,12 @@ var SPTTemplates = {
      * Bind all event handlers
      */
     bindEvents: function() {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         
         // Template preview buttons
         $(document).on('click', '.template-preview-btn', this.handlePreview);
         
-        // Template install buttons
+        // Template install buttons - FIXED to use modal instead of confirm()
         $(document).on('click', '.template-install', this.handleInstall);
         
         // Import functionality
@@ -54,358 +53,56 @@ var SPTTemplates = {
      * Setup modal event handlers
      */
     setupModalHandlers: function() {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         
         // Modal close handlers
         $(document).on('click', '.spt-modal-close, #close-preview', function() {
             $('#template-preview-modal').hide();
         });
         
-        // Close modal when clicking backdrop
-        $(document).on('click', '#template-preview-modal', function(e) {
+        // Close modal on backdrop click
+        $(document).on('click', '.spt-modal', function(e) {
             if (e.target === this) {
                 $(this).hide();
             }
         });
         
-        // Close modal with Escape key
-        $(document).on('keydown', function(e) {
-            if (e.keyCode === 27 && $('#template-preview-modal').is(':visible')) {
-                $('#template-preview-modal').hide();
-            }
+        // Install from preview modal
+        $(document).on('click', '#install-from-preview', function() {
+            var templateKey = $('.template-preview-btn[data-template-key]').first().data('template-key');
+            var templateName = $('.template-preview-btn[data-template-key]').first().data('template-name');
+            var $button = $('.template-install[data-template-key="' + templateKey + '"]');
+            var $card = $button.closest('.template-card');
+            
+            $('#template-preview-modal').hide();
+            SPTTemplates.showInstallConfirmationModal(templateKey, templateName, $button, $card);
         });
     },
-    
-    /**
-     * Handle template preview
-     */
-    handlePreview: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
-        e.preventDefault();
-        
-        var templateKey = $(this).data('template-key');
-        var templateName = $(this).data('template-name') || 'Template';
-        var $modal = $('#template-preview-modal');
-        var $modalBody = $modal.find('.spt-modal-body');
-        
-        // Show modal immediately
-        $modal.show();
-        
-        // Set initial title
-        $('#preview-template-title').text('Loading Template Preview...');
-        
-        // Show loading spinner
-        SPTTemplates.showModalSpinner($modalBody, 'Loading template details...');
-        
-        // Make AJAX request
-        $.ajax({
-            url: SPTTemplates.getAjaxUrl(),
-            type: 'POST',
-            data: {
-                action: 'spt_get_template_preview',
-                template_key: templateKey,
-                nonce: SPTTemplates.getAjaxNonce()
-            },
-            success: function(response) {
-                SPTTemplates.hideModalSpinner($modalBody);
-                
-                if (response.success && response.data) {
-                    var template = response.data;
-                    
-                    // Update modal title
-                    $('#preview-template-title').text('Template Preview: ' + (template.name || templateName));
-                    
-                    // Generate preview content
-                    var content = SPTTemplates.generateTemplatePreviewHTML(template);
-                    $('#preview-template-content').html(content);
-                    
-                    // Set up install button
-                    $('#install-from-preview').off('click').on('click', function() {
-                        $modal.hide();
-                        // Trigger install on the original install button
-                        $('.template-install[data-template-key="' + templateKey + '"]').click();
-                    });
-                    
-                } else {
-                    $('#preview-template-title').text('Preview Error');
-                    $('#preview-template-content').html(
-                        '<div class="spt-status-message error">' +
-                        '<p><strong>Error:</strong> ' + (response.data || 'Unable to load template preview') + '</p>' +
-                        '</div>'
-                    );
-                }
-            },
-            error: function(xhr, status, error) {
-                SPTTemplates.hideModalSpinner($modalBody);
-                $('#preview-template-title').text('Preview Error');
-                $('#preview-template-content').html(
-                    '<div class="spt-status-message error">' +
-                    '<p><strong>Error:</strong> Failed to load template preview. Please try again.</p>' +
-                    '<p><em>Details: ' + error + '</em></p>' +
-                    '</div>'
-                );
-            }
-        });
-    },
-    
-    /**
-     * Handle template installation
-     */
-    handleInstall: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
-        e.preventDefault();
 
-        var templateKey = $(this).data('template-key');
-        var templateName = $(this).data('template-name') || 'this template';
-        var $button = $(this);
-        var $card = $button.closest('.template-card');
-
-        // Show enhanced confirmation modal instead of simple confirm()
-        SPTTemplates.showInstallConfirmationModal(templateKey, templateName, $button, $card);
-    },
-    
-    /**
-     * Handle file import
-     */
-    handleFileImport: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
-        e.preventDefault();
-        
-        var fileInput = $('#template_file')[0];
-        if (!fileInput.files.length) {
-            alert('Please select a file to import.');
-            return;
-        }
-        
-        var formData = new FormData();
-        formData.append('action', 'spt_import_template_file');
-        formData.append('template_file', fileInput.files[0]);
-        formData.append('nonce', SPTTemplates.getAjaxNonce());
-        
-        var $button = $(this);
-        $button.prop('disabled', true).text('Importing...');
-        
-        $.ajax({
-            url: SPTTemplates.getAjaxUrl(),
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    SPTTemplates.showSuccessMessage('Template imported successfully! ' + response.data.imported + ' rules imported.');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                } else {
-                    SPTTemplates.showErrorMessage('Import failed: ' + response.data);
-                }
-            },
-            error: function() {
-                SPTTemplates.showErrorMessage('Import failed. Please try again.');
-            },
-            complete: function() {
-                $button.prop('disabled', false).text('Import Template');
-            }
-        });
-    },
-    
-    /**
-     * Handle text import
-     */
-    handleTextImport: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
-        e.preventDefault();
-        
-        var templateText = $('#template_text').val().trim();
-        if (!templateText) {
-            alert('Please enter template data to import.');
-            return;
-        }
-        
-        var $button = $(this);
-        $button.prop('disabled', true).text('Importing...');
-        
-        $.ajax({
-            url: SPTTemplates.getAjaxUrl(),
-            type: 'POST',
-            data: {
-                action: 'spt_import_template_text',
-                template_text: templateText,
-                nonce: SPTTemplates.getAjaxNonce()
-            },
-            success: function(response) {
-                if (response.success) {
-                    SPTTemplates.showSuccessMessage('Template imported successfully! ' + response.data.imported + ' rules imported.');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
-                } else {
-                    SPTTemplates.showErrorMessage('Import failed: ' + response.data);
-                }
-            },
-            error: function() {
-                SPTTemplates.showErrorMessage('Import failed. Please try again.');
-            },
-            complete: function() {
-                $button.prop('disabled', false).text('Import Template');
-            }
-        });
-    },
-    
-    /**
-     * Handle export
-     */
-    handleExport: function(e) {
-        var $ = jQuery; // Ensure jQuery is available
-        e.preventDefault();
-        
-        var $button = $(this);
-        $button.prop('disabled', true).text('Exporting...');
-        
-        $.ajax({
-            url: SPTTemplates.getAjaxUrl(),
-            type: 'POST',
-            data: {
-                action: 'spt_export_rules',
-                nonce: SPTTemplates.getAjaxNonce()
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Create download link
-                    var blob = new Blob([response.data.content], { type: 'application/json' });
-                    var url = window.URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = response.data.filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                    
-                    SPTTemplates.showSuccessMessage('Export completed successfully!');
-                } else {
-                    SPTTemplates.showErrorMessage('Export failed: ' + response.data);
-                }
-            },
-            error: function() {
-                SPTTemplates.showErrorMessage('Export failed. Please try again.');
-            },
-            complete: function() {
-                $button.prop('disabled', false).text('Download Export File');
-            }
-        });
-    },
-    
-    /**
-     * Show loading spinner in modal
-     */
-    showModalSpinner: function($container, message) {
-        var spinnerHTML = 
-            '<div class="spt-modal-loading">' +
-                '<div class="spt-modal-loading-content">' +
-                    '<div class="spt-modal-loading-spinner"></div>' +
-                    '<div class="spt-modal-loading-text">' + (message || 'Loading...') + '</div>' +
-                '</div>' +
-            '</div>';
-        
-        $container.html(spinnerHTML);
-    },
-    
-    /**
-     * Hide loading spinner
-     */
-    hideModalSpinner: function($container) {
-        $container.find('.spt-modal-loading').remove();
-    },
-    
-    /**
-     * Generate template preview HTML
-     */
-    generateTemplatePreviewHTML: function(template) {
-        var html = '<div class="template-preview-details">';
-        
-        // Basic template information
-        html += '<p><strong>Description:</strong> ' + (template.description || 'No description available') + '</p>';
-        html += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
-        html += '<p><strong>Author:</strong> ' + (template.author || 'Unknown') + '</p>';
-        
-        // Rules/tabs information
-        if (template.rules && template.rules.length > 0) {
-            html += '<p><strong>Number of Tabs:</strong> ' + template.rules.length + '</p>';
-            
-            html += '<h4>Included Tabs</h4>';
-            html += '<div class="tabs-preview-list">';
-            
-            template.rules.forEach(function(rule, index) {
-                html += '<div class="tab-preview-item">';
-                html += '<h5>' + (rule.tab_title || 'Tab ' + (index + 1)) + '</h5>';
-                
-                if (rule.tab_type) {
-                    html += '<p><strong>Type:</strong> ' + rule.tab_type + '</p>';
-                }
-                
-                if (rule.conditions && rule.conditions.length > 0) {
-                    html += '<p><strong>Conditions:</strong> ' + rule.conditions.length + ' condition(s)</p>';
-                }
-                
-                if (rule.tab_content) {
-                    var contentPreview = rule.tab_content.substring(0, 100);
-                    if (rule.tab_content.length > 100) {
-                        contentPreview += '...';
-                    }
-                    html += '<p><strong>Content Preview:</strong> ' + contentPreview + '</p>';
-                }
-                
-                html += '</div>';
-            });
-            
-            html += '</div>';
-        } else {
-            html += '<p><strong>Number of Tabs:</strong> 0 (No tabs included)</p>';
-        }
-        
-        // Additional metadata
-        if (template.tags && template.tags.length > 0) {
-            html += '<p><strong>Tags:</strong> ' + template.tags.join(', ') + '</p>';
-        }
-        
-        if (template.compatibility) {
-            html += '<p><strong>Compatibility:</strong> ' + template.compatibility + '</p>';
-        }
-        
-        html += '</div>';
-        
-        return html;
-    },
-    
     /**
      * Get AJAX URL with fallback
      */
     getAjaxUrl: function() {
-        if (typeof spt_admin_ajax !== 'undefined' && spt_admin_ajax.ajax_url) {
-            return spt_admin_ajax.ajax_url;
-        }
-        if (typeof ajaxurl !== 'undefined') {
-            return ajaxurl;
-        }
-        return '/wp-admin/admin-ajax.php';
+        return (typeof spt_admin_ajax !== 'undefined' && spt_admin_ajax.ajax_url) ? 
+               spt_admin_ajax.ajax_url : 
+               ajaxurl || '/wp-admin/admin-ajax.php';
     },
-    
+
     /**
      * Get AJAX nonce with fallback
      */
     getAjaxNonce: function() {
-        var $ = jQuery; // Ensure jQuery is available
+        var nonce = '';
         
+        // Try multiple sources for nonce
         if (typeof spt_admin_ajax !== 'undefined' && spt_admin_ajax.nonce) {
-            return spt_admin_ajax.nonce;
+            nonce = spt_admin_ajax.nonce;
+        } else if ($('#spt-ajax-nonce').length) {
+            nonce = $('#spt-ajax-nonce').val();
         }
-        // Fallback - look for nonce in hidden input or data attribute
-        var nonce = $('#spt-ajax-nonce').val() || $('[data-spt-nonce]').data('spt-nonce');
+        
         if (!nonce) {
-            console.warn('SPT: No AJAX nonce found. Some functionality may not work.');
+            console.warn('SPT Templates: No nonce found. Some functionality may not work.');
         }
         return nonce || '';
     },
@@ -414,7 +111,7 @@ var SPTTemplates = {
      * Show success message
      */
     showSuccessMessage: function(message) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         var $notice = $('<div class="notice notice-success is-dismissible"><p>' + message + '</p></div>');
         $('.spt-templates, .wrap').first().prepend($notice);
         
@@ -427,7 +124,7 @@ var SPTTemplates = {
      * Show error message
      */
     showErrorMessage: function(message) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         var $notice = $('<div class="notice notice-error is-dismissible"><p>' + message + '</p></div>');
         $('.spt-templates, .wrap').first().prepend($notice);
         
@@ -437,13 +134,13 @@ var SPTTemplates = {
     },
 
     /**
-     * Show enhanced confirmation modal for template installation
+     * FIXED: Show enhanced confirmation modal for template installation
      */
     showInstallConfirmationModal: function(templateKey, templateName, $button, $card) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         
         var modalHtml = 
-            '<div id="install-confirmation-modal" class="spt-modal" style="display: block;">' +
+            '<div id="install-confirmation-modal" class="spt-modal" style="display: flex;">' +
                 '<div class="spt-modal-content install-confirmation-modal">' +
                     '<div class="spt-modal-header">' +
                         '<h3>⚠️ Confirm Template Installation</h3>' +
@@ -457,34 +154,28 @@ var SPTTemplates = {
                             '</div>' +
                             
                             '<div class="warning-message">' +
-                                '<h4>Install "' + templateName + '"?</h4>' +
+                                '<h4>Install Template: ' + templateName + '</h4>' +
                                 '<p>This action will:</p>' +
                                 '<ul class="warning-list">' +
-                                    '<li><strong>Remove ALL existing custom tabs</strong> from your site</li>' +
-                                    '<li>Install new tab rules from the "' + templateName + '" template</li>' +
+                                    '<li>Remove all existing tab rules</li>' +
+                                    '<li>Install new rules from the template</li>' +
                                     '<li>This action cannot be undone</li>' +
                                 '</ul>' +
-                                
-                                '<div class="recommendation">' +
-                                    '<p><strong>💡 Recommendation:</strong> Export your current tab configuration before proceeding to create a backup.</p>' +
-                                '</div>' +
                             '</div>' +
+                        '</div>' +
+                        
+                        '<div class="recommendation">' +
+                            '<p><strong>Recommendation:</strong> Export your current configuration first to create a backup.</p>' +
                         '</div>' +
                     '</div>' +
                     
                     '<div class="spt-modal-footer">' +
-                        '<button type="button" class="button button-secondary" id="cancel-install">' +
-                            'Cancel' +
-                        '</button>' +
-                        '<button type="button" class="button button-primary" id="export-first">' +
-                            'Export First' +
-                        '</button>' +
+                        '<button type="button" class="button" id="cancel-install">Cancel</button>' +
+                        '<button type="button" class="button button-secondary" id="export-first">Export First</button>' +
                         '<button type="button" class="button button-primary install-confirm-btn" ' +
                                 'data-template-key="' + templateKey + '" ' +
-                                'data-template-name="' + templateName + '"' +
-                                'style="background-color: #d63384; border-color: #d63384;">' +
-                            'Install & Remove Existing' +
-                        '</button>' +
+                                'data-template-name="' + templateName + '" ' +
+                                'style="background-color: #d63384; border-color: #d63384;">Install & Remove Existing</button>' +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -492,18 +183,18 @@ var SPTTemplates = {
         // Remove existing modal if present
         $('#install-confirmation-modal').remove();
         
-        // Add modal to page
+        // Add modal to body
         $('body').append(modalHtml);
         
         // Bind modal events
-        SPTTemplates.bindInstallModalEvents($button, $card);
+        this.bindInstallModalEvents($button, $card);
     },
 
     /**
-     * Bind events for the installation confirmation modal
+     * FIXED: Bind events for the installation confirmation modal
      */
     bindInstallModalEvents: function($originalButton, $originalCard) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         var $modal = $('#install-confirmation-modal');
         
         // Close modal handlers
@@ -524,7 +215,7 @@ var SPTTemplates = {
             // Trigger existing export functionality
             $('#export-rules').click();
         });
-        
+      
         // Confirm installation button
         $modal.on('click', '.install-confirm-btn', function() {
             var templateKey = $(this).data('template-key');
@@ -538,27 +229,31 @@ var SPTTemplates = {
     },
 
     /**
-     * Proceed with actual template installation
+     * FIXED: Proceed with actual template installation
      */
     proceedWithInstallation: function(templateKey, templateName, $button, $card) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         
         // Show loading state
         $button.prop('disabled', true).text('Installing...');
         $card.addClass('loading');
         
         // Show installation progress modal
-        SPTTemplates.showInstallationProgressModal(templateName);
+        this.showInstallationProgressModal(templateName);
         
         $.ajax({
-            url: SPTTemplates.getAjaxUrl(),
+            url: this.getAjaxUrl(),
             type: 'POST',
             data: {
                 action: 'spt_install_builtin_template',
                 template_key: templateKey,
-                nonce: SPTTemplates.getAjaxNonce()
+                remove_existing: true,
+                nonce: this.getAjaxNonce()
             },
             success: function(response) {
+                $button.prop('disabled', false).text('Install');
+                $card.removeClass('loading');
+                
                 if (response.success) {
                     SPTTemplates.showInstallationSuccessModal(templateName, response.data.imported || 0);
                 } else {
@@ -566,43 +261,163 @@ var SPTTemplates = {
                 }
             },
             error: function(xhr, status, error) {
-                SPTTemplates.showInstallationErrorModal('Installation failed. Please try again.');
-            },
-            complete: function() {
-                $button.prop('disabled', false).text('Install');
-                $card.removeClass('loading');
+                $('#preview-template-title').text('Preview Error');
+                $('#preview-template-content').html(
+                    '<div class="spt-status-message error">' +
+                    '<p><strong>Error:</strong> Failed to load template preview. Please try again.</p>' +
+                    '<p><em>Details: ' + error + '</em></p>' +
+                    '</div>'
+                );
             }
         });
+    },
+    
+    
+    /**
+     * Handle template preview
+     */
+    handlePreview: function(e) {
+        var $ = jQuery;
+        e.preventDefault();
+        
+        var templateKey = $(this).data('template-key');
+        var templateName = $(this).data('template-name') || 'Unknown Template';
+        var $modalBody = $('#template-preview-modal .spt-modal-body');
+        
+        // Show modal with loading state
+        $('#template-preview-modal').show();
+        $('#preview-template-title').text('Loading Preview...');
+        $modalBody.html('<div class="spt-modal-loading"><div class="spt-modal-loading-content"><div class="spt-modal-loading-spinner"></div><div class="spt-modal-loading-text">Loading template preview...</div></div></div>');
+        
+        $.ajax({
+            url: SPTTemplates.getAjaxUrl(),
+            type: 'POST',
+            data: {
+                action: 'spt_get_template_preview',
+                template_key: templateKey,
+                nonce: SPTTemplates.getAjaxNonce()
+            },
+            success: function(response) {
+                if (response.success && response.data) {
+                    var template = response.data;
+                    
+                    // Update modal title
+                    $('#preview-template-title').text('Template Preview: ' + (template.name || templateName));
+                    
+                    // Generate preview content
+                    var content = SPTTemplates.generateTemplatePreviewHTML(template);
+                    $('#preview-template-content').html(content);
+                    
+                    // Set up install button
+                    $('#install-from-preview').off('click').on('click', function() {
+                        $('#template-preview-modal').hide();
+                        // Trigger install on the original install button
+                        $('.template-install[data-template-key="' + templateKey + '"]').click();
+                    });
+                    
+                } else {
+                    $('#preview-template-title').text('Preview Error');
+                    $('#preview-template-content').html(
+                        '<div class="spt-status-message error">' +
+                        '<p><strong>Error:</strong> ' + (response.data || 'Unable to load template preview') + '</p>' +
+                        '</div>'
+                    );
+                }
+            },
+            error: function(xhr, status, error) {
+                $button.prop('disabled', false).text('Install');
+                $card.removeClass('loading');
+                
+                console.error('Installation AJAX Error:', {xhr: xhr, status: status, error: error});
+                SPTTemplates.showInstallationErrorModal('Installation failed. Please try again.');
+            }
+        });
+    },    
+    
+    
+    /**
+     * FIXED: Handle template installation - NO MORE CONFIRM BOX
+     */
+    handleInstall: function(e) {
+        var $ = jQuery;
+        e.preventDefault();
+
+        var templateKey = $(this).data('template-key');
+        var templateName = $(this).data('template-name') || 'this template';
+        var $button = $(this);
+        var $card = $button.closest('.template-card');
+
+        // Show enhanced confirmation modal instead of simple confirm()
+        SPTTemplates.showInstallConfirmationModal(templateKey, templateName, $button, $card);
+    },
+    
+    /**
+     * Generate template preview HTML
+     */
+    generateTemplatePreviewHTML: function(template) {
+        var content = '<div class="template-preview-details">';
+        content += '<p><strong>Name:</strong> ' + (template.name || 'Unknown') + '</p>';
+        content += '<p><strong>Description:</strong> ' + (template.description || 'No description') + '</p>';
+        content += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
+        content += '<p><strong>Rules Count:</strong> ' + (template.rules_count || 0) + '</p>';
+        
+        if (template.rules && template.rules.length > 0) {
+            content += '<h4>Tab Rules Preview:</h4>';
+            content += '<div class="tabs-preview-list">';
+            
+            template.rules.forEach(function(rule) {
+                content += '<div class="tab-preview-item">';
+                content += '<h5>' + (rule.tab_title || 'Untitled Tab') + '</h5>';
+                content += '<p><strong>Rule Name:</strong> ' + (rule.rule_name || 'Unnamed Rule') + '</p>';
+                content += '<p><strong>Priority:</strong> ' + (rule.priority || 10) + '</p>';
+                content += '<p><strong>Status:</strong> ' + (rule.is_active ? 'Active' : 'Inactive') + '</p>';
+                if (rule.conditions) {
+                    content += '<p><strong>Conditions:</strong> ' + rule.conditions + '</p>';
+                }
+                content += '</div>';
+            });
+            
+            content += '</div>';
+        }
+        content += '</div>';
+        
+        return content;
     },
 
     /**
      * Show installation progress modal
      */
     showInstallationProgressModal: function(templateName) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         
         var progressHtml = 
-            '<div id="install-progress-modal" class="spt-modal" style="display: block;">' +
+            '<div id="install-progress-modal" class="spt-modal" style="display: flex;">' +
                 '<div class="spt-modal-content install-progress-modal">' +
+                    '<div class="spt-modal-header">' +
+                        '<h3>Installing Template</h3>' +
+                    '</div>' +
+                    
                     '<div class="spt-modal-body">' +
                         '<div class="install-progress-content">' +
                             '<div class="progress-spinner">' +
                                 '<div class="spinner"></div>' +
                             '</div>' +
-                            '<h4>Installing "' + templateName + '"...</h4>' +
-                            '<p>Please wait while we remove existing tabs and install the new template.</p>' +
+                            
+                            '<h4>Installing: ' + templateName + '</h4>' +
+                            '<p>Please wait while the template is being installed...</p>' +
+                            
                             '<div class="progress-steps">' +
                                 '<div class="step active">' +
-                                    '<span class="step-number">1</span>' +
-                                    '<span class="step-text">Removing existing custom tabs</span>' +
+                                    '<div class="step-number">1</div>' +
+                                    '<div class="step-text">Preparing installation</div>' +
                                 '</div>' +
-                                '<div class="step">' +
-                                    '<span class="step-number">2</span>' +
-                                    '<span class="step-text">Installing template rules</span>' +
+                                '<div class="step active">' +
+                                    '<div class="step-number">2</div>' +
+                                    '<div class="step-text">Removing existing rules</div>' +
                                 '</div>' +
-                                '<div class="step">' +
-                                    '<span class="step-number">3</span>' +
-                                    '<span class="step-text">Finalizing installation</span>' +
+                                '<div class="step active">' +
+                                    '<div class="step-number">3</div>' +
+                                    '<div class="step-text">Installing new rules</div>' +
                                 '</div>' +
                             '</div>' +
                         '</div>' +
@@ -610,29 +425,23 @@ var SPTTemplates = {
                 '</div>' +
             '</div>';
         
+        // Remove existing modal
         $('#install-progress-modal').remove();
+        
+        // Add to body
         $('body').append(progressHtml);
-        
-        // Animate progress steps
-        setTimeout(function() {
-            $('.progress-steps .step').eq(1).addClass('active');
-        }, 1000);
-        
-        setTimeout(function() {
-            $('.progress-steps .step').eq(2).addClass('active');
-        }, 2000);
     },
 
     /**
      * Show installation success modal
      */
     showInstallationSuccessModal: function(templateName, importedCount) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         
         $('#install-progress-modal').remove();
         
         var successHtml = 
-            '<div id="install-success-modal" class="spt-modal" style="display: block;">' +
+            '<div id="install-success-modal" class="spt-modal" style="display: flex;">' +
                 '<div class="spt-modal-content install-success-modal">' +
                     '<div class="spt-modal-header">' +
                         '<h3>✅ Installation Successful</h3>' +
@@ -642,24 +451,21 @@ var SPTTemplates = {
                     '<div class="spt-modal-body">' +
                         '<div class="success-content">' +
                             '<div class="success-icon">' +
-                                '<span class="dashicons dashicons-yes-alt"></span>' +
+                                '<span class="dashicons dashicons-yes"></span>' +
                             '</div>' +
                             
                             '<div class="success-message">' +
-                                '<h4>"' + templateName + '" installed successfully!</h4>' +
-                                '<p><strong>' + importedCount + '</strong> tab rules have been imported.</p>' +
-                                '<p>Your existing custom tabs have been removed and replaced with the new template.</p>' +
+                                '<h4>Template installed successfully!</h4>' +
+                                '<p><strong>Template:</strong> ' + templateName + '</p>' +
+                                '<p><strong>Rules imported:</strong> ' + importedCount + '</p>' +
+                                '<p>Your template has been installed and is ready to use.</p>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
                     
                     '<div class="spt-modal-footer">' +
-                        '<button type="button" class="button button-primary" id="view-installed-tabs">' +
-                            'View Installed Tabs' +
-                        '</button>' +
-                        '<button type="button" class="button button-secondary" id="close-success">' +
-                            'Close' +
-                        '</button>' +
+                        '<button type="button" class="button" id="close-success">Close</button>' +
+                        '<button type="button" class="button button-primary" id="view-installed-tabs">View Installed Tabs</button>' +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -669,13 +475,14 @@ var SPTTemplates = {
         // Bind success modal events
         $('#install-success-modal').on('click', '.spt-modal-close, #close-success', function() {
             $('#install-success-modal').remove();
-            location.reload(); // Refresh to show updated tabs
+            // Reload page to show updated tabs
+            location.reload();
         });
         
         $('#install-success-modal').on('click', '#view-installed-tabs', function() {
             $('#install-success-modal').remove();
             // Redirect to tab rules page
-            window.location.href = 'admin.php?page=spt-tab-rules';
+            window.location.href = 'admin.php?page=smart-product-tabs';
         });
     },
 
@@ -683,12 +490,12 @@ var SPTTemplates = {
      * Show installation error modal
      */
     showInstallationErrorModal: function(errorMessage) {
-        var $ = jQuery; // Ensure jQuery is available
+        var $ = jQuery;
         
         $('#install-progress-modal').remove();
         
         var errorHtml = 
-            '<div id="install-error-modal" class="spt-modal" style="display: block;">' +
+            '<div id="install-error-modal" class="spt-modal" style="display: flex;">' +
                 '<div class="spt-modal-content install-error-modal">' +
                     '<div class="spt-modal-header">' +
                         '<h3>❌ Installation Failed</h3>' +
@@ -710,9 +517,7 @@ var SPTTemplates = {
                     '</div>' +
                     
                     '<div class="spt-modal-footer">' +
-                        '<button type="button" class="button button-primary" id="close-error">' +
-                            'Close' +
-                        '</button>' +
+                        '<button type="button" class="button button-primary" id="close-error">Close</button>' +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -723,5 +528,132 @@ var SPTTemplates = {
         $('#install-error-modal').on('click', '.spt-modal-close, #close-error', function() {
             $('#install-error-modal').remove();
         });
+    },
+
+    /**
+     * Handle file import
+     */
+    handleFileImport: function(e) {
+        var $ = jQuery;
+        e.preventDefault();
+        
+        var fileInput = $('#template_file')[0];
+        if (!fileInput.files.length) {
+            alert('Please select a file to import.');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('action', 'spt_import_template');
+        formData.append('import_type', 'file');
+        formData.append('template_file', fileInput.files[0]);
+        formData.append('nonce', SPTTemplates.getAjaxNonce());
+
+        $(this).prop('disabled', true).text('Importing...');
+
+        $.ajax({
+            url: SPTTemplates.getAjaxUrl(),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    SPTTemplates.showSuccessMessage('Template imported successfully! ' + response.data.message);
+                    location.reload();
+                } else {
+                    SPTTemplates.showErrorMessage('Import failed: ' + response.data);
+                }
+            },
+            error: function() {
+                SPTTemplates.showErrorMessage('Import failed. Please try again.');
+            },
+            complete: function() {
+                $('#import-template-file').prop('disabled', false).text('Import File');
+            }
+        });
+    },
+
+    /**
+     * Handle text import
+     */
+    handleTextImport: function(e) {
+        var $ = jQuery;
+        e.preventDefault();
+        
+        var templateText = $('#template_text').val().trim();
+        if (!templateText) {
+            alert('Please enter template data.');
+            return;
+        }
+
+        $(this).prop('disabled', true).text('Importing...');
+
+        $.ajax({
+            url: SPTTemplates.getAjaxUrl(),
+            type: 'POST',
+            data: {
+                action: 'spt_import_template',
+                import_type: 'text',
+                template_data: templateText,
+                nonce: SPTTemplates.getAjaxNonce()
+            },
+            success: function(response) {
+                if (response.success) {
+                    SPTTemplates.showSuccessMessage('Template imported successfully! ' + response.data.message);
+                    location.reload();
+                } else {
+                    SPTTemplates.showErrorMessage('Import failed: ' + response.data);
+                }
+            },
+            error: function() {
+                SPTTemplates.showErrorMessage('Import failed. Please try again.');
+            },
+            complete: function() {
+                $('#import-template-text').prop('disabled', false).text('Import Text');
+            }
+        });
+    },
+
+    /**
+     * Handle export
+     */
+    handleExport: function(e) {
+        var $ = jQuery;
+        e.preventDefault();
+
+        $(this).prop('disabled', true).text('Exporting...');
+
+        $.ajax({
+            url: SPTTemplates.getAjaxUrl(),
+            type: 'POST',
+            data: {
+                action: 'spt_export_rules',
+                nonce: SPTTemplates.getAjaxNonce()
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Create and download file
+                    var blob = new Blob([response.data.data], { type: 'application/json' });
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = response.data.filename;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    SPTTemplates.showSuccessMessage('Export completed! ' + response.data.rules_count + ' rules exported.');
+                } else {
+                    SPTTemplates.showErrorMessage('Export failed: ' + response.data);
+                }
+            },
+            error: function() {
+                SPTTemplates.showErrorMessage('Export failed. Please try again.');
+            },
+            complete: function() {
+                $('#export-rules').prop('disabled', false).text('Download Export File');
+            }
+        });
     }
-};
+}; 
+

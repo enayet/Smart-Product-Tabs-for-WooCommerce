@@ -1244,6 +1244,7 @@ class SPT_Admin {
 </div>
 
 <script type="text/javascript">
+
 jQuery(document).ready(function($) {
     // Use fallback for nonce if spt_admin_ajax is not defined
     var sptNonce = (typeof spt_admin_ajax !== 'undefined' && spt_admin_ajax.nonce) ? 
@@ -1252,11 +1253,157 @@ jQuery(document).ready(function($) {
     
     var ajaxUrl = (typeof spt_admin_ajax !== 'undefined' && spt_admin_ajax.ajax_url) ? 
                   spt_admin_ajax.ajax_url : 
-                  ajaxurl;
+                  '<?php echo admin_url('admin-ajax.php'); ?>';
 
+    // Template preview functionality
+    $('.template-preview-btn').on('click', function() {
+        var templateKey = $(this).data('template-key');
+        var templateName = $(this).data('template-name');
+        
+        // Show loading
+        $('#template-preview-modal').show();
+        $('#preview-template-title').text('Loading...');
+        $('#preview-template-content').html('<div class="spt-modal-loading"><div class="spt-modal-loading-content"><div class="spt-modal-loading-spinner"></div><div class="spt-modal-loading-text">Loading template preview...</div></div></div>');
+        
+        $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'spt_get_template_preview',
+                template_key: templateKey,
+                nonce: sptNonce
+            },
+            success: function(response) {
+                if (response.success && response.data) {
+                    var template = response.data;
+                    $('#preview-template-title').text('Template Preview: ' + (template.name || templateName));
+                    
+                    var content = '<div class="template-preview-details">';
+                    content += '<p><strong>Name:</strong> ' + (template.name || 'Unknown') + '</p>';
+                    content += '<p><strong>Description:</strong> ' + (template.description || 'No description') + '</p>';
+                    content += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
+                    content += '<p><strong>Rules Count:</strong> ' + (template.rules_count || 0) + '</p>';
+                    
+                    if (template.rules && template.rules.length > 0) {
+                        content += '<h4>Tab Rules Preview:</h4>';
+                        content += '<div class="tabs-preview-list">';
+                        
+                        template.rules.forEach(function(rule) {
+                            content += '<div class="tab-preview-item">';
+                            content += '<h5>' + (rule.tab_title || 'Untitled Tab') + '</h5>';
+                            content += '<p><strong>Rule Name:</strong> ' + (rule.rule_name || 'Unnamed Rule') + '</p>';
+                            content += '<p><strong>Priority:</strong> ' + (rule.priority || 10) + '</p>';
+                            content += '<p><strong>Status:</strong> ' + (rule.is_active ? 'Active' : 'Inactive') + '</p>';
+                            content += '</div>';
+                        });
+                        
+                        content += '</div>';
+                    }
+                    content += '</div>';
+                    
+                    $('#preview-template-content').html(content);
+                } else {
+                    $('#preview-template-title').text('Preview Error');
+                    $('#preview-template-content').html('<div class="spt-status-message error"><p><strong>Error:</strong> ' + (response.data || 'Unable to load template preview') + '</p></div>');
+                }
+            },
+            error: function() {
+                $('#preview-template-title').text('Preview Error');
+                $('#preview-template-content').html('<div class="spt-status-message error"><p><strong>Error:</strong> Failed to load template preview. Please try again.</p></div>');
+            }
+        });
+    });
 
+    // Close modal handlers
+    $(document).on('click', '.spt-modal-close, #close-preview', function() {
+        $('#template-preview-modal').hide();
+    });
 
-    // Export functionality - Direct blob download
+    // Close modal on backdrop click
+    $('#template-preview-modal').on('click', function(e) {
+        if (e.target === this) {
+            $(this).hide();
+        }
+    });
+
+    // REMOVED: Old template installation with confirm() - now handled by SPTTemplates.js
+
+    // File import functionality
+    $('#import-template-file').on('click', function() {
+        var fileInput = $('#template_file')[0];
+        if (!fileInput.files.length) {
+            alert('Please select a file to import.');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('action', 'spt_import_template');
+        formData.append('import_type', 'file');
+        formData.append('template_file', fileInput.files[0]);
+        formData.append('nonce', sptNonce);
+
+        $(this).prop('disabled', true).text('Importing...');
+
+        $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    alert('Template imported successfully! ' + response.data.message);
+                    location.reload();
+                } else {
+                    alert('Import failed: ' + response.data);
+                }
+            },
+            error: function() {
+                alert('Import failed. Please try again.');
+            },
+            complete: function() {
+                $('#import-template-file').prop('disabled', false).text('Import File');
+            }
+        });
+    });
+
+    // Text import functionality  
+    $('#import-template-text').on('click', function() {
+        var templateText = $('#template_text').val().trim();
+        if (!templateText) {
+            alert('Please enter template data.');
+            return;
+        }
+
+        $(this).prop('disabled', true).text('Importing...');
+
+        $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'spt_import_template',
+                import_type: 'text',
+                template_data: templateText,
+                nonce: sptNonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Template imported successfully! ' + response.data.message);
+                    location.reload();
+                } else {
+                    alert('Import failed: ' + response.data);
+                }
+            },
+            error: function() {
+                alert('Import failed. Please try again.');
+            },
+            complete: function() {
+                $('#import-template-text').prop('disabled', false).text('Import Text');
+            }
+        });
+    });
+
+    // Export functionality
     $('#export-rules').on('click', function() {
         $(this).prop('disabled', true).text('Exporting...');
 
@@ -1269,19 +1416,18 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    // Always use blob download
+                    // Create and download file
                     var blob = new Blob([response.data.data], { type: 'application/json' });
                     var url = window.URL.createObjectURL(blob);
                     var a = document.createElement('a');
                     a.href = url;
-                    a.download = response.data.filename || 'spt-export.json';
-                    document.body.appendChild(a);
+                    a.download = response.data.filename;
                     a.click();
-                    document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
-                    alert('Export file downloaded!');
+                    
+                    alert('Export completed! ' + response.data.rules_count + ' rules exported.');
                 } else {
-                    alert('Error: ' + response.data);
+                    alert('Export failed: ' + response.data);
                 }
             },
             error: function() {
@@ -1292,99 +1438,8 @@ jQuery(document).ready(function($) {
             }
         });
     });
-
-    // Modal functionality
-    $('.template-preview-btn').on('click', function() {
-        var templateKey = $(this).data('template-key');
-        $('#template-preview-modal').show();
-    });
-
-    $('.spt-modal-close, #close-preview').on('click', function() {
-        $('#template-preview-modal').hide();
-    });
-
-    // Template preview functionality
-    $('.template-preview-btn').on('click', function() {
-        var templateKey = $(this).data('template-key');
-        var $modal = $('#template-preview-modal');
-
-        $('#preview-template-title').text('Loading...');
-        $('#preview-template-content').html('<p>Loading template preview...</p>');
-        $modal.show();
-
-        $.ajax({
-            url: ajaxUrl,
-            type: 'POST',
-            data: {
-                action: 'spt_get_template_preview',
-                template_key: templateKey,
-                nonce: sptNonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    var template = response.data;
-                    $('#preview-template-title').text(template.name);
-                    
-                    var content = '<div class="template-preview-details">';
-                    content += '<p><strong>Description:</strong> ' + (template.description || 'No description available') + '</p>';
-                    content += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
-                    content += '<p><strong>Author:</strong> ' + (template.author || 'Unknown') + '</p>';
-                    content += '<p><strong>Number of Tabs:</strong> ' + (template.tabs_count || 0) + '</p>';
-                    content += '</div>';
-                    
-                    $('#preview-template-content').html(content);
-                    
-                    $('#install-from-preview').off('click').on('click', function() {
-                        $modal.hide();
-                        $('.template-install[data-template-key="' + templateKey + '"]').click();
-                    });
-                } else {
-                    $('#preview-template-content').html('<p class="error">Error loading template preview: ' + (response.data || 'Unknown error') + '</p>');
-                }
-            },
-            error: function() {
-                $('#preview-template-content').html('<p class="error">Failed to load template preview. Please try again.</p>');
-            }
-        });
-    });
-
-    // Template installation
-    $('.template-install').on('click', function() {
-        var templateKey = $(this).data('template-key');
-        var templateName = $(this).data('template-name');
-        var $button = $(this);
-        
-        if (!confirm('Install template "' + templateName + '"? This will add new tab rules to your site.')) {
-            return;
-        }
-        
-        $button.prop('disabled', true).text('Installing...');
-        
-        $.ajax({
-            url: ajaxUrl,
-            type: 'POST',
-            data: {
-                action: 'spt_install_builtin_template',
-                template_key: templateKey,
-                nonce: sptNonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Template installed successfully! ' + response.data.imported + ' rules imported.');
-                    location.reload();
-                } else {
-                    alert('Installation failed: ' + response.data);
-                }
-            },
-            error: function() {
-                alert('Installation failed. Please try again.');
-            },
-            complete: function() {
-                $button.prop('disabled', false).text('Install Template');
-            }
-        });
-    });
 });
+   
 </script>
 
         <style>

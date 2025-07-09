@@ -126,109 +126,56 @@ class SPT_Templates {
     /**
      * Install built-in template (updated to use JSON files)
      */
-    public function install_builtin_template1($template_key) {
-        // Load template data from JSON file
+   
+public function install_builtin_template($template_key, $remove_existing = true) {
+    global $wpdb;
+    
+    try {
+        // Get template data from JSON file
         $template_data = $this->load_template_from_file($template_key);
         
         if (is_wp_error($template_data)) {
             return $template_data;
         }
         
-        // Import the template data
-        return $this->import_template_data($template_data);
-    }    
-    
-    
-    
-public function install_builtin_template($template_key, $remove_existing = true) {
-    global $wpdb;
-    
-    // Get template data
-    //$template_data = $this->get_builtin_template($template_key);
-    $template_data = $this->load_template_from_file($template_key);
-    
-    if (!$template_data) {
-        return new WP_Error('template_not_found', __('Template not found', 'smart-product-tabs'));
-    }
-    
-    $rules_table = $wpdb->prefix . 'spt_rules';
-    $imported_count = 0;
-    $removed_count = 0;
-    
-    try {
-        // Start transaction
-        $wpdb->query('START TRANSACTION');
-        
-        // Step 1: Remove existing custom tabs if requested
-        if ($remove_existing) {
-            $existing_rules = $wpdb->get_results("SELECT id, rule_name FROM $rules_table", ARRAY_A);
-            $removed_count = count($existing_rules);
-            
-            if ($removed_count > 0) {
-                $wpdb->query("DELETE FROM $rules_table");
-                
-                // Log removal action
-                error_log("Smart Product Tabs: Removed {$removed_count} existing custom tabs for template installation");
-            }
+        if (!$template_data || !isset($template_data['rules']) || !is_array($template_data['rules'])) {
+            return new WP_Error('template_not_found', __('Template not found or invalid', 'smart-product-tabs'));
         }
         
-        // Step 2: Install template rules
-        if (isset($template_data['rules']) && is_array($template_data['rules'])) {
-            foreach ($template_data['rules'] as $rule_data) {
-                // Prepare rule data for insert
-                $rule_insert_data = array(
-                    'rule_name' => sanitize_text_field($rule_data['rule_name']),
-                    'tab_title' => sanitize_text_field($rule_data['tab_title']),
-                    'tab_content' => wp_kses_post($rule_data['tab_content'] ?? ''),
-                    'content_type' => sanitize_text_field($rule_data['content_type'] ?? 'rich_editor'),
-                    'conditions' => sanitize_text_field($rule_data['conditions'] ?? '{"type":"all"}'),
-                    'user_role_condition' => sanitize_text_field($rule_data['user_role_condition'] ?? 'all'),
-                    'user_roles' => sanitize_text_field($rule_data['user_roles'] ?? ''),
-                    'priority' => intval($rule_data['priority'] ?? 10),
-                    'is_active' => intval($rule_data['is_active'] ?? 1),
-                    'mobile_hidden' => intval($rule_data['mobile_hidden'] ?? 0),
-                    'created_at' => current_time('mysql'),
-                    'updated_at' => current_time('mysql')
-                );
-                
-                // Insert rule
-                $inserted = $wpdb->insert($rules_table, $rule_insert_data);
-                
-                if ($inserted) {
-                    $imported_count++;
-                } else {
-                    throw new Exception("Failed to insert rule: " . $rule_data['rule_name']);
+        $removed_count = 0;
+        
+        // Remove existing rules if requested
+        if ($remove_existing) {
+            $rules_table = $wpdb->prefix . 'spt_rules';
+            $existing_count = $wpdb->get_var("SELECT COUNT(*) FROM $rules_table");
+            
+            if ($existing_count > 0) {
+                $deleted = $wpdb->query("DELETE FROM $rules_table");
+                if ($deleted !== false) {
+                    $removed_count = $existing_count;
                 }
             }
         }
         
-        // Step 3: Clear any cached data
-        $this->clear_template_cache();
+        // Use existing import_template_data method to handle the actual import
+        $import_result = $this->import_template_data($template_data, false); // false = don't replace existing since we already removed them
         
-        // Commit transaction
-        $wpdb->query('COMMIT');
+        if (is_wp_error($import_result)) {
+            return $import_result;
+        }
         
-        // Log successful installation
-        error_log("Smart Product Tabs: Successfully installed template '{$template_key}' - {$imported_count} rules imported, {$removed_count} existing rules removed");
-        
+        // Return combined results
         return array(
-            'imported' => $imported_count,
+            'imported' => $import_result['imported'] ?? 0,
             'removed' => $removed_count,
-            'template_name' => $template_data['name'] ?? $template_key,
-            'success' => true
+            'template_name' => $template_data['name'] ?? ucfirst($template_key) . ' Template'
         );
         
     } catch (Exception $e) {
-        // Rollback transaction on error
-        $wpdb->query('ROLLBACK');
-        
-        error_log("Smart Product Tabs: Template installation failed - " . $e->getMessage());
-        
-        return new WP_Error('installation_failed', 
-            __('Template installation failed: ', 'smart-product-tabs') . $e->getMessage()
-        );
+        error_log('SPT Template Installation Error: ' . $e->getMessage());
+        return new WP_Error('installation_failed', __('Installation failed: ', 'smart-product-tabs') . $e->getMessage());
     }
-}    
+}  
     
     
     
@@ -602,30 +549,6 @@ public function ajax_export_rules() {
     /**
      * AJAX: Install built-in template
      */
-    public function ajax_install_builtin_template1() {
-        check_ajax_referer('spt_ajax_nonce', 'nonce');
-        
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Insufficient permissions');
-            return;
-        }
-        
-        $template_key = sanitize_text_field($_POST['template_key'] ?? '');
-        
-        if (empty($template_key)) {
-            wp_send_json_error(__('Template key is required', 'smart-product-tabs'));
-            return;
-        }
-        
-        $result = $this->install_builtin_template($template_key);
-        
-        if (is_wp_error($result)) {
-            wp_send_json_error($result->get_error_message());
-            return;
-        }
-        
-        wp_send_json_success($result);
-    }
     
     
 public function ajax_install_builtin_template() {
