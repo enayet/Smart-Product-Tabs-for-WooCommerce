@@ -231,46 +231,54 @@ var SPTTemplates = {
     /**
      * FIXED: Proceed with actual template installation
      */
-    proceedWithInstallation: function(templateKey, templateName, $button, $card) {
-        var $ = jQuery;
-        
-        // Show loading state
-        $button.prop('disabled', true).text('Installing...');
-        $card.addClass('loading');
-        
-        // Show installation progress modal
-        this.showInstallationProgressModal(templateName);
-        
+proceedWithInstallation: function(templateKey, templateName, $button, $card) {
+    var $ = jQuery;
+    
+    // Show loading state
+    $button.prop('disabled', true).text('Installing...');
+    $card.addClass('loading');
+    
+    // Show installation progress modal with animation
+    this.showInstallationProgressModal(templateName);
+    
+    // Delay the actual AJAX call to let the animation play
+    setTimeout(function() {
         $.ajax({
-            url: this.getAjaxUrl(),
+            url: SPTTemplates.getAjaxUrl(),
             type: 'POST',
             data: {
                 action: 'spt_install_builtin_template',
                 template_key: templateKey,
                 remove_existing: true,
-                nonce: this.getAjaxNonce()
+                nonce: SPTTemplates.getAjaxNonce()
             },
             success: function(response) {
                 $button.prop('disabled', false).text('Install');
                 $card.removeClass('loading');
                 
                 if (response.success) {
-                    SPTTemplates.showInstallationSuccessModal(templateName, response.data.imported || 0);
+                    // Small delay to show completion of step 3
+                    setTimeout(function() {
+                        $('.step[data-step="3"]').removeClass('active').addClass('completed');
+                        // Then show success modal
+                        setTimeout(function() {
+                            SPTTemplates.showInstallationSuccessModal(templateName, response.data.imported || 0);
+                        }, 800);
+                    }, 500);
                 } else {
                     SPTTemplates.showInstallationErrorModal(response.data || 'Installation failed');
                 }
             },
             error: function(xhr, status, error) {
-                $('#preview-template-title').text('Preview Error');
-                $('#preview-template-content').html(
-                    '<div class="spt-status-message error">' +
-                    '<p><strong>Error:</strong> Failed to load template preview. Please try again.</p>' +
-                    '<p><em>Details: ' + error + '</em></p>' +
-                    '</div>'
-                );
+                $button.prop('disabled', false).text('Install');
+                $card.removeClass('loading');
+                
+                console.error('Installation AJAX Error:', {xhr: xhr, status: status, error: error});
+                SPTTemplates.showInstallationErrorModal('Installation failed. Please try again.');
             }
         });
-    },
+    }, 4000); // Start AJAX after 4 seconds to let animation complete
+},
     
     
     /**
@@ -387,50 +395,81 @@ var SPTTemplates = {
     /**
      * Show installation progress modal
      */
-    showInstallationProgressModal: function(templateName) {
-        var $ = jQuery;
-        
-        var progressHtml = 
-            '<div id="install-progress-modal" class="spt-modal" style="display: flex;">' +
-                '<div class="spt-modal-content install-progress-modal">' +
-                    '<div class="spt-modal-header">' +
-                        '<h3>Installing Template</h3>' +
-                    '</div>' +
-                    
-                    '<div class="spt-modal-body">' +
-                        '<div class="install-progress-content">' +
-                            '<div class="progress-spinner">' +
-                                '<div class="spinner"></div>' +
+showInstallationProgressModal: function(templateName) {
+    var $ = jQuery;
+    
+    var progressHtml = 
+        '<div id="install-progress-modal" class="spt-modal" style="display: flex;">' +
+            '<div class="spt-modal-content install-progress-modal">' +
+                '<div class="spt-modal-header">' +
+                    '<h3>Installing Template</h3>' +
+                '</div>' +
+                
+                '<div class="spt-modal-body">' +
+                    '<div class="install-progress-content">' +
+                        '<div class="progress-spinner">' +
+                            '<div class="spinner"></div>' +
+                        '</div>' +
+                        
+                        '<h4>Installing: ' + templateName + '</h4>' +
+                        '<p>Please wait while the template is being installed...</p>' +
+                        
+                        '<div class="progress-steps">' +
+                            '<div class="step" data-step="1">' +
+                                '<div class="step-number">1</div>' +
+                                '<div class="step-text">Preparing installation</div>' +
                             '</div>' +
-                            
-                            '<h4>Installing: ' + templateName + '</h4>' +
-                            '<p>Please wait while the template is being installed...</p>' +
-                            
-                            '<div class="progress-steps">' +
-                                '<div class="step active">' +
-                                    '<div class="step-number">1</div>' +
-                                    '<div class="step-text">Preparing installation</div>' +
-                                '</div>' +
-                                '<div class="step active">' +
-                                    '<div class="step-number">2</div>' +
-                                    '<div class="step-text">Removing existing rules</div>' +
-                                '</div>' +
-                                '<div class="step active">' +
-                                    '<div class="step-number">3</div>' +
-                                    '<div class="step-text">Installing new rules</div>' +
-                                '</div>' +
+                            '<div class="step" data-step="2">' +
+                                '<div class="step-number">2</div>' +
+                                '<div class="step-text">Removing existing rules</div>' +
+                            '</div>' +
+                            '<div class="step" data-step="3">' +
+                                '<div class="step-number">3</div>' +
+                                '<div class="step-text">Installing new rules</div>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
-            '</div>';
-        
-        // Remove existing modal
-        $('#install-progress-modal').remove();
-        
-        // Add to body
-        $('body').append(progressHtml);
-    },
+            '</div>' +
+        '</div>';
+    
+    // Remove existing modal
+    $('#install-progress-modal').remove();
+    
+    // Add to body
+    $('body').append(progressHtml);
+    
+    // Start the animated progress sequence
+    SPTTemplates.animateProgressSteps();
+},
+    
+ /*    
+ * Animate progress steps sequentially
+ */
+animateProgressSteps: function() {
+    var $ = jQuery;
+    
+    // Reset all steps to inactive state
+    $('.progress-steps .step').removeClass('active completed');
+    
+    // Animate steps one by one with delays
+    setTimeout(function() {
+        $('.step[data-step="1"]').addClass('active');
+    }, 500); // First step after 0.5s
+    
+    setTimeout(function() {
+        $('.step[data-step="1"]').removeClass('active').addClass('completed');
+        $('.step[data-step="2"]').addClass('active');
+    }, 2000); // Second step after 2s total
+    
+    setTimeout(function() {
+        $('.step[data-step="2"]').removeClass('active').addClass('completed');
+        $('.step[data-step="3"]').addClass('active');
+    }, 3500); // Third step after 3.5s total
+    
+    // Keep the third step active until installation completes
+},    
+    
 
     /**
      * Show installation success modal

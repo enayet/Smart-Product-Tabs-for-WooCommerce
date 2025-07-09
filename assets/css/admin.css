@@ -3127,3 +3127,227 @@ html.wp-toolbar .spt-modal {
         font-size: 13px;
     }
 }
+
+
+
+/* Enhanced CSS for animated progress steps - Add to assets/css/admin.css */
+
+/* Progress Steps Container */
+.progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* Individual Step */
+.step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0.3; /* Start dim */
+    transition: all 0.5s ease;
+    transform: translateX(-10px);
+}
+
+/* Step States */
+.step.active {
+    opacity: 1;
+    transform: translateX(0);
+    animation: stepPulse 1.5s infinite ease-in-out;
+}
+
+.step.completed {
+    opacity: 1;
+    transform: translateX(0);
+    animation: none;
+}
+
+/* Step Number */
+.step-number {
+    width: 28px;
+    height: 28px;
+    background: #e0e0e0; /* Default gray */
+    color: #666;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.5s ease;
+    border: 2px solid transparent;
+}
+
+/* Active Step Number */
+.step.active .step-number {
+    background: #0073aa; /* Blue */
+    color: #fff;
+    border-color: #005a87;
+    box-shadow: 0 0 0 4px rgba(0, 115, 170, 0.2);
+    transform: scale(1.1);
+}
+
+/* Completed Step Number */
+.step.completed .step-number {
+    background: #28a745; /* Green */
+    color: #fff;
+    border-color: #1e7e34;
+    transform: scale(1);
+}
+
+/* Step Text */
+.step-text {
+    color: #666;
+    font-size: 14px;
+    transition: all 0.5s ease;
+    font-weight: 400;
+}
+
+.step.active .step-text {
+    color: #333;
+    font-weight: 500;
+}
+
+.step.completed .step-text {
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* Step Pulse Animation */
+@keyframes stepPulse {
+    0%, 100% {
+        transform: translateX(0) scale(1);
+    }
+    50% {
+        transform: translateX(0) scale(1.02);
+    }
+}
+
+/* Step Number Pulse for Active State */
+.step.active .step-number {
+    animation: numberPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes numberPulse {
+    0%, 100% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 4px rgba(0, 115, 170, 0.2);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 8px rgba(0, 115, 170, 0.1);
+    }
+}
+
+/* Completion Animation */
+.step.completed .step-number {
+    animation: completionBounce 0.6s ease-out;
+}
+
+@keyframes completionBounce {
+    0% {
+        transform: scale(1.1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Enhanced Installation Progress Modal */
+.install-progress-modal {
+    max-width: 500px;
+    width: 90%;
+}
+
+.install-progress-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.install-progress-content h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.install-progress-content p {
+    margin: 0 0 30px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Progress Spinner */
+.progress-spinner {
+    margin: 0 auto 30px auto;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0073aa;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design for Progress Modal */
+@media (max-width: 768px) {
+    .install-progress-modal {
+        max-width: 95%;
+        width: 95%;
+    }
+    
+    .progress-steps {
+        max-width: 250px;
+    }
+    
+    .step-text {
+        font-size: 13px;
+    }
+    
+    .install-progress-content {
+        padding: 30px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .install-progress-modal {
+        max-width: 98%;
+        width: 98%;
+    }
+    
+    .progress-steps {
+        max-width: 220px;
+    }
+    
+    .step {
+        gap: 10px;
+    }
+    
+    .step-number {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+    
+    .step-text {
+        font-size: 12px;
+    }
+}
