@@ -1,6 +1,7 @@
 /**
- * Smart Product Tabs - Admin Templates & Import/Export
- * Handles template management, import/export functionality
+ * Updated Smart Product Tabs - Admin Templates JavaScript
+ * Removed template save functionality and copy/paste export
+ * Only supports file download export
  */
 
 (function($) {
@@ -82,16 +83,9 @@
                 success: function(response) {
                     if (response.success) {
                         SPTTemplates.showSuccess('Template installed successfully! ' + response.data.imported + ' rules imported.');
-                        
-                        // Update button state
-                        $button.text('Installed').addClass('disabled').prop('disabled', true);
-                        
-                        // Optionally reload rules list
                         setTimeout(function() {
-                            if (confirm('Would you like to view the new rules?')) {
-                                window.location.href = spt_admin_ajax.rules_url || 'admin.php?page=smart-product-tabs';
-                            }
-                        }, 1000);
+                            location.reload();
+                        }, 2000);
                     } else {
                         SPTTemplates.showError('Installation failed: ' + response.data);
                     }
@@ -105,8 +99,6 @@
             });
         },
 
-
-
         /**
          * Upload template file
          */
@@ -119,10 +111,23 @@
             }
 
             var $form = $(this);
-            var $submitBtn = $form.find('input[type="submit"]');
             var formData = new FormData(this);
-            
-            // Add AJAX data
+            var $submitBtn = $form.find('input[type="submit"]');
+
+            // Check if file is selected
+            var fileInput = $form.find('input[type="file"]')[0];
+            if (!fileInput.files.length) {
+                alert('Please select a file to upload');
+                return;
+            }
+
+            // Validate file type
+            var fileName = fileInput.files[0].name;
+            if (!fileName.toLowerCase().endsWith('.json')) {
+                alert('Please select a valid JSON file');
+                return;
+            }
+
             formData.append('action', 'spt_import_template');
             formData.append('import_type', 'file');
             formData.append('nonce', spt_admin_ajax.nonce);
@@ -146,7 +151,7 @@
                         // Clear form
                         $form[0].reset();
 
-                        // Reload page after success
+                        // Reload page
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
@@ -323,69 +328,67 @@
         generatePreviewHTML: function(templateName, templateData) {
             var html = '<h3>Template Preview: ' + templateName + '</h3>';
             html += '<p><strong>Rules:</strong> ' + (templateData.rules ? templateData.rules.length : 0) + '</p>';
-            
-            if (templateData.description) {
-                html += '<p><strong>Description:</strong> ' + templateData.description + '</p>';
-            }
-            
-            if (templateData.rules && templateData.rules.length > 0) {
-                html += '<h4>Included Rules:</h4><ul>';
-                templateData.rules.forEach(function(rule, index) {
-                    html += '<li><strong>' + rule.tab_title + '</strong>';
-                    if (rule.rule_name !== rule.tab_title) {
-                        html += ' (' + rule.rule_name + ')';
-                    }
-                    if (rule.conditions) {
-                        try {
-                            var conditions = JSON.parse(rule.conditions);
-                            html += ' - ' + conditions.type + ': ' + conditions.value;
-                        } catch (e) {
-                            // Ignore JSON parse errors
-                        }
-                    }
-                    html += '</li>';
-                });
-                html += '</ul>';
-            }
-            
-            html += '<br><button type="button" onclick="jQuery(this).closest(\'#template-preview-modal\').remove();">Close</button>';
-            
+            html += '<p><strong>Description:</strong> ' + (templateData.description || 'No description') + '</p>';
+            html += '<button type="button" onclick="$(this).closest(\'#template-preview-modal\').remove();">Close</button>';
             return html;
         },
 
         /**
-         * Validate file upload
+         * Validate template data
          */
-        validateFileUpload: function() {
-            var $file = $(this);
-            var file = this.files[0];
-            
-            if (!file) return;
-            
-            // Check file type
-            if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-                alert('Please select a JSON file');
-                $file.val('');
-                return;
-            }
-            
-            // Check file size (max 1MB)
-            if (file.size > 1024 * 1024) {
-                alert('File too large. Maximum size is 1MB');
-                $file.val('');
-                return;
-            }
-            
-            // Read and validate JSON
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var validation = SPTTemplates.validateTemplateData(e.target.result);
-                if (!validation.valid) {
-                    alert('Invalid template file: ' + validation.error);
-                    $file.val('');
+        validateTemplateData: function(jsonString) {
+            try {
+                var data = JSON.parse(jsonString);
+                
+                // Basic validation
+                if (!data || typeof data !== 'object') {
+                    return { valid: false, error: 'Invalid data format' };
                 }
-            };
-            reader.readAsText(file);
+                
+                if (!data.rules || !Array.isArray(data.rules)) {
+                    return { valid: false, error: 'No rules found in template' };
+                }
+                
+                if (data.rules.length === 0) {
+                    return { valid: false, error: 'Template contains no rules' };
+                }
+                
+                // Validate each rule has required fields
+                for (var i = 0; i < data.rules.length; i++) {
+                    var rule = data.rules[i];
+                    if (!rule.rule_name || !rule.tab_title) {
+                        return { valid: false, error: 'Rule ' + (i + 1) + ' missing required fields' };
+                    }
+                }
+                
+                return { valid: true };
+            } catch (e) {
+                return { valid: false, error: 'Invalid JSON format: ' + e.message };
+            }
+        },
+
+        /**
+         * Setup file validation
+         */
+        setupFileValidation: function() {
+            $(document).on('change', 'input[type="file"][accept=".json"]', function() {
+                var file = this.files[0];
+                if (file) {
+                    var fileName = file.name.toLowerCase();
+                    if (!fileName.endsWith('.json')) {
+                        alert('Please select a valid JSON file');
+                        $(this).val('');
+                        return;
+                    }
+                    
+                    // Check file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File too large. Maximum size is 5MB');
+                        $(this).val('');
+                        return;
+                    }
+                }
+            });
         },
 
         /**
@@ -393,75 +396,29 @@
          */
         validateJSONInput: function() {
             var $textarea = $(this);
-            var value = $textarea.val().trim();
+            var jsonString = $textarea.val();
             
-            if (!value) return;
-            
-            setTimeout(function() {
-                var validation = SPTTemplates.validateTemplateData(value);
-                if (!validation.valid) {
-                    $textarea.addClass('error');
-                    $textarea.attr('title', 'Invalid JSON: ' + validation.error);
-                } else {
-                    $textarea.removeClass('error');
-                    $textarea.removeAttr('title');
-                }
-            }, 500);
-        },
-
-        /**
-         * Setup file validation
-         */
-        setupFileValidation: function() {
-            // Add drag and drop for file areas
-            $('.file-upload-area').on('dragover', function(e) {
-                e.preventDefault();
-                $(this).addClass('drag-hover');
-            });
-            
-            $('.file-upload-area').on('dragleave', function(e) {
-                e.preventDefault();
-                $(this).removeClass('drag-hover');
-            });
-            
-            $('.file-upload-area').on('drop', function(e) {
-                e.preventDefault();
-                $(this).removeClass('drag-hover');
-                
-                var files = e.originalEvent.dataTransfer.files;
-                if (files.length > 0) {
-                    var $fileInput = $(this).find('input[type="file"]');
-                    $fileInput[0].files = files;
-                    $fileInput.trigger('change');
-                }
-            });
-        },
-
-        /**
-         * Template validation helper
-         */
-        validateTemplateData: function(jsonString) {
-            try {
-                var data = JSON.parse(jsonString);
-
-                if (!data.rules || !Array.isArray(data.rules)) {
-                    return { valid: false, error: 'Template must contain a rules array' };
-                }
-
-                for (var i = 0; i < data.rules.length; i++) {
-                    var rule = data.rules[i];
-                    if (!rule.rule_name || !rule.tab_title) {
-                        return { 
-                            valid: false, 
-                            error: 'Rule ' + (i + 1) + ' is missing required fields (rule_name, tab_title)' 
-                        };
-                    }
-                }
-
-                return { valid: true, data: data };
-            } catch (e) {
-                return { valid: false, error: 'Invalid JSON format: ' + e.message };
+            if (!jsonString.trim()) {
+                return;
             }
+            
+            // Remove any existing validation message
+            $textarea.siblings('.json-validation-message').remove();
+            
+            var validation = SPTTemplates.validateTemplateData(jsonString);
+            
+            var messageClass = validation.valid ? 'valid' : 'invalid';
+            var messageText = validation.valid ? 'Valid JSON template' : validation.error;
+            
+            var $message = $('<div class="json-validation-message ' + messageClass + '">' + messageText + '</div>');
+            $textarea.after($message);
+            
+            // Auto-remove validation message after 3 seconds
+            setTimeout(function() {
+                $message.fadeOut(300, function() {
+                    $message.remove();
+                });
+            }, 3000);
         },
 
         /**
@@ -509,7 +466,7 @@
     };
 
     /**
-     * SPT Export Manager
+     * SPT Export Manager - UPDATED: Only file download, no copy/paste
      */
     var SPTExport = {
         
@@ -525,25 +482,10 @@
          */
         bindEvents: function() {
             $(document).on('click', '#export-rules', this.exportRules);
-            $(document).on('change', '#export_format', this.handleFormatChange);
         },
 
         /**
-         * Handle export format change
-         */
-        handleFormatChange: function() {
-            var format = $(this).val();
-            var $exportBtn = $('#export-rules');
-            
-            if (format === 'file') {
-                $exportBtn.text('Download Export File');
-            } else {
-                $exportBtn.text('Generate Export Data');
-            }
-        },
-
-        /**
-         * Export rules
+         * Export rules - UPDATED: Always file download, no format selection
          */
         exportRules: function(e) {
             e.preventDefault();
@@ -553,8 +495,6 @@
                 return;
             }
             
-            var includeSettings = $('#export_include_settings').is(':checked');
-            var exportFormat = $('#export_format').val();
             var $button = $(this);
             
             $button.prop('disabled', true).text('Exporting...');
@@ -564,26 +504,19 @@
                 type: 'POST',
                 data: {
                     action: 'spt_export_rules',
-                    include_settings: includeSettings ? '1' : '0',
-                    export_format: exportFormat,
+                    export_format: 'file', // Always use file format
                     nonce: spt_admin_ajax.nonce
                 },
                 success: function(response) {
                     if (response.success) {
-                        if (exportFormat === 'file') {
-                            // Trigger download
-                            if (response.data.download_url) {
-                                window.open(response.data.download_url);
-                                SPTExport.showSuccess('Export completed successfully!');
-                            } else {
-                                // Fallback: create blob and download
-                                SPTExport.downloadAsFile(response.data.data, response.data.filename);
-                                SPTExport.showSuccess('Export file downloaded!');
-                            }
+                        if (response.data.download_url) {
+                            // Use download URL if available
+                            window.open(response.data.download_url);
+                            SPTExport.showSuccess('Export completed successfully!');
                         } else {
-                            // Show JSON data in a new window/tab for copy-paste
-                            SPTExport.showExportData(response.data.data, response.data.filename);
-                            SPTExport.showSuccess('Export data opened in new tab. Copy and save the content.');
+                            // Fallback: create blob and download
+                            SPTExport.downloadAsFile(response.data.data, response.data.filename);
+                            SPTExport.showSuccess('Export file downloaded!');
                         }
                     } else {
                         SPTExport.showError('Export failed: ' + response.data);
@@ -593,7 +526,7 @@
                     SPTExport.showError('Export failed. Please try again.');
                 },
                 complete: function() {
-                    $button.prop('disabled', false).text($('#export_format').val() === 'file' ? 'Download Export File' : 'Generate Export Data');
+                    $button.prop('disabled', false).text('Download Export File');
                 }
             });
         },
@@ -611,19 +544,6 @@
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-        },
-
-        /**
-         * Show export data in new window
-         */
-        showExportData: function(data, filename) {
-            var newWindow = window.open('', '_blank');
-            newWindow.document.write('<html><head><title>Export Data - ' + (filename || 'SPT Export') + '</title></head><body>');
-            newWindow.document.write('<h3>Smart Product Tabs Export</h3>');
-            newWindow.document.write('<p>Copy the content below and save it as a .json file:</p>');
-            newWindow.document.write('<textarea style="width:100%;height:80%;" readonly>' + data + '</textarea>');
-            newWindow.document.write('</body></html>');
-            newWindow.document.close();
         },
 
         /**

@@ -1085,25 +1085,23 @@ class SPT_Admin {
             </div>
 
             <!-- Built-in Templates -->
-            <div class="builtin-templates-section">
+        <div class="templates-section">
+            <div class="built-in-templates">
                 <h3><?php _e('Built-in Templates', 'smart-product-tabs'); ?></h3>
-                <p><?php _e('Professional templates ready to install with one click.', 'smart-product-tabs'); ?></p>
+                <p><?php _e('Choose from professionally designed templates to get started quickly:', 'smart-product-tabs'); ?></p>
 
-                <div class="template-grid">
+                <div class="templates-grid">
                     <?php foreach ($builtin_templates as $key => $template): ?>
-                    <div class="template-card" data-template-key="<?php echo esc_attr($key); ?>">
-                        <div class="template-preview">
-                            <?php if (isset($template['preview_image'])): ?>
-                                <img src="<?php echo esc_url($template['preview_image']); ?>" alt="<?php echo esc_attr($template['name']); ?>">
+                    <div class="template-card">
+                        <div class="template-icon">
+                            <?php if (!empty($template['icon'])): ?>
+                                <i class="<?php echo esc_attr($template['icon']); ?>"></i>
                             <?php else: ?>
-                                <div class="template-icon">
+                                <div class="default-icon">
                                     <?php 
-                                    $icons = array(
-                                        'electronics' => '⚡',
-                                        'fashion' => '👕', 
-                                        'digital' => '💾'
-                                    );
-                                    echo $icons[$key] ?? '📋';
+                                    echo $template['category'] === 'electronics' ? '🔌' : 
+                                         ($template['category'] === 'fashion' ? '👕' : 
+                                         ($template['category'] === 'digital' ? '💻' : '📋'));
                                     ?>
                                 </div>
                             <?php endif; ?>
@@ -1135,6 +1133,7 @@ class SPT_Admin {
                 </div>
             </div>
 
+            
             <!-- Import/Export Section -->
             <div class="import-export-section">
                 <div class="import-section">
@@ -1183,39 +1182,20 @@ class SPT_Admin {
 
                 <div class="export-section">
                     <h4><?php _e('Export Current Rules', 'smart-product-tabs'); ?></h4>
+                    <p><?php _e('Download your current rules as a JSON file for backup or transfer to another site.', 'smart-product-tabs'); ?></p>
 
                     <form id="export-form">
-                        <table class="form-table">
-                            <tr>
-                                <th><?php _e('Export Format', 'smart-product-tabs'); ?></th>
-                                <td>
-                                    <select name="export_format" id="export_format">
-                                        <option value="file"><?php _e('Download File', 'smart-product-tabs'); ?></option>
-                                        <option value="json"><?php _e('Show JSON (copy/paste)', 'smart-product-tabs'); ?></option>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th><?php _e('Include Settings', 'smart-product-tabs'); ?></th>
-                                <td>
-                                    <label>
-                                        <input type="checkbox" name="export_include_settings" id="export_include_settings" value="1" checked>
-                                        <?php _e('Include default tab settings', 'smart-product-tabs'); ?>
-                                    </label>
-                                    <p class="description"><?php _e('Export tab ordering and default tab customizations', 'smart-product-tabs'); ?></p>
-                                </td>
-                            </tr>
-                        </table>
                         <p class="submit">
                             <button type="button" class="button-primary" id="export-rules">
-                                <?php _e('Export Rules', 'smart-product-tabs'); ?>
+                                <?php _e('Download Export File', 'smart-product-tabs'); ?>
                             </button>
                         </p>
                     </form>
                 </div>
             </div>
 
-            <!-- Enhanced Template Preview Modal with Single Scroll -->
+            
+            <!-- Enhanced Template Preview Modal -->
             <div id="template-preview-modal" class="spt-modal" style="display: none;">
                 <div class="spt-modal-content">
                     <!-- Fixed Header -->
@@ -1227,7 +1207,7 @@ class SPT_Admin {
                     <!-- Scrollable Body -->
                     <div class="spt-modal-body">
                         <div id="preview-template-content">
-                            <!-- Content will be populated via AJAX -->
+                            <!-- Template preview content loaded via AJAX -->
                         </div>
                     </div>
 
@@ -1236,13 +1216,153 @@ class SPT_Admin {
                         <button type="button" class="button-primary" id="install-from-preview">
                             <?php _e('Install This Template', 'smart-product-tabs'); ?>
                         </button>
-                        <button type="button" class="button spt-modal-close">
+                        <button type="button" class="button" id="close-preview">
                             <?php _e('Close', 'smart-product-tabs'); ?>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            // Define nonce for consistent usage
+            var sptNonce = '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>';
+
+            // File upload form
+            $('.template-upload-form').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+                formData.append('action', 'spt_import_template');
+                formData.append('nonce', sptNonce);
+
+                var $submitBtn = $(this).find('input[type="submit"]');
+                $submitBtn.prop('disabled', true).val('Uploading...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Import completed: ' + response.data.imported + ' rules imported, ' + response.data.skipped + ' skipped');
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        alert('Upload failed. Please try again.');
+                    },
+                    complete: function() {
+                        $submitBtn.prop('disabled', false).val('Import Template');
+                    }
+                });
+            });
+
+            // Export functionality - UPDATED: Only file download, no copy/paste
+            $('#export-rules').on('click', function() {
+                $(this).prop('disabled', true).text('Exporting...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'spt_export_rules',
+                        export_format: 'file', // Always use file format
+                        nonce: sptNonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            if (response.data.download_url) {
+                                // Use download URL if available
+                                window.open(response.data.download_url);
+                                alert('Export completed successfully!');
+                            } else {
+                                // Fallback: create blob and download
+                                var blob = new Blob([response.data.data], { type: 'application/json' });
+                                var url = window.URL.createObjectURL(blob);
+                                var a = document.createElement('a');
+                                a.href = url;
+                                a.download = response.data.filename || 'spt-export.json';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                                alert('Export file downloaded!');
+                            }
+                        } else {
+                            alert('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        alert('Export failed. Please try again.');
+                    },
+                    complete: function() {
+                        $('#export-rules').prop('disabled', false).text('Download Export File');
+                    }
+                });
+            });
+
+            // Modal functionality
+            $('.template-preview-btn').on('click', function() {
+                var templateKey = $(this).data('template-key');
+                $('#template-preview-modal').show();
+            });
+
+            $('.spt-modal-close, #close-preview').on('click', function() {
+                $('#template-preview-modal').hide();
+            });
+
+            // Template preview functionality
+            $('.template-preview-btn').on('click', function() {
+                var templateKey = $(this).data('template-key');
+                var $modal = $('#template-preview-modal');
+
+                $('#preview-template-title').text('Loading...');
+                $('#preview-template-content').html('<p>Loading template preview...</p>');
+                $modal.show();
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'spt_get_template_preview',
+                        template_key: templateKey,
+                        nonce: sptNonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var template = response.data;
+                            $('#preview-template-title').text(template.name);
+
+                            var content = '<div class="template-preview-details">';
+                            content += '<p><strong>Description:</strong> ' + (template.description || 'No description available') + '</p>';
+                            content += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
+                            content += '<p><strong>Author:</strong> ' + (template.author || 'Unknown') + '</p>';
+                            content += '<p><strong>Number of Tabs:</strong> ' + (template.tabs_count || 0) + '</p>';
+                            content += '</div>';
+
+                            $('#preview-template-content').html(content);
+
+                            $('#install-from-preview').off('click').on('click', function() {
+                                $modal.hide();
+                                $('.template-install[data-template-key="' + templateKey + '"]').click();
+                            });
+                        } else {
+                            $('#preview-template-content').html('<p class="error">Error loading template preview: ' + (response.data || 'Unknown error') + '</p>');
+                        }
+                    },
+                    error: function() {
+                        $('#preview-template-content').html('<p class="error">Failed to load template preview. Please try again.</p>');
+                    }
+                });
+            });
+        });
+        </script>
 
         <style>
         .template-grid {
@@ -1401,379 +1521,6 @@ class SPT_Admin {
         }
         </style>
 
-        <script>
-        jQuery(document).ready(function($) { 
-            
-            
-            
-            var sptNonce = (typeof spt_ajax !== 'undefined') ? spt_ajax.nonce : '<?php echo wp_create_nonce('spt_ajax_nonce'); ?>';
-
-            // File upload form
-            $('.template-upload-form').on('submit', function(e) {
-                e.preventDefault();
-
-                var formData = new FormData(this);
-                formData.append('action', 'spt_import_template');
-                formData.append('nonce', sptNonce); // Use the variable
-
-                var $submitBtn = $(this).find('input[type="submit"]');
-                $submitBtn.prop('disabled', true).val('Uploading...');
-
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        if (response.success) {
-                            alert('Import completed: ' + response.data.imported + ' rules imported, ' + response.data.skipped + ' skipped');
-                            location.reload();
-                        } else {
-                            alert('Error: ' + response.data);
-                        }
-                    },
-                    error: function() {
-                        alert('Upload failed. Please try again.');
-                    },
-                    complete: function() {
-                        $submitBtn.prop('disabled', false).val('Import Template');
-                    }
-                });
-            });
-
-            // Export functionality
-            $('#export-rules').on('click', function() {
-                var includeSettings = $('#export_include_settings').is(':checked');
-                var exportFormat = $('#export_format').val();
-
-                $(this).prop('disabled', true).text('Exporting...');
-
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'spt_export_rules',
-                        include_settings: includeSettings ? '1' : '0',
-                        export_format: exportFormat,
-                        nonce: sptNonce // Use the variable
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            if (exportFormat === 'file') {
-                                window.open(response.data.download_url);
-                                alert('Export completed successfully!');
-                            } else {
-                                var newWindow = window.open('', '_blank');
-                                newWindow.document.write('<pre>' + response.data.data + '</pre>');
-                                newWindow.document.title = 'Export Data - ' + response.data.filename;
-                                alert('Export data opened in new tab. Copy and save the content.');
-                            }
-                        } else {
-                            alert('Error: ' + response.data);
-                        }
-                    },
-                    error: function() {
-                        alert('Export failed. Please try again.');
-                    },
-                    complete: function() {
-                        $('#export-rules').prop('disabled', false).text('Export Rules');
-                    }
-                });
-            });
-
-            // Modal functionality
-            $('.template-preview-btn').on('click', function() {
-                var templateKey = $(this).data('template-key');
-                // Show preview modal with template details
-                $('#template-preview-modal').show();
-            });
-
-            $('.spt-modal-close').on('click', function() {
-                $('#template-preview-modal').hide();
-            });
-
-            
-            
-            
-            
-            
-        
-            // Template preview functionality with fixes
-            $('.template-preview-btn').on('click', function() {
-                var templateKey = $(this).data('template-key');
-                var $modal = $('#template-preview-modal');
-
-                // SOLUTION 1: Clear previous content immediately
-                $('#preview-template-title').text('Loading...');
-                $('#preview-template-content').html('');
-
-                // SOLUTION 2: Show loading state with preloader
-                showModalLoading($modal);
-
-                // Show modal immediately with loading state
-                $modal.show();
-
-                // Get template data via AJAX
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'spt_get_template_preview',
-                        template_key: templateKey,
-                        nonce: sptNonce // Use the consistent nonce variable
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            var template = response.data;
-
-                            // SOLUTION 3: Clear loading and populate with fresh content
-                            hideModalLoading($modal);
-
-                            // Populate modal content
-                            $('#preview-template-title').text(template.name);
-
-                            var content = '<div class="template-preview-details">';
-                            content += '<p><strong>Description:</strong> ' + (template.description || 'No description available') + '</p>';
-                            content += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
-                            content += '<p><strong>Author:</strong> ' + (template.author || 'Unknown') + '</p>';
-                            content += '<p><strong>Number of Tabs:</strong> ' + (template.tabs_count || 0) + '</p>';
-
-                            if (template.categories && template.categories.length > 0) {
-                                content += '<p><strong>Categories:</strong> ' + template.categories.join(', ') + '</p>';
-                            }
-
-                            content += '<h4>Tabs Included:</h4>';
-                            content += '<div class="tabs-preview-list">';
-
-                            if (template.rules && template.rules.length > 0) {
-                                template.rules.forEach(function(rule, index) {
-                                    content += '<div class="tab-preview-item">';
-                                    content += '<h5>' + (index + 1) + '. ' + (rule.tab_title || 'Untitled Tab') + '</h5>';
-                                    content += '<p><strong>Conditions:</strong> ' + formatConditions(rule.conditions) + '</p>';
-                                    content += '<p><strong>Priority:</strong> ' + (rule.priority || 10) + '</p>';
-
-                                    // Show preview of content (truncated)
-                                    var contentPreview = '';
-                                    if (rule.tab_content) {
-                                        contentPreview = rule.tab_content.replace(/<[^>]*>/g, ''); // Strip HTML
-                                        if (contentPreview.length > 200) {
-                                            contentPreview = contentPreview.substring(0, 200) + '...';
-                                        }
-                                    }
-                                    content += '<p><strong>Content Preview:</strong> ' + (contentPreview || 'No content preview available') + '</p>';
-                                    content += '</div>';
-                                });
-                            } else {
-                                content += '<p>No tab rules found in this template.</p>';
-                            }
-
-                            content += '</div>';
-                            content += '</div>';
-
-                            $('#preview-template-content').html(content);
-
-                            // Set up install button
-                            $('#install-from-preview').off('click').on('click', function() {
-                                $modal.hide();
-                                // Trigger the install for this template
-                                $('.template-install[data-template-key="' + templateKey + '"]').click();
-                            });
-
-                        } else {
-                            hideModalLoading($modal);
-                            $('#preview-template-content').html('<p class="error">Error loading template preview: ' + (response.data || 'Unknown error') + '</p>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        hideModalLoading($modal);
-                        $('#preview-template-content').html('<p class="error">Failed to load template preview. Please try again.</p>');
-                        console.error('Template preview error:', error);
-                    }
-                });
-            });
-
-            // Enhanced modal close functionality
-            $('.spt-modal-close').on('click', function() {
-                var $modal = $(this).closest('.spt-modal');
-                hideModal($modal);
-            });
-
-            // Close modal when clicking outside
-            $('.spt-modal').on('click', function(e) {
-                if (e.target === this) {
-                    hideModal($(this));
-                }
-            });
-
-            // Escape key to close modal
-            $(document).on('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    var $visibleModal = $('.spt-modal:visible');
-                    if ($visibleModal.length) {
-                        hideModal($visibleModal);
-                    }
-                }
-            });
-
-            // Helper function to get the correct nonce
-            function getSptNonce() {
-                // Try multiple possible nonce variable names
-                if (typeof spt_admin_modal !== 'undefined' && spt_admin_modal.nonce) {
-                    return spt_admin_modal.nonce;
-                }
-                if (typeof spt_ajax_nonce !== 'undefined') {
-                    return spt_ajax_nonce;
-                }
-                if (typeof spt_admin !== 'undefined' && spt_admin.nonce) {
-                    return spt_admin.nonce;
-                }
-                if (typeof ajaxurl !== 'undefined') {
-                    // Look for nonce in existing forms or elements
-                    var nonceInput = $('input[name*="nonce"], input[name*="_wpnonce"]').first();
-                    if (nonceInput.length) {
-                        return nonceInput.val();
-                    }
-                }
-
-                console.warn('SPT: No nonce found. AJAX requests may fail.');
-                return '';
-            }
-
-            // Helper function to show loading state in modal
-            function showModalLoading($modal) {
-                var $content = $modal.find('.spt-modal-content');
-
-                // Remove existing loading overlay
-                $content.find('.spt-modal-loading').remove();
-
-                // Add loading overlay
-                var $loading = $('<div class="spt-modal-loading">' +
-                    '<div class="spt-modal-loading-content">' +
-                        '<div class="spt-modal-loading-spinner"></div>' +
-                        '<div>Loading template preview...</div>' +
-                    '</div>' +
-                '</div>');
-
-                $content.css('position', 'relative').append($loading);
-            }
-
-            // Helper function to hide loading state
-            function hideModalLoading($modal) {
-                $modal.find('.spt-modal-loading').remove();
-            }
-
-            // Helper function to hide modal with cleanup
-            function hideModal($modal) {
-                // Clear any loading states
-                hideModalLoading($modal);
-
-                // SOLUTION 4: Clear content to prevent showing previous template
-                $modal.find('#preview-template-title').text('');
-                $modal.find('#preview-template-content').html('');
-
-                // Hide modal
-                $modal.hide();
-            }
-
-            // Helper function to format conditions (if not already defined)
-            function formatConditions(conditions) {
-                if (!conditions) {
-                    return 'All Products';
-                }
-
-                try {
-                    var conditionsObj = typeof conditions === 'string' ? JSON.parse(conditions) : conditions;
-
-                    if (!conditionsObj || typeof conditionsObj !== 'object') {
-                        return 'All Products';
-                    }
-
-                    var type = conditionsObj.type || 'all';
-                    var value = conditionsObj.value || '';
-                    var operator = conditionsObj.operator || 'equals';
-
-                    switch (type) {
-                        case 'product_id':
-                            return 'Product ID ' + operator + ' ' + value;
-                        case 'product_category':
-                            return 'Product Category ' + operator + ' ' + value;
-                        case 'product_tag':
-                            return 'Product Tag ' + operator + ' ' + value;
-                        case 'product_type':
-                            return 'Product Type: ' + value;
-                        case 'all':
-                        default:
-                            return 'All Products';
-                    }
-                } catch (e) {
-                    return 'All Products';
-                }
-            }
-
-            // Template installation with improved error handling
-            $('.template-install').on('click', function() {
-                var templateKey = $(this).data('template-key');
-                var templateName = $(this).data('template-name');
-                var $button = $(this);
-
-                if (!confirm('Install template "' + templateName + '"? This will add new tab rules to your site.')) {
-                    return;
-                }
-
-                $button.prop('disabled', true).text('Installing...');
-
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'spt_install_builtin_template',
-                        template_key: templateKey,
-                        nonce: sptNonce // Use the consistent nonce variable
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            alert('Template installed successfully! ' + response.data.imported + ' rules imported.');
-                            location.reload();
-                        } else {
-                            alert('Error: ' + (response.data || 'Unknown error occurred'));
-                            $button.prop('disabled', false).text('Install');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        alert('An error occurred. Please try again.');
-                        console.error('Template installation error:', error);
-                        $button.prop('disabled', false).text('Install');
-                    }
-                });
-            });
-
-            // Additional: Remove any unwanted close buttons that might be in the preview content
-            // This addresses the cross button issue mentioned
-            $(document).on('DOMNodeInserted', function(e) {
-                var $target = $(e.target);
-
-                // Remove any unwanted close buttons that might appear in preview content
-                if ($target.hasClass('template-preview-details') || $target.closest('.template-preview-details').length) {
-                    $target.find('.close, .modal-close, .preview-close').not('.spt-modal-close').remove();
-                }
-            });
-
-          
-            
-            
-            
-            
-            
-            
-            
-        });            
-
-          
-            
-            
-            
-        </script>
         <?php
     }
     
