@@ -55,27 +55,50 @@ var SPTTemplates = {
     setupModalHandlers: function() {
         var $ = jQuery;
         
-        // Modal close handlers
-        $(document).on('click', '.spt-modal-close, #close-preview', function() {
-            $('#template-preview-modal').hide();
-        });
-        
-        // Close modal on backdrop click
-        $(document).on('click', '.spt-modal', function(e) {
-            if (e.target === this) {
-                $(this).hide();
+        // Modal close handlers - Fixed with better error checking
+        $(document).off('click', '.spt-modal-close, #close-preview').on('click', '.spt-modal-close, #close-preview', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                $('#template-preview-modal').hide();
+            } catch (error) {
+                console.warn('Error closing modal:', error);
             }
         });
         
-        // Install from preview modal
-        $(document).on('click', '#install-from-preview', function() {
-            var templateKey = $('.template-preview-btn[data-template-key]').first().data('template-key');
-            var templateName = $('.template-preview-btn[data-template-key]').first().data('template-name');
-            var $button = $('.template-install[data-template-key="' + templateKey + '"]');
-            var $card = $button.closest('.template-card');
+        // Close modal on backdrop click - Fixed with better error checking
+        $(document).off('click', '.spt-modal').on('click', '.spt-modal', function(e) {
+            try {
+                if (e.target === this) {
+                    $(this).hide();
+                }
+            } catch (error) {
+                console.warn('Error closing modal on backdrop click:', error);
+            }
+        });
+        
+        // Install from preview modal - Fixed with better error checking
+        $(document).off('click', '#install-from-preview').on('click', '#install-from-preview', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             
-            $('#template-preview-modal').hide();
-            SPTTemplates.showInstallConfirmationModal(templateKey, templateName, $button, $card);
+            try {
+                var templateKey = $(this).data('template-key') || $('.template-preview-btn[data-template-key]').first().data('template-key');
+                var templateName = $(this).data('template-name') || $('.template-preview-btn[data-template-key]').first().data('template-name');
+                
+                if (!templateKey) {
+                    console.error('No template key found for install from preview');
+                    return;
+                }
+                
+                var $button = $('.template-install[data-template-key="' + templateKey + '"]');
+                var $card = $button.closest('.template-card');
+                
+                $('#template-preview-modal').hide();
+                SPTTemplates.showInstallConfirmationModal(templateKey, templateName, $button, $card);
+            } catch (error) {
+                console.error('Error in install from preview:', error);
+            }
         });
     },
 
@@ -292,10 +315,15 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
         var templateName = $(this).data('template-name') || 'Unknown Template';
         var $modalBody = $('#template-preview-modal .spt-modal-body');
         
+        console.log('Preview clicked for template:', templateKey, templateName);
+        
         // Show modal with loading state
         $('#template-preview-modal').show();
         $('#preview-template-title').text('Loading Preview...');
-        $modalBody.html('<div class="spt-modal-loading"><div class="spt-modal-loading-content"><div class="spt-modal-loading-spinner"></div><div class="spt-modal-loading-text">Loading template preview...</div></div></div>');
+        $modalBody.html('<div class="spt-modal-loading"><div class="spt-modal-loading-content"><div class="spt-modal-loading-spinner"></div><div id="preview-template-content">Loading template preview...</div></div></div>');
+        
+        // Store template key in install button for later use
+        $('#install-from-preview').data('template-key', templateKey).data('template-name', templateName);
         
         $.ajax({
             url: SPTTemplates.getAjaxUrl(),
@@ -306,22 +334,17 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
                 nonce: SPTTemplates.getAjaxNonce()
             },
             success: function(response) {
+                console.log('Preview response:', response);
+                
                 if (response.success && response.data) {
                     var template = response.data;
                     
                     // Update modal title
                     $('#preview-template-title').text('Template Preview: ' + (template.name || templateName));
                     
-                    // Generate preview content
+                    // Generate preview content using the correct method
                     var content = SPTTemplates.generateTemplatePreviewHTML(template);
                     $('#preview-template-content').html(content);
-                    
-                    // Set up install button
-                    $('#install-from-preview').off('click').on('click', function() {
-                        $('#template-preview-modal').hide();
-                        // Trigger install on the original install button
-                        $('.template-install[data-template-key="' + templateKey + '"]').click();
-                    });
                     
                 } else {
                     $('#preview-template-title').text('Preview Error');
@@ -333,14 +356,16 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
                 }
             },
             error: function(xhr, status, error) {
-                $button.prop('disabled', false).text('Install');
-                $card.removeClass('loading');
-                
-                console.error('Installation AJAX Error:', {xhr: xhr, status: status, error: error});
-                SPTTemplates.showInstallationErrorModal('Installation failed. Please try again.');
+                console.error('Preview AJAX Error:', {xhr: xhr, status: status, error: error});
+                $('#preview-template-title').text('Preview Error');
+                $('#preview-template-content').html(
+                    '<div class="spt-status-message error">' +
+                    '<p><strong>Error:</strong> Failed to load template preview. Please try again.</p>' +
+                    '</div>'
+                );
             }
         });
-    },    
+    },  
     
     
     /**
@@ -367,7 +392,16 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
         content += '<p><strong>Name:</strong> ' + (template.name || 'Unknown') + '</p>';
         content += '<p><strong>Description:</strong> ' + (template.description || 'No description') + '</p>';
         content += '<p><strong>Version:</strong> ' + (template.version || '1.0') + '</p>';
-        content += '<p><strong>Rules Count:</strong> ' + (template.rules_count || 0) + '</p>';
+        
+        if (template.author) {
+            content += '<p><strong>Author:</strong> ' + template.author + '</p>';
+        }
+        
+        if (template.rules) {
+            content += '<p><strong>Rules Count:</strong> ' + template.rules.length + '</p>';
+        } else {
+            content += '<p><strong>Rules Count:</strong> ' + (template.rules_count || 0) + '</p>';
+        }
         
         if (template.rules && template.rules.length > 0) {
             content += '<h4>Tab Rules Preview:</h4>';
@@ -379,9 +413,12 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
                 content += '<p><strong>Rule Name:</strong> ' + (rule.rule_name || 'Unnamed Rule') + '</p>';
                 content += '<p><strong>Priority:</strong> ' + (rule.priority || 10) + '</p>';
                 content += '<p><strong>Status:</strong> ' + (rule.is_active ? 'Active' : 'Inactive') + '</p>';
-                if (rule.conditions) {
-                    content += '<p><strong>Conditions:</strong> ' + rule.conditions + '</p>';
+                
+                // Show conditions if available
+                if (rule.conditions && rule.conditions.length > 0) {
+                    content += '<p><strong>Conditions:</strong> ' + rule.conditions.length + ' condition(s)</p>';
                 }
+                
                 content += '</div>';
             });
             

@@ -757,53 +757,62 @@ public function ajax_install_builtin_template() {
      * AJAX handler for template preview
      * Add this method to your SPT_Templates class
      */
-    public function ajax_get_template_preview() {
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'spt_ajax_nonce')) {
-            wp_send_json_error(__('Security check failed', 'smart-product-tabs'));
-            return;
-        }
-
-        $template_key = sanitize_text_field($_POST['template_key'] ?? '');
-
-        if (empty($template_key)) {
-            wp_send_json_error(__('Invalid template key', 'smart-product-tabs'));
-            return;
-        }
-
-        try {
-            // Load template from JSON file
-            $template_data = $this->load_template_from_file($template_key);
-            
-            if (is_wp_error($template_data)) {
-                wp_send_json_error($template_data->get_error_message());
-                return;
-            }
-
-            // Prepare template data for preview
-            $preview_data = array(
-                'name' => $template_data['name'] ?? 'Unknown Template',
-                'description' => $template_data['description'] ?? '',
-                'version' => $template_data['version'] ?? '1.0',
-                'author' => $template_data['author'] ?? 'Smart Product Tabs',
-                'tabs_count' => 0,
-                'categories' => $template_data['categories'] ?? array(),
-                'rules' => array()
-            );
-
-            // Load and parse template rules if available
-            if (isset($template_data['rules']) && is_array($template_data['rules'])) {
-                $preview_data['rules'] = $template_data['rules'];
-                $preview_data['tabs_count'] = count($template_data['rules']);
-            }
-
-            error_log('SPT Templates: Sending preview data for ' . $template_key . ' - ' . $preview_data['tabs_count'] . ' tabs');
-            wp_send_json_success($preview_data);
-
-        } catch (Exception $e) {
-            error_log('SPT Templates: Preview error - ' . $e->getMessage());
-            wp_send_json_error(__('Preview failed: ', 'smart-product-tabs') . $e->getMessage());
-        }
+public function ajax_get_template_preview() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'] ?? '', 'spt_ajax_nonce')) {
+        wp_send_json_error(__('Security check failed', 'smart-product-tabs'));
+        return;
     }
+
+    $template_key = sanitize_text_field($_POST['template_key'] ?? '');
+
+    if (empty($template_key)) {
+        wp_send_json_error(__('Invalid template key', 'smart-product-tabs'));
+        return;
+    }
+
+    try {
+        // Load template from JSON file using the existing method
+        $template_data = $this->load_template_from_file($template_key);
+        
+        if (is_wp_error($template_data)) {
+            wp_send_json_error($template_data->get_error_message());
+            return;
+        }
+
+        // Prepare template data for preview with all necessary information
+        $preview_data = array(
+            'name' => $template_data['name'] ?? 'Unknown Template',
+            'description' => $template_data['description'] ?? 'No description available',
+            'version' => $template_data['version'] ?? '1.0',
+            'author' => $template_data['author'] ?? 'Unknown Author',
+            'rules_count' => isset($template_data['rules']) ? count($template_data['rules']) : 0,
+            'rules' => array()
+        );
+
+        // Process rules for preview
+        if (isset($template_data['rules']) && is_array($template_data['rules'])) {
+            foreach ($template_data['rules'] as $rule) {
+                $preview_rule = array(
+                    'tab_title' => $rule['tab_title'] ?? 'Untitled Tab',
+                    'rule_name' => $rule['rule_name'] ?? 'Unnamed Rule',
+                    'priority' => $rule['priority'] ?? 10,
+                    'is_active' => isset($rule['is_active']) ? (bool)$rule['is_active'] : true,
+                    'conditions' => $rule['conditions'] ?? array()
+                );
+                
+                $preview_data['rules'][] = $preview_rule;
+            }
+        }
+
+        // Send successful response
+        wp_send_json_success($preview_data);
+        
+    } catch (Exception $e) {
+        error_log('SPT Template Preview Error: ' . $e->getMessage());
+        wp_send_json_error(__('Failed to load template preview', 'smart-product-tabs'));
+    }
+}
     
     /**
      * Validate individual rule data
