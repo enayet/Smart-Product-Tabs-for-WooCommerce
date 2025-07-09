@@ -319,8 +319,8 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
         
         // Show modal with loading state
         $('#template-preview-modal').show();
-        $('#preview-template-title').text('Loading Preview...');
-        $modalBody.html('<div class="spt-modal-loading"><div class="spt-modal-loading-content"><div class="spt-modal-loading-spinner"></div><div id="preview-template-content">Loading template preview...</div></div></div>');
+        $('#preview-template-title').text('Loading Details...');
+        $modalBody.html('<div class="spt-modal-loading"><div class="spt-modal-loading-content"><div class="spt-modal-loading-spinner"></div><div id="preview-template-content">Loading template details...</div></div></div>');
         
         // Store template key in install button for later use
         $('#install-from-preview').data('template-key', templateKey).data('template-name', templateName);
@@ -340,7 +340,7 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
                     var template = response.data;
                     
                     // Update modal title
-                    $('#preview-template-title').text('Template Preview: ' + (template.name || templateName));
+                    $('#preview-template-title').text('Template Details: ' + (template.name || templateName));
                     
                     // Generate preview content using the correct method
                     var content = SPTTemplates.generateTemplatePreviewHTML(template);
@@ -415,9 +415,9 @@ proceedWithInstallation: function(templateKey, templateName, $button, $card) {
                 content += '<p><strong>Status:</strong> ' + (rule.is_active ? 'Active' : 'Inactive') + '</p>';
                 
                 // Show conditions if available
-                if (rule.conditions && rule.conditions.length > 0) {
-                    content += '<p><strong>Conditions:</strong> ' + rule.conditions.length + ' condition(s)</p>';
-                }
+//                if (rule.conditions && rule.conditions.length > 0) {
+//                    content += '<p><strong>Conditions:</strong> ' + rule.conditions.length + ' condition(s)</p>';
+//                }
                 
                 content += '</div>';
             });

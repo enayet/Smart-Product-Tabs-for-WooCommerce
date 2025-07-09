@@ -733,27 +733,47 @@ class SPT_Admin {
                 </div>
             </form>
         </div>
-        
-    <script>
-    jQuery(document).ready(function($) {
-        $('#sortable-tabs').sortable({
-            handle: '.tab-handle',
-            placeholder: 'tab-placeholder',
-            axis: 'y',
-            opacity: 0.8,
-            tolerance: 'pointer',
-            stop: function(event, ui) {
-                $('#sortable-tabs .tab-item').each(function(index) {
-                    $(this).find('.sort-order-input').val(index + 1);
-                });
-            }
-        });
+    
 
-        $('#sortable-tabs .tab-item').each(function(index) {
-            $(this).find('.sort-order-input').val(index + 1);
+<script>
+jQuery(document).ready(function($) {
+    $('#sortable-tabs').sortable({
+        handle: '.tab-handle',
+        placeholder: 'tab-placeholder',
+        axis: 'y',
+        opacity: 0.8,
+        tolerance: 'pointer',
+        stop: function(event, ui) {
+            // Update sort order for all items after drag stops
+            $('#sortable-tabs .tab-item').each(function(index) {
+                $(this).find('.sort-order-input').val(index + 1);
+            });
+            
+            // Clean up the opacity and any other inline styles left by jQuery UI
+            $('#sortable-tabs .tab-item').each(function() {
+                $(this).css('opacity', '').removeAttr('style');
+            });
+        }
+    });
+    
+    // Set initial sort order values
+    $('#sortable-tabs .tab-item').each(function(index) {
+        $(this).find('.sort-order-input').val(index + 1);
+    });
+    
+    // Additional cleanup before form submission to prevent any jump
+    $('.button-primary').on('click', function(e) {
+        // Clean up any remaining inline styles before form submission
+        $('#sortable-tabs .tab-item').each(function() {
+            $(this).removeAttr('style');
         });
     });
-    </script>
+});
+</script>
+       
+<style>
+
+</style>
         <?php
     }
     
@@ -1125,7 +1145,7 @@ class SPT_Admin {
                         <button class="button button-secondary template-preview-btn" 
                                 data-template-key="<?php echo esc_attr($template_key); ?>" 
                                 data-template-name="<?php echo esc_attr($template_name); ?>">
-                            <?php _e('Preview', 'smart-product-tabs'); ?>
+                            <?php _e('Details', 'smart-product-tabs'); ?>
                         </button>
                         <button class="button button-primary template-install" 
                                 data-template-key="<?php echo esc_attr($template_key); ?>" 
