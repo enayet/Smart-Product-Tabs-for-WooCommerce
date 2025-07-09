@@ -1,14 +1,13 @@
 /**
- * Updated Smart Product Tabs - Admin Templates JavaScript
- * Removed template save functionality and copy/paste export
- * Only supports file download export
+ * FIXED: Smart Product Tabs - Admin Templates JavaScript
+ * This fixes the file upload issues and JavaScript errors
  */
 
 (function($) {
     'use strict';
 
     /**
-     * SPT Template Manager
+     * SPT Template Manager - FIXED VERSION
      */
     var SPTTemplates = {
         
@@ -27,22 +26,150 @@
             // Template installation
             $(document).on('click', '.template-install', this.installTemplate);
             
-            // File upload import only
+            // FIXED: File upload import form handling
             $(document).on('submit', '.template-upload-form', this.uploadTemplate);
             
             // Template preview
-            $(document).on('click', '.template-preview', this.previewTemplate);
+            $(document).on('click', '.template-preview-btn', this.previewTemplate);
             
-            // File input change
-            $(document).on('change', 'input[type="file"]', this.validateFileUpload);
+            // FIXED: File input change validation
+            $(document).on('change', 'input[type="file"][name="template_file"]', this.validateFileUpload);
         },
 
         /**
          * Initialize validation
          */
         initValidation: function() {
-            // Add file validation
             this.setupFileValidation();
+        },
+
+        /**
+         * FIXED: Upload template file with proper error handling
+         */
+        uploadTemplate: function(e) {
+            e.preventDefault();
+            
+            // Check if AJAX is available
+            if (typeof spt_admin_ajax === 'undefined') {
+                alert('AJAX not available. Please refresh the page and try again.');
+                return;
+            }
+
+            var $form = $(this);
+            var $submitBtn = $form.find('input[type="submit"]');
+
+            // Validate file selection
+            var fileInput = $form.find('input[type="file"][name="template_file"]')[0];
+            if (!fileInput || !fileInput.files || !fileInput.files.length) {
+                alert('Please select a file to upload');
+                return;
+            }
+
+            var file = fileInput.files[0];
+
+            // Validate file type
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                alert('Please select a valid JSON file');
+                return;
+            }
+
+            // Validate file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File too large. Maximum size is 5MB');
+                return;
+            }
+
+            // FIXED: Proper FormData creation
+            var formData = new FormData();
+            formData.append('action', 'spt_import_template');
+            formData.append('import_type', 'file');
+            formData.append('nonce', spt_admin_ajax.nonce);
+            formData.append('template_file', file); // Add the file directly
+            
+            // Add replace existing option
+            var replaceExisting = $form.find('input[name="replace_existing"]:checked').length > 0;
+            if (replaceExisting) {
+                formData.append('replace_existing', '1');
+            }
+
+            $submitBtn.prop('disabled', true).val('Uploading...');
+
+            $.ajax({
+                url: spt_admin_ajax.ajax_url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    console.log('Upload response:', response); // Debug logging
+                    
+                    if (response && response.success) {
+                        var message = 'Import completed successfully!';
+                        if (response.data) {
+                            if (response.data.imported) {
+                                message += ' ' + response.data.imported + ' rules imported';
+                            }
+                            if (response.data.updated) {
+                                message += ', ' + response.data.updated + ' rules updated';
+                            }
+                            if (response.data.skipped) {
+                                message += ', ' + response.data.skipped + ' rules skipped';
+                            }
+                        }
+                        
+                        SPTTemplates.showSuccess(message);
+
+                        // Clear form
+                        $form[0].reset();
+
+                        // Reload page after delay
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        var errorMsg = 'Import failed';
+                        if (response && response.data) {
+                            errorMsg += ': ' + response.data;
+                        }
+                        SPTTemplates.showError(errorMsg);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Upload error:', xhr.responseText); // Debug logging
+                    SPTTemplates.showError('Upload failed. Server error: ' + error);
+                },
+                complete: function() {
+                    $submitBtn.prop('disabled', false).val('Import Template');
+                }
+            });
+        },
+
+        /**
+         * FIXED: File upload validation
+         */
+        validateFileUpload: function() {
+            var file = this.files[0];
+            var $input = $(this);
+            
+            if (file) {
+                // Check file type
+                if (!file.name.toLowerCase().endsWith('.json')) {
+                    alert('Please select a valid JSON file');
+                    $input.val(''); // Clear the input
+                    return false;
+                }
+                
+                // Check file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File too large. Maximum size is 5MB');
+                    $input.val(''); // Clear the input
+                    return false;
+                }
+                
+                console.log('File validated:', file.name, 'Size:', file.size + ' bytes');
+            }
+            
+            return true;
         },
 
         /**
@@ -94,75 +221,6 @@
         },
 
         /**
-         * Upload template file
-         */
-        uploadTemplate: function(e) {
-            e.preventDefault();
-            
-            if (typeof spt_admin_ajax === 'undefined') {
-                alert('AJAX not available. Please refresh the page and try again.');
-                return;
-            }
-
-            var $form = $(this);
-            var formData = new FormData(this);
-            var $submitBtn = $form.find('input[type="submit"]');
-
-            // Check if file is selected
-            var fileInput = $form.find('input[type="file"]')[0];
-            if (!fileInput.files.length) {
-                alert('Please select a file to upload');
-                return;
-            }
-
-            // Validate file type
-            var fileName = fileInput.files[0].name;
-            if (!fileName.toLowerCase().endsWith('.json')) {
-                alert('Please select a valid JSON file');
-                return;
-            }
-
-            formData.append('action', 'spt_import_template');
-            formData.append('import_type', 'file');
-            formData.append('nonce', spt_admin_ajax.nonce);
-
-            $submitBtn.prop('disabled', true).val('Uploading...');
-
-            $.ajax({
-                url: spt_admin_ajax.ajax_url,
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        var message = 'Import completed: ' + response.data.imported + ' rules imported';
-                        if (response.data.skipped > 0) {
-                            message += ', ' + response.data.skipped + ' skipped';
-                        }
-                        SPTTemplates.showSuccess(message);
-
-                        // Clear form
-                        $form[0].reset();
-
-                        // Reload page
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        SPTTemplates.showError('Import failed: ' + response.data);
-                    }
-                },
-                error: function() {
-                    SPTTemplates.showError('Upload failed. Please try again.');
-                },
-                complete: function() {
-                    $submitBtn.prop('disabled', false).val('Import Template');
-                }
-            });
-        },
-
-        /**
          * Preview template before installation
          */
         previewTemplate: function(e) {
@@ -180,7 +238,7 @@
                 url: spt_admin_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'spt_preview_template',
+                    action: 'spt_get_template_preview',
                     template_key: templateKey,
                     nonce: spt_admin_ajax.nonce
                 },
@@ -198,7 +256,7 @@
         },
 
         /**
-         * Show template preview in modal/popup
+         * Show template preview in modal
          */
         showTemplatePreview: function(templateName, templateData) {
             var preview = SPTTemplates.generatePreviewHTML(templateName, templateData);
@@ -233,7 +291,7 @@
             
             $modal.show();
             
-            // Close on click outside or escape
+            // Close handlers
             $modal.on('click', function(e) {
                 if (e.target === this) {
                     $(this).remove();
@@ -260,66 +318,17 @@
         },
 
         /**
-         * Validate template data
-         */
-        validateTemplateData: function(jsonString) {
-            try {
-                var data = JSON.parse(jsonString);
-                
-                // Basic validation
-                if (!data || typeof data !== 'object') {
-                    return { valid: false, error: 'Invalid data format' };
-                }
-                
-                if (!data.rules || !Array.isArray(data.rules)) {
-                    return { valid: false, error: 'No rules found in template' };
-                }
-                
-                if (data.rules.length === 0) {
-                    return { valid: false, error: 'Template contains no rules' };
-                }
-                
-                // Validate each rule has required fields
-                for (var i = 0; i < data.rules.length; i++) {
-                    var rule = data.rules[i];
-                    if (!rule.rule_name || !rule.tab_title) {
-                        return { valid: false, error: 'Rule ' + (i + 1) + ' missing required fields' };
-                    }
-                }
-                
-                return { valid: true };
-            } catch (e) {
-                return { valid: false, error: 'Invalid JSON format: ' + e.message };
-            }
-        },
-
-        /**
          * Setup file validation
          */
         setupFileValidation: function() {
+            // Remove any existing handlers to prevent duplicates
+            $(document).off('change', 'input[type="file"][accept=".json"]');
+            
+            // Add new handler
             $(document).on('change', 'input[type="file"][accept=".json"]', function() {
-                var file = this.files[0];
-                if (file) {
-                    var fileName = file.name.toLowerCase();
-                    if (!fileName.endsWith('.json')) {
-                        alert('Please select a valid JSON file');
-                        $(this).val('');
-                        return;
-                    }
-                    
-                    // Check file size (5MB limit)
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert('File too large. Maximum size is 5MB');
-                        $(this).val('');
-                        return;
-                    }
-                }
+                SPTTemplates.validateFileUpload.call(this);
             });
         },
-
-        /**
-         * Validate JSON input - REMOVED (no longer needed)
-         */
 
         /**
          * Show success message
@@ -366,7 +375,7 @@
     };
 
     /**
-     * SPT Export Manager - UPDATED: Only file download, no copy/paste
+     * SPT Export Manager - FIXED VERSION
      */
     var SPTExport = {
         
@@ -385,7 +394,7 @@
         },
 
         /**
-         * Export rules - UPDATED: Direct blob download only
+         * Export rules - Direct blob download
          */
         exportRules: function(e) {
             e.preventDefault();

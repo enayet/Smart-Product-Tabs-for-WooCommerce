@@ -1138,34 +1138,55 @@ class SPT_Admin {
         <div class="import-section">
             <h4><?php _e('Import Template', 'smart-product-tabs'); ?></h4>
 
-            <!-- File Upload -->
-            <form class="template-upload-form" enctype="multipart/form-data">
+            <!-- File Upload Form - FIXED VERSION -->
+            <form class="template-upload-form" method="post" enctype="multipart/form-data">
                 <table class="form-table">
                     <tr>
                         <th><?php _e('Upload File', 'smart-product-tabs'); ?></th>
                         <td>
                             <div class="file-upload-area">
-                                <input type="file" name="template_file" accept=".json" id="template-file-input">
+                                <input type="file" name="template_file" accept=".json" id="template-file-input" required>
                                 <p><?php _e('Select a .json template file to upload', 'smart-product-tabs'); ?></p>
+                                <small><?php _e('Maximum file size: 5MB', 'smart-product-tabs'); ?></small>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <th><?php _e('Options', 'smart-product-tabs'); ?></th>
+                        <th><?php _e('Import Options', 'smart-product-tabs'); ?></th>
                         <td>
                             <label>
                                 <input type="checkbox" name="replace_existing" value="1">
                                 <?php _e('Replace existing rules with same names', 'smart-product-tabs'); ?>
                             </label>
+                            <p class="description"><?php _e('If unchecked, rules with duplicate names will be skipped', 'smart-product-tabs'); ?></p>
                         </td>
                     </tr>
                 </table>
+
                 <p class="submit">
                     <input type="submit" class="button-primary" value="<?php _e('Import Template', 'smart-product-tabs'); ?>">
+                    <span class="spinner" id="upload-spinner" style="display: none;"></span>
                 </p>
+
+                <!-- Progress indicator -->
+                <div class="upload-progress" style="display: none;">
+                    <div class="upload-progress-bar"></div>
+                </div>
+
+                <!-- Status messages container -->
+                <div class="import-status" style="margin-top: 15px;"></div>
             </form>
 
-
+            <!-- Import Instructions -->
+            <div class="import-instructions" style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0073aa;">
+                <h5><?php _e('Import Instructions:', 'smart-product-tabs'); ?></h5>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><?php _e('Only JSON files exported from Smart Product Tabs are supported', 'smart-product-tabs'); ?></li>
+                    <li><?php _e('Maximum file size is 5MB', 'smart-product-tabs'); ?></li>
+                    <li><?php _e('Backup your existing rules before importing', 'smart-product-tabs'); ?></li>
+                    <li><?php _e('Rules with duplicate names will be skipped unless you check "Replace existing"', 'smart-product-tabs'); ?></li>
+                </ul>
+            </div>
         </div>
 
         <div class="export-section">
@@ -1222,39 +1243,7 @@ jQuery(document).ready(function($) {
                   spt_admin_ajax.ajax_url : 
                   ajaxurl;
 
-    // File upload form
-    $('.template-upload-form').on('submit', function(e) {
-        e.preventDefault();
 
-        var formData = new FormData(this);
-        formData.append('action', 'spt_import_template');
-        formData.append('nonce', sptNonce);
-
-        var $submitBtn = $(this).find('input[type="submit"]');
-        $submitBtn.prop('disabled', true).val('Uploading...');
-
-        $.ajax({
-            url: ajaxUrl,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    alert('Import completed: ' + response.data.imported + ' rules imported, ' + response.data.skipped + ' skipped');
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.data);
-                }
-            },
-            error: function() {
-                alert('Upload failed. Please try again.');
-            },
-            complete: function() {
-                $submitBtn.prop('disabled', false).val('Import Template');
-            }
-        });
-    });
 
     // Export functionality - Direct blob download
     $('#export-rules').on('click', function() {
@@ -1543,6 +1532,229 @@ jQuery(document).ready(function($) {
             }
         }
         </style>
+        
+        
+        
+<!-- Additional JavaScript for enhanced upload handling -->
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    // Enhanced file input handling
+    $('#template-file-input').on('change', function() {
+        var file = this.files[0];
+        var $statusDiv = $('.import-status');
+        
+        if (file) {
+            // Clear previous messages
+            $statusDiv.html('');
+            
+            // Validate file
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                $statusDiv.html('<div class="notice notice-error"><p>Please select a valid JSON file.</p></div>');
+                $(this).val('');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                $statusDiv.html('<div class="notice notice-error"><p>File too large. Maximum size is 5MB.</p></div>');
+                $(this).val('');
+                return;
+            }
+            
+            // Show file info
+            var fileSize = (file.size / 1024).toFixed(1) + ' KB';
+            if (file.size > 1024 * 1024) {
+                fileSize = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+            }
+            
+            $statusDiv.html('<div class="notice notice-info"><p><strong>File selected:</strong> ' + file.name + ' (' + fileSize + ')</p></div>');
+        }
+    });
+    
+    // Enhanced form submission with progress
+    $('.template-upload-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        var $form = $(this);
+        var $submitBtn = $form.find('input[type="submit"]');
+        var $spinner = $('#upload-spinner');
+        var $progress = $('.upload-progress');
+        var $progressBar = $('.upload-progress-bar');
+        var $statusDiv = $('.import-status');
+        
+        // Validate file selection
+        var fileInput = $form.find('input[type="file"]')[0];
+        if (!fileInput || !fileInput.files || !fileInput.files.length) {
+            $statusDiv.html('<div class="notice notice-error"><p>Please select a file to upload.</p></div>');
+            return;
+        }
+        
+        // Show progress
+        $submitBtn.prop('disabled', true).val('Uploading...');
+        $spinner.show();
+        $progress.show();
+        $progressBar.css('width', '0%');
+        
+        // Prepare form data
+        var formData = new FormData();
+        formData.append('action', 'spt_import_template');
+        formData.append('import_type', 'file');
+        formData.append('nonce', spt_admin_ajax.nonce);
+        formData.append('template_file', fileInput.files[0]);
+        
+        if ($form.find('input[name="replace_existing"]:checked').length) {
+            formData.append('replace_existing', '1');
+        }
+        
+        // Simulate progress animation
+        var progressInterval = setInterval(function() {
+            var currentWidth = parseInt($progressBar.css('width'));
+            if (currentWidth < 90) {
+                $progressBar.css('width', (currentWidth + 10) + '%');
+            }
+        }, 200);
+        
+        $.ajax({
+            url: spt_admin_ajax.ajax_url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                clearInterval(progressInterval);
+                $progressBar.css('width', '100%');
+                
+                if (response && response.success) {
+                    var message = 'Import completed successfully!';
+                    if (response.data) {
+                        var details = [];
+                        if (response.data.imported) details.push(response.data.imported + ' rules imported');
+                        if (response.data.updated) details.push(response.data.updated + ' rules updated');
+                        if (response.data.skipped) details.push(response.data.skipped + ' rules skipped');
+                        if (details.length) message += ' (' + details.join(', ') + ')';
+                    }
+                    
+                    $statusDiv.html('<div class="notice notice-success"><p>' + message + '</p></div>');
+                    
+                    // Clear form
+                    $form[0].reset();
+                    
+                    // Reload page after delay
+                    setTimeout(function() {
+                        if (confirm('Import completed! Would you like to reload the page to see the imported rules?')) {
+                            location.reload();
+                        }
+                    }, 2000);
+                } else {
+                    var errorMsg = 'Import failed';
+                    if (response && response.data) {
+                        errorMsg += ': ' + response.data;
+                    }
+                    $statusDiv.html('<div class="notice notice-error"><p>' + errorMsg + '</p></div>');
+                }
+            },
+            error: function(xhr, status, error) {
+                clearInterval(progressInterval);
+                console.error('Upload error:', xhr.responseText);
+                $statusDiv.html('<div class="notice notice-error"><p>Upload failed: ' + error + '</p></div>');
+            },
+            complete: function() {
+                $submitBtn.prop('disabled', false).val('Import Template');
+                $spinner.hide();
+                setTimeout(function() {
+                    $progress.hide();
+                }, 1000);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* Enhanced styling for upload form */
+.file-upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 30px 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #fafafa;
+}
+
+.file-upload-area:hover {
+    border-color: #0073aa;
+    background: #f0f8ff;
+}
+
+.file-upload-area input[type="file"] {
+    margin: 15px 0;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    width: 100%;
+    max-width: 400px;
+}
+
+.upload-progress {
+    width: 100%;
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0073aa, #00a0d2);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.import-instructions h5 {
+    margin: 0 0 10px 0;
+    color: #0073aa;
+    font-weight: 600;
+}
+
+.import-instructions ul {
+    color: #333;
+    line-height: 1.6;
+}
+
+.import-status .notice {
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
+
+.import-status .notice p {
+    margin: 0;
+}
+
+.spinner {
+    background: url('<?php echo admin_url('images/spinner.gif'); ?>') no-repeat;
+    background-size: 20px 20px;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .file-upload-area {
+        padding: 20px 15px;
+    }
+    
+    .import-instructions {
+        font-size: 14px;
+    }
+}
+</style>        
+        
+        
 
         <?php
     }
