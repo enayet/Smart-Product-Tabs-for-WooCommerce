@@ -119,6 +119,7 @@ class Smart_Product_Tabs {
     public function enqueue_frontend_assets() {
         if (is_product()) {
             wp_enqueue_style('spt-frontend', SPT_PLUGIN_URL . 'assets/css/frontend.css', array(), SPT_VERSION);
+            wp_enqueue_style('spt-templates', SPT_PLUGIN_URL . 'assets/css/templates.css', array(), SPT_VERSION);
             wp_enqueue_style('spt-mobile', SPT_PLUGIN_URL . 'assets/css/mobile.css', array(), SPT_VERSION);
             wp_enqueue_script('spt-frontend', SPT_PLUGIN_URL . 'assets/js/frontend.js', array('jquery'), SPT_VERSION, true);
         }
