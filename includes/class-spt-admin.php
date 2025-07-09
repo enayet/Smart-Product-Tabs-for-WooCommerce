@@ -1092,20 +1092,21 @@ class SPT_Admin {
 
         <div class="templates-grid">
             <?php foreach ($builtin_templates as $key => $template): ?>
-            <div class="template-card">
+            <div class="template-card">                
                 <div class="template-icon">
                     <?php if (!empty($template['icon'])): ?>
                         <i class="<?php echo esc_attr($template['icon']); ?>"></i>
                     <?php else: ?>
                         <div class="default-icon">
                             <?php 
-                            echo $template['category'] === 'electronics' ? '🔌' : 
-                                 ($template['category'] === 'fashion' ? '👕' : 
-                                 ($template['category'] === 'digital' ? '💻' : '📋'));
+                            // Fix: Use $key instead of undefined 'category'
+                            echo $key === 'electronics' ? '🔌' : 
+                                 ($key === 'fashion' ? '👕' : 
+                                 ($key === 'digital' ? '💻' : '📋'));
                             ?>
                         </div>
                     <?php endif; ?>
-                </div>
+                </div>                
 
                 <div class="template-info">
                     <h4><?php echo esc_html($template['name']); ?></h4>
@@ -2182,14 +2183,5 @@ jQuery(document).ready(function($) {
         }
     }    
     
-    
-   
-    
-    
-  
-    
-    
-    
-    
-    
+
 }
