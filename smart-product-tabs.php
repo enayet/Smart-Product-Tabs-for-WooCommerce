@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('SPT_VERSION', '1.2.0');
+define('SPT_VERSION', '1.2.1');
 define('SPT_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SPT_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('SPT_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -59,6 +59,9 @@ class Smart_Product_Tabs {
         // Add debug hook for testing
         add_action('wp_ajax_spt_force_table_creation', array($this, 'force_table_creation'));
     }
+     
+    
+    
     
     /**
      * Initialize plugin
@@ -124,39 +127,46 @@ class Smart_Product_Tabs {
     /**
      * Enqueue admin assets
      */
-    public function enqueue_admin_assets($hook) {
-        if (strpos($hook, 'woocommerce_page_smart-product-tabs') !== false) {
-            wp_enqueue_style('spt-admin', SPT_PLUGIN_URL . 'assets/css/admin.css', array(), SPT_VERSION);
-            //wp_enqueue_script('spt-admin', SPT_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
+    
+public function enqueue_admin_assets($hook) {
+    if (strpos($hook, 'woocommerce_page_smart-product-tabs') !== false) {
+        wp_enqueue_style('spt-admin', SPT_PLUGIN_URL . 'assets/css/admin.css', array(), SPT_VERSION);
+        
+        // Load rules JS on rule management pages
+        wp_enqueue_script('spt-admin-rules', SPT_PLUGIN_URL . 'assets/js/spt-admin-rules.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
 
-            
-            // Load rules JS on rule management pages
-            wp_enqueue_script('spt-admin-rules', SPT_PLUGIN_URL . 'assets/js/spt-admin-rules.js', array('jquery', 'jquery-ui-sortable'), SPT_VERSION, true);
+        // Load templates JS on template pages  
+        wp_enqueue_script('spt-admin-templates', SPT_PLUGIN_URL . 'assets/js/spt-admin-templates.js', array('jquery'), SPT_VERSION, true);
 
-            // Load templates JS on template pages  
-            wp_enqueue_script('spt-admin-templates', SPT_PLUGIN_URL . 'assets/js/spt-admin-templates.js', array('jquery'), SPT_VERSION, true);
-
-            // Load analytics JS on analytics pages
-            wp_enqueue_script('spt-admin-analytics', SPT_PLUGIN_URL . 'assets/js/spt-admin-analytics.js', array('jquery'), SPT_VERSION, true);            
-            
-            
-            
-            // CRITICAL: Localize the nonce for AJAX calls
-            wp_localize_script('spt-admin', 'spt_admin_ajax', array(
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('spt_ajax_nonce'),
-                'strings' => array(
-                    'loading' => __('Loading...', 'smart-product-tabs'),
-                    'error' => __('An error occurred', 'smart-product-tabs'),
-                    'confirm_delete' => __('Are you sure?', 'smart-product-tabs'),
-                    'success' => __('Success!', 'smart-product-tabs')
-                )
-            ));            
-            
-            
-            
-        }
+        // Load analytics JS on analytics pages
+        wp_enqueue_script('spt-admin-analytics', SPT_PLUGIN_URL . 'assets/js/spt-admin-analytics.js', array('jquery'), SPT_VERSION, true);            
+        
+        // FIXED: Localize script for each individual script handle
+        $localization_data = array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('spt_ajax_nonce'),
+            'strings' => array(
+                'loading' => __('Loading...', 'smart-product-tabs'),
+                'error' => __('An error occurred', 'smart-product-tabs'),
+                'confirm_delete' => __('Are you sure?', 'smart-product-tabs'),
+                'success' => __('Success!', 'smart-product-tabs'),
+                'failed' => __('Failed!', 'smart-product-tabs'),
+                'saving' => __('Saving...', 'smart-product-tabs'),
+                'deleting' => __('Deleting...', 'smart-product-tabs'),
+                'importing' => __('Importing...', 'smart-product-tabs'),
+                'exporting' => __('Exporting...', 'smart-product-tabs'),
+                'installing' => __('Installing...', 'smart-product-tabs')
+            )
+        );
+        
+        // Localize for each script
+        wp_localize_script('spt-admin-rules', 'spt_admin_ajax', $localization_data);
+        wp_localize_script('spt-admin-templates', 'spt_admin_ajax', $localization_data);
+        wp_localize_script('spt-admin-analytics', 'spt_admin_ajax', $localization_data);
     }
+}    
+    
+    
     
     /**
      * Plugin activation

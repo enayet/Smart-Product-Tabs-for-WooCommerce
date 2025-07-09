@@ -23,10 +23,14 @@ class SPT_Templates {
         add_action('wp_ajax_spt_import_template', array($this, 'ajax_import_template'));
         add_action('wp_ajax_spt_export_rules', array($this, 'ajax_export_rules'));
         add_action('wp_ajax_spt_install_builtin_template', array($this, 'ajax_install_builtin_template'));
-        add_action('wp_ajax_spt_get_template_preview', array($this, 'ajax_get_template_preview'));
+        add_action('wp_ajax_spt_get_template_preview', array($this, 'ajax_get_template_preview'));  
 
         add_action('init', array($this, 'init'));
     }
+    
+    
+  
+    
     
     /**
      * Initialize
@@ -393,117 +397,117 @@ class SPT_Templates {
     /**
      * Export current rules to template
      */
-    public function export_rules() {
-        global $wpdb;
-
-        $rules_table = $wpdb->prefix . 'spt_rules';
-        $rules = $wpdb->get_results("SELECT * FROM $rules_table ORDER BY priority ASC", ARRAY_A);
-
-        $export_data = array(
-            'version' => SPT_VERSION,
-            'export_date' => current_time('mysql'),
-            'export_type' => 'rules_export',
-            'name' => sprintf(__('Export from %s', 'smart-product-tabs'), get_bloginfo('name')),
-            'description' => sprintf(__('Exported on %s', 'smart-product-tabs'), current_time('F j, Y')),
-            'rules' => $rules
-        );
-
-        // REMOVED: Tab settings export functionality
-        // No longer include tab_settings in export
-
-        return $export_data;
-    }
+public function export_rules() {
+    global $wpdb;
+    
+    $rules_table = $wpdb->prefix . 'spt_rules';
+    $rules = $wpdb->get_results("SELECT * FROM $rules_table ORDER BY priority ASC", ARRAY_A);
+    
+    $export_data = array(
+        'version' => SPT_VERSION,
+        'export_date' => current_time('mysql'),
+        'export_type' => 'rules_export',
+        'name' => sprintf(__('Export from %s', 'smart-product-tabs'), get_bloginfo('name')),
+        'description' => sprintf(__('Exported on %s', 'smart-product-tabs'), current_time('F j, Y')),
+        'rules' => $rules
+    );
+    
+    // REMOVED: Tab settings export functionality
+    // No longer include tab_settings in export
+    
+    return $export_data;
+}
     
     /**
      * Import template data
      */
-    public function import_template_data($template_data, $replace_existing = false) {
-        global $wpdb;
+public function import_template_data($template_data, $replace_existing = false) {
+    global $wpdb;
 
-        $rules_table = $wpdb->prefix . 'spt_rules';
-        // REMOVED: $settings_table reference
+    $rules_table = $wpdb->prefix . 'spt_rules';
+    // REMOVED: $settings_table reference
 
-        $imported_count = 0;
-        $skipped_count = 0;
-        $updated_count = 0;
-        $errors = array();
+    $imported_count = 0;
+    $skipped_count = 0;
+    $updated_count = 0;
+    $errors = array();
 
-        try {
-            // Start transaction
-            $wpdb->query('START TRANSACTION');
+    try {
+        // Start transaction
+        $wpdb->query('START TRANSACTION');
 
-            // Process rules
-            if (isset($template_data['rules']) && is_array($template_data['rules'])) {
-                foreach ($template_data['rules'] as $rule_data) {
+        // Process rules
+        if (isset($template_data['rules']) && is_array($template_data['rules'])) {
+            foreach ($template_data['rules'] as $rule_data) {
 
-                    // Check if rule already exists
-                    $existing_rule = $wpdb->get_row($wpdb->prepare(
-                        "SELECT id FROM $rules_table WHERE rule_name = %s",
-                        $rule_data['rule_name']
-                    ));
+                // Check if rule already exists
+                $existing_rule = $wpdb->get_row($wpdb->prepare(
+                    "SELECT id FROM $rules_table WHERE rule_name = %s",
+                    $rule_data['rule_name']
+                ));
 
-                    if ($existing_rule && !$replace_existing) {
-                        // Skip existing rule
-                        $skipped_count++;
-                        continue;
-                    }
+                if ($existing_rule && !$replace_existing) {
+                    // Skip existing rule
+                    $skipped_count++;
+                    continue;
+                }
 
-                    // Prepare rule data for insert/update
-                    $rule_insert_data = array(
-                        'rule_name' => sanitize_text_field($rule_data['rule_name']),
-                        'tab_title' => sanitize_text_field($rule_data['tab_title']),
-                        'tab_content' => wp_kses_post($rule_data['tab_content']),
-                        'content_type' => sanitize_text_field($rule_data['content_type'] ?? 'simple_text'),
-                        'conditions' => sanitize_text_field($rule_data['conditions'] ?? ''),
-                        'user_role_condition' => sanitize_text_field($rule_data['user_role_condition'] ?? 'all'),
-                        'user_roles' => sanitize_text_field($rule_data['user_roles'] ?? ''),
-                        'priority' => intval($rule_data['priority'] ?? 10),
-                        'is_active' => intval($rule_data['is_active'] ?? 1),
-                        'mobile_hidden' => intval($rule_data['mobile_hidden'] ?? 0),
-                        'created_at' => current_time('mysql'),
-                        'updated_at' => current_time('mysql')
-                    );
+                // Prepare rule data for insert/update
+                $rule_insert_data = array(
+                    'rule_name' => sanitize_text_field($rule_data['rule_name']),
+                    'tab_title' => sanitize_text_field($rule_data['tab_title']),
+                    'tab_content' => wp_kses_post($rule_data['tab_content']),
+                    'content_type' => sanitize_text_field($rule_data['content_type'] ?? 'simple_text'),
+                    'conditions' => sanitize_text_field($rule_data['conditions'] ?? ''),
+                    'user_role_condition' => sanitize_text_field($rule_data['user_role_condition'] ?? 'all'),
+                    'user_roles' => sanitize_text_field($rule_data['user_roles'] ?? ''),
+                    'priority' => intval($rule_data['priority'] ?? 10),
+                    'is_active' => intval($rule_data['is_active'] ?? 1),
+                    'mobile_hidden' => intval($rule_data['mobile_hidden'] ?? 0),
+                    'created_at' => current_time('mysql'),
+                    'updated_at' => current_time('mysql')
+                );
 
-                    if ($existing_rule && $replace_existing) {
-                        // Update existing rule
-                        $wpdb->update($rules_table, $rule_insert_data, array('id' => $existing_rule->id));
-                        $updated_count++;
-                    } else {
-                        // Insert new rule
-                        $wpdb->insert($rules_table, $rule_insert_data);
-                        $imported_count++;
-                    }
+                if ($existing_rule && $replace_existing) {
+                    // Update existing rule
+                    $wpdb->update($rules_table, $rule_insert_data, array('id' => $existing_rule->id));
+                    $updated_count++;
+                } else {
+                    // Insert new rule
+                    $wpdb->insert($rules_table, $rule_insert_data);
+                    $imported_count++;
                 }
             }
-
-            // REMOVED: Tab settings processing
-            // No longer process tab_settings from import data
-
-            // Commit transaction
-            $wpdb->query('COMMIT');
-
-            // Clear any caches
-            wp_cache_flush();
-
-            $result = array(
-                'success' => true,
-                'imported' => $imported_count,
-                'updated' => $updated_count,
-                'skipped' => $skipped_count,
-                'errors' => $errors
-            );
-
-            do_action('spt_template_imported', $template_data, $result);
-
-            return $result;
-
-        } catch (Exception $e) {
-            // Rollback transaction
-            $wpdb->query('ROLLBACK');
-
-            return new WP_Error('import_failed', __('Import failed: ', 'smart-product-tabs') . $e->getMessage());
         }
+
+        // REMOVED: Tab settings processing
+        // No longer process tab_settings from import data
+
+        // Commit transaction
+        $wpdb->query('COMMIT');
+
+        // Clear any caches
+        wp_cache_flush();
+
+        $result = array(
+            'success' => true,
+            'imported' => $imported_count,
+            'updated' => $updated_count,
+            'skipped' => $skipped_count,
+            'errors' => $errors
+        );
+
+        do_action('spt_template_imported', $template_data, $result);
+
+        return $result;
+
+    } catch (Exception $e) {
+        // Rollback transaction
+        $wpdb->query('ROLLBACK');
+
+        return new WP_Error('import_failed', __('Import failed: ', 'smart-product-tabs') . $e->getMessage());
     }
+}
     
 
     
@@ -512,228 +516,160 @@ class SPT_Templates {
     /**
      * Validate template data
      */
-    private function validate_template_data($template_data) {
-        $errors = array();
+private function validate_template_data($template_data) {
+    $errors = array();
 
-        // Basic structure validation
-        if (!is_array($template_data)) {
-            $errors[] = __('Invalid template data format', 'smart-product-tabs');
-            return $errors;
-        }
-
-        // Check for required fields
-        if (!isset($template_data['rules']) || !is_array($template_data['rules'])) {
-            $errors[] = __('No rules found in template', 'smart-product-tabs');
-            return $errors;
-        }
-
-        // Validate each rule
-        foreach ($template_data['rules'] as $index => $rule) {
-            $rule_errors = $this->validate_rule_data($rule, $index);
-            $errors = array_merge($errors, $rule_errors);
-        }
-
-        // REMOVED: Tab settings validation
-        // No longer validate tab_settings
-
+    // Basic structure validation
+    if (!is_array($template_data)) {
+        $errors[] = __('Invalid template data format', 'smart-product-tabs');
         return $errors;
     }
+
+    // Check for required fields
+    if (!isset($template_data['rules']) || !is_array($template_data['rules'])) {
+        $errors[] = __('No rules found in template', 'smart-product-tabs');
+        return $errors;
+    }
+
+    // Validate each rule
+    foreach ($template_data['rules'] as $index => $rule) {
+        $rule_errors = $this->validate_rule_data($rule, $index);
+        $errors = array_merge($errors, $rule_errors);
+    }
+
+    // REMOVED: Tab settings validation
+    // No longer validate tab_settings
+
+    return $errors;
+}
     
     /**
      * AJAX: Import template
      */
-    public function ajax_import_template() {
-        check_ajax_referer('spt_ajax_nonce', 'nonce');
-
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Insufficient permissions');
-            return;
-        }
-
-        $import_type = isset($_POST['import_type']) ? sanitize_text_field($_POST['import_type']) : '';
-        
-        // Fallback logic
-        if (empty($import_type)) {
-            if (!empty($_FILES['template_file'])) {
-                $import_type = 'file';
-            } elseif (isset($_POST['template_data'])) {
-                $import_type = 'text';
-            } else {
-                $import_type = 'unknown';
-            }
-        }        
-        
-
-        if ($import_type === 'file') {
-            // Handle file upload with enhanced validation
-            if (empty($_FILES['template_file'])) {
-                wp_send_json_error(__('No file uploaded', 'smart-product-tabs'));
-                return;
-            }
-
-            $file = $_FILES['template_file'];
-
-            // Enhanced file validation
-            if ($file['error'] !== UPLOAD_ERR_OK) {
-                $error_messages = array(
-                    UPLOAD_ERR_INI_SIZE => 'File too large (server limit)',
-                    UPLOAD_ERR_FORM_SIZE => 'File too large (form limit)',
-                    UPLOAD_ERR_PARTIAL => 'File upload incomplete',
-                    UPLOAD_ERR_NO_FILE => 'No file uploaded',
-                    UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
-                    UPLOAD_ERR_CANT_WRITE => 'Failed to write file',
-                    UPLOAD_ERR_EXTENSION => 'Upload stopped by extension'
-                );
-
-                $error_message = $error_messages[$file['error']] ?? 'Unknown upload error';
-                wp_send_json_error(__('File upload error: ', 'smart-product-tabs') . $error_message);
-                return;
-            }
-
-            // Validate file type and extension
-            $allowed_types = array('application/json', 'text/plain');
-            if (!in_array($file['type'], $allowed_types) && !preg_match('/\.json$/i', $file['name'])) {
-                wp_send_json_error(__('Only JSON files are allowed', 'smart-product-tabs'));
-                return;
-            }
-
-            // Check file size (5MB limit)
-            if ($file['size'] > 5 * 1024 * 1024) {
-                wp_send_json_error(__('File too large. Maximum size is 5MB', 'smart-product-tabs'));
-                return;
-            }
-
-            $content = file_get_contents($file['tmp_name']);
-
-            if ($content === false) {
-                wp_send_json_error(__('Failed to read uploaded file', 'smart-product-tabs'));
-                return;
-            }
-
-            $template_data = json_decode($content, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                wp_send_json_error(__('Invalid JSON file: ', 'smart-product-tabs') . json_last_error_msg());
-                return;
-            }
-
-        } elseif ($import_type === 'text') {
-            // Handle text input with size validation
-            //$template_json = $_POST['template_data'] ?? '';
-            $template_json = isset($_POST['template_data']) ? stripslashes($_POST['template_data']) : '';
-            //exit ($template_json);
-
-            if (empty($template_json)) {
-                wp_send_json_error(__('No template data provided', 'smart-product-tabs'));
-                return;
-            }
-
-            // Check JSON size (prevent memory issues)
-            if (strlen($template_json) > 2 * 1024 * 1024) { // 2MB limit for text
-                wp_send_json_error(__('Template data too large. Maximum size is 2MB', 'smart-product-tabs'));
-                return;
-            }
-
-            $template_data = json_decode($template_json, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                wp_send_json_error(__('Invalid JSON data: ', 'smart-product-tabs') . json_last_error_msg());
-                return;
-            }
-        } else {
-            wp_send_json_error(__('Invalid import type', 'smart-product-tabs'));
-            return;
-        }
-
-        // Validate template data structure
-        $validation_errors = $this->validate_template_data($template_data);
-        if (!empty($validation_errors)) {
-            wp_send_json_error(implode(', ', $validation_errors));
-            return;
-        }
-
-        // Import template
-        $replace_existing = isset($_POST['replace_existing']) && $_POST['replace_existing'] === '1';
-        $result = $this->import_template_data($template_data, $replace_existing);
-
-        if (is_wp_error($result)) {
-            wp_send_json_error($result->get_error_message());
-            return;
-        }
-
-        // Enhanced success response
-        $message = sprintf(
-            __('%d rules imported', 'smart-product-tabs'),
-            $result['imported']
-        );
-
-        if ($result['updated'] > 0) {
-            $message .= sprintf(
-                __(', %d rules updated', 'smart-product-tabs'),
-                $result['updated']
-            );
-        }
-
-        if ($result['skipped'] > 0) {
-            $message .= sprintf(
-                __(', %d rules skipped', 'smart-product-tabs'),
-                $result['skipped']
-            );
-        }
-
-        $result['message'] = $message;
-
-        wp_send_json_success($result);
+public function ajax_import_template() {
+    check_ajax_referer('spt_ajax_nonce', 'nonce');
+    
+    if (!current_user_can('manage_woocommerce')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
     }
+    
+    $import_type = sanitize_text_field($_POST['import_type'] ?? 'file');
+    $template_data = null;
+    
+    if ($import_type === 'file') {
+        // Handle file upload
+        if (empty($_FILES['template_file']['tmp_name'])) {
+            wp_send_json_error(__('No file uploaded', 'smart-product-tabs'));
+            return;
+        }
+        
+        $file = $_FILES['template_file'];
+        
+        // Validate file type
+        if ($file['type'] !== 'application/json' && !str_ends_with($file['name'], '.json')) {
+            wp_send_json_error(__('Invalid file type. Please upload a JSON file', 'smart-product-tabs'));
+            return;
+        }
+        
+        // Validate file size (5MB limit)
+        if ($file['size'] > 5 * 1024 * 1024) {
+            wp_send_json_error(__('File too large. Maximum size is 5MB', 'smart-product-tabs'));
+            return;
+        }
+        
+        // Read file contents
+        $template_json = file_get_contents($file['tmp_name']);
+        
+        if ($template_json === false) {
+            wp_send_json_error(__('Failed to read uploaded file', 'smart-product-tabs'));
+            return;
+        }
+        
+        $template_data = json_decode($template_json, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_send_json_error(__('Invalid JSON file: ', 'smart-product-tabs') . json_last_error_msg());
+            return;
+        }
+    } else {
+        wp_send_json_error(__('Only file upload is supported', 'smart-product-tabs'));
+        return;
+    }
+    
+    // Validate template data structure
+    $validation_errors = $this->validate_template_data($template_data);
+    if (!empty($validation_errors)) {
+        wp_send_json_error(implode(', ', $validation_errors));
+        return;
+    }
+    
+    // Import template
+    $replace_existing = isset($_POST['replace_existing']) && $_POST['replace_existing'] === '1';
+    $result = $this->import_template_data($template_data, $replace_existing);
+    
+    if (is_wp_error($result)) {
+        wp_send_json_error($result->get_error_message());
+        return;
+    }
+    
+    // Enhanced success response
+    $message = sprintf(
+        __('%d rules imported', 'smart-product-tabs'),
+        $result['imported']
+    );
+    
+    if ($result['updated'] > 0) {
+        $message .= sprintf(
+            __(', %d rules updated', 'smart-product-tabs'),
+            $result['updated']
+        );
+    }
+    
+    if ($result['skipped'] > 0) {
+        $message .= sprintf(
+            __(', %d rules skipped', 'smart-product-tabs'),
+            $result['skipped']
+        );
+    }
+    
+    $result['message'] = $message;
+    
+    wp_send_json_success($result);
+}
     
     /**
      * AJAX: Export rules
      */
-    public function ajax_export_rules() {
-        check_ajax_referer('spt_ajax_nonce', 'nonce');
+public function ajax_export_rules() {
+    check_ajax_referer('spt_ajax_nonce', 'nonce');
 
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Insufficient permissions');
+    if (!current_user_can('manage_woocommerce')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+
+    try {
+        $export_data = $this->export_rules();
+
+        if (empty($export_data['rules'])) {
+            wp_send_json_error(__('No rules found to export', 'smart-product-tabs'));
             return;
         }
 
-        // REMOVED: include_settings parameter (no longer needed)
-        // Always export as file format only
-        $export_format = 'file';
+        // Always return JSON data for direct blob download
+        $filename = 'spt_export_' . date('Y-m-d_H-i-s') . '.json';
+        wp_send_json_success(array(
+            'data' => json_encode($export_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+            'filename' => $filename,
+            'rules_count' => count($export_data['rules'])
+        ));
 
-        try {
-            // UPDATED: Remove include_settings parameter
-            $export_data = $this->export_rules();
-
-            if (empty($export_data['rules'])) {
-                wp_send_json_error(__('No rules found to export', 'smart-product-tabs'));
-                return;
-            }
-
-            // Always save to file and return download URL
-            $filename = 'spt_export_' . date('Y-m-d_H-i-s') . '.json';
-            $filepath = $this->save_template_file($export_data, $filename);
-
-            if ($filepath) {
-                $download_url = SPT_PLUGIN_URL . 'assets/templates/' . $filename;
-                wp_send_json_success(array(
-                    'download_url' => $download_url,
-                    'filename' => $filename,
-                    'rules_count' => count($export_data['rules'])
-                ));
-            } else {
-                // Fallback: return JSON data directly for blob download
-                wp_send_json_success(array(
-                    'data' => json_encode($export_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
-                    'filename' => $filename,
-                    'rules_count' => count($export_data['rules'])
-                ));
-            }
-
-        } catch (Exception $e) {
-            wp_send_json_error(__('Export failed: ', 'smart-product-tabs') . $e->getMessage());
-        }
+    } catch (Exception $e) {
+        wp_send_json_error(__('Export failed: ', 'smart-product-tabs') . $e->getMessage());
     }
+}
+
     
     /**
      * AJAX: Install built-in template
@@ -992,89 +928,41 @@ class SPT_Templates {
     /**
      * Validate individual rule data
      */
-    private function validate_rule_data($rule_data, $index) {
-        $errors = array();
+private function validate_rule_data($rule_data, $index) {
+    $errors = array();
 
-        // Required fields
-        $required_fields = array('rule_name', 'tab_title');
-        foreach ($required_fields as $field) {
-            if (empty($rule_data[$field])) {
-                $errors[] = sprintf(__('Rule %d: Missing required field "%s"', 'smart-product-tabs'), $index + 1, $field);
-            }
+    // Required fields
+    $required_fields = array('rule_name', 'tab_title');
+    foreach ($required_fields as $field) {
+        if (empty($rule_data[$field])) {
+            $errors[] = sprintf(__('Rule %d: Missing required field "%s"', 'smart-product-tabs'), $index + 1, $field);
         }
-
-        // Validate field lengths
-        if (strlen($rule_data['rule_name'] ?? '') > 100) {
-            $errors[] = sprintf(__('Rule %d: Rule name too long (max 100 characters)', 'smart-product-tabs'), $index + 1);
-        }
-
-        if (strlen($rule_data['tab_title'] ?? '') > 100) {
-            $errors[] = sprintf(__('Rule %d: Tab title too long (max 100 characters)', 'smart-product-tabs'), $index + 1);
-        }
-
-        // Validate priority
-        $priority = intval($rule_data['priority'] ?? 10);
-        if ($priority < 1 || $priority > 100) {
-            $errors[] = sprintf(__('Rule %d: Priority must be between 1 and 100', 'smart-product-tabs'), $index + 1);
-        }
-
-        return $errors;
-    }    
-    
-    
-    /**
-     * Save template file to uploads directory
-     */
-    private function save_template_file($template_data, $filename) {
-        // Create templates directory if it doesn't exist
-        $templates_dir = SPT_PLUGIN_PATH . 'assets/templates/';
-        if (!file_exists($templates_dir)) {
-            wp_mkdir_p($templates_dir);
-        }
-
-        $filepath = $templates_dir . $filename;
-        $json_data = json_encode($template_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-
-        if (file_put_contents($filepath, $json_data) !== false) {
-            return $filepath;
-        }
-
-        return false;
-    }    
-    
-    
-    /**
-     * Get template file contents for download
-     */
-    private function get_template_file_contents($filename) {
-        $filepath = SPT_PLUGIN_PATH . 'assets/templates/' . $filename;
-
-        if (!file_exists($filepath)) {
-            return false;
-        }
-
-        return file_get_contents($filepath);
     }
 
-    /**
-     * Clean up old export files (optional cleanup method)
-     */
-    public function cleanup_old_export_files() {
-        $templates_dir = SPT_PLUGIN_PATH . 'assets/templates/';
+    // Validate field lengths
+    if (strlen($rule_data['rule_name'] ?? '') > 100) {
+        $errors[] = sprintf(__('Rule %d: Rule name too long (max 100 characters)', 'smart-product-tabs'), $index + 1);
+    }
 
-        if (!is_dir($templates_dir)) {
-            return;
-        }
+    if (strlen($rule_data['tab_title'] ?? '') > 100) {
+        $errors[] = sprintf(__('Rule %d: Tab title too long (max 100 characters)', 'smart-product-tabs'), $index + 1);
+    }
 
-        $files = glob($templates_dir . 'spt_export_*.json');
-        $cutoff_time = time() - (24 * 60 * 60); // 24 hours ago
+    // Validate priority
+    $priority = intval($rule_data['priority'] ?? 10);
+    if ($priority < 1 || $priority > 100) {
+        $errors[] = sprintf(__('Rule %d: Priority must be between 1 and 100', 'smart-product-tabs'), $index + 1);
+    }
 
-        foreach ($files as $file) {
-            if (filemtime($file) < $cutoff_time) {
-                unlink($file);
-            }
-        }
-    }    
+    return $errors;
+}
+    
+    
+  
+    
+    
+
+   
 
     
        

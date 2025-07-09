@@ -27,20 +27,14 @@
             // Template installation
             $(document).on('click', '.template-install', this.installTemplate);
             
-            // File upload import
+            // File upload import only
             $(document).on('submit', '.template-upload-form', this.uploadTemplate);
-            
-            // Text import
-            $(document).on('submit', '.template-text-form', this.importFromText);
             
             // Template preview
             $(document).on('click', '.template-preview', this.previewTemplate);
             
             // File input change
             $(document).on('change', 'input[type="file"]', this.validateFileUpload);
-            
-            // JSON validation on paste
-            $(document).on('paste blur', 'textarea[name="template_data"]', this.validateJSONInput);
         },
 
         /**
@@ -164,74 +158,6 @@
                 },
                 complete: function() {
                     $submitBtn.prop('disabled', false).val('Import Template');
-                }
-            });
-        },
-
-        /**
-         * Import from text/JSON
-         */
-        importFromText: function(e) {
-            e.preventDefault();
-            
-            if (typeof spt_admin_ajax === 'undefined') {
-                alert('AJAX not available. Please refresh the page and try again.');
-                return;
-            }
-
-            var $form = $(this);
-            var templateData = $form.find('textarea[name="template_data"]').val();
-            var replaceExisting = $form.find('input[name="replace_existing"]').is(':checked');
-            var $submitBtn = $form.find('input[type="submit"]');
-
-            if (!templateData.trim()) {
-                alert('Please paste template JSON data');
-                return;
-            }
-
-            // Validate JSON before sending
-            var validation = SPTTemplates.validateTemplateData(templateData);
-            if (!validation.valid) {
-                alert('Invalid JSON data: ' + validation.error);
-                return;
-            }
-
-            $submitBtn.prop('disabled', true).val('Importing...');
-
-            $.ajax({
-                url: spt_admin_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'spt_import_template',
-                    import_type: 'text',
-                    template_data: templateData,
-                    replace_existing: replaceExisting ? '1' : '0',
-                    nonce: spt_admin_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        var message = 'Import completed: ' + response.data.imported + ' rules imported';
-                        if (response.data.skipped > 0) {
-                            message += ', ' + response.data.skipped + ' skipped';
-                        }
-                        SPTTemplates.showSuccess(message);
-
-                        // Clear form
-                        $form.find('textarea[name="template_data"]').val('');
-
-                        // Reload page
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
-                    } else {
-                        SPTTemplates.showError('Import failed: ' + response.data);
-                    }
-                },
-                error: function() {
-                    SPTTemplates.showError('Import failed. Please try again.');
-                },
-                complete: function() {
-                    $submitBtn.prop('disabled', false).val('Import from Text');
                 }
             });
         },
@@ -392,34 +318,8 @@
         },
 
         /**
-         * Validate JSON input
+         * Validate JSON input - REMOVED (no longer needed)
          */
-        validateJSONInput: function() {
-            var $textarea = $(this);
-            var jsonString = $textarea.val();
-            
-            if (!jsonString.trim()) {
-                return;
-            }
-            
-            // Remove any existing validation message
-            $textarea.siblings('.json-validation-message').remove();
-            
-            var validation = SPTTemplates.validateTemplateData(jsonString);
-            
-            var messageClass = validation.valid ? 'valid' : 'invalid';
-            var messageText = validation.valid ? 'Valid JSON template' : validation.error;
-            
-            var $message = $('<div class="json-validation-message ' + messageClass + '">' + messageText + '</div>');
-            $textarea.after($message);
-            
-            // Auto-remove validation message after 3 seconds
-            setTimeout(function() {
-                $message.fadeOut(300, function() {
-                    $message.remove();
-                });
-            }, 3000);
-        },
 
         /**
          * Show success message
@@ -485,7 +385,7 @@
         },
 
         /**
-         * Export rules - UPDATED: Always file download, no format selection
+         * Export rules - UPDATED: Direct blob download only
          */
         exportRules: function(e) {
             e.preventDefault();
@@ -504,20 +404,13 @@
                 type: 'POST',
                 data: {
                     action: 'spt_export_rules',
-                    export_format: 'file', // Always use file format
                     nonce: spt_admin_ajax.nonce
                 },
                 success: function(response) {
                     if (response.success) {
-                        if (response.data.download_url) {
-                            // Use download URL if available
-                            window.open(response.data.download_url);
-                            SPTExport.showSuccess('Export completed successfully!');
-                        } else {
-                            // Fallback: create blob and download
-                            SPTExport.downloadAsFile(response.data.data, response.data.filename);
-                            SPTExport.showSuccess('Export file downloaded!');
-                        }
+                        // Always use blob download
+                        SPTExport.downloadAsFile(response.data.data, response.data.filename);
+                        SPTExport.showSuccess('Export file downloaded!');
                     } else {
                         SPTExport.showError('Export failed: ' + response.data);
                     }
@@ -595,7 +488,7 @@
      */
     $(document).ready(function() {
         // Initialize based on page content
-        if ($('.spt-templates').length || $('.template-upload-form').length || $('.template-text-form').length) {
+        if ($('.spt-templates').length || $('.template-upload-form').length) {
             SPTTemplates.init();
         }
         
