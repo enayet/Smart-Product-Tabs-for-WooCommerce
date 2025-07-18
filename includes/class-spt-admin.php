@@ -29,8 +29,8 @@ class SPT_Admin {
     public function add_admin_menu() {
         add_submenu_page(
             'woocommerce',
-            __('Product Tabs', 'smart-product-tabs'),
-            __('Product Tabs', 'smart-product-tabs'),
+            __('Product Tabs', 'smart-product-tabs-for-woocommerce'),
+            __('Product Tabs', 'smart-product-tabs-for-woocommerce'),
             'manage_woocommerce',
             'smart-product-tabs',
             array($this, 'admin_page')
@@ -77,14 +77,14 @@ class SPT_Admin {
      */
     private function save_analytics_settings() {
         if (!current_user_can('manage_woocommerce')) {
-            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+            wp_die(__('Insufficient permissions', 'smart-product-tabs-for-woocommerce'));
         }
 
         update_option('spt_enable_analytics', isset($_POST['spt_enable_analytics']) ? 1 : 0);
         update_option('spt_analytics_retention_days', intval($_POST['spt_analytics_retention_days']));
 
         wp_redirect(admin_url('admin.php?page=smart-product-tabs&tab=analytics&spt_message=' . 
-                    urlencode(__('Analytics settings saved successfully', 'smart-product-tabs'))));
+                    urlencode(__('Analytics settings saved successfully', 'smart-product-tabs-for-woocommerce'))));
         exit;
     }    
     
@@ -114,20 +114,20 @@ class SPT_Admin {
     private function render_main_page($active_tab) {
         ?>
         <div class="wrap">
-            <h1><?php _e('Smart Product Tabs', 'smart-product-tabs'); ?></h1>
+            <h1><?php _e('Smart Product Tabs', 'smart-product-tabs-for-woocommerce'); ?></h1>
 
             <nav class="nav-tab-wrapper">
                 <a href="?page=smart-product-tabs&tab=rules" class="nav-tab <?php echo $active_tab === 'rules' ? 'nav-tab-active' : ''; ?>">
-                    <?php _e('Tab Rules', 'smart-product-tabs'); ?>
+                    <?php _e('Tab Rules', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
                 <a href="?page=smart-product-tabs&tab=default-tabs" class="nav-tab <?php echo $active_tab === 'default-tabs' ? 'nav-tab-active' : ''; ?>">
-                    <?php _e('Default Tabs', 'smart-product-tabs'); ?>
+                    <?php _e('Default Tabs', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
                 <a href="?page=smart-product-tabs&tab=templates" class="nav-tab <?php echo $active_tab === 'templates' ? 'nav-tab-active' : ''; ?>">
-                    <?php _e('Templates', 'smart-product-tabs'); ?>
+                    <?php _e('Templates', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
                 <a href="?page=smart-product-tabs&tab=analytics" class="nav-tab <?php echo $active_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">
-                    <?php _e('Analytics', 'smart-product-tabs'); ?>
+                    <?php _e('Analytics', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
             </nav>
 
@@ -162,9 +162,9 @@ class SPT_Admin {
         ?>
         <div class="wrap">
             <h1>
-                <?php _e('Add New Rule', 'smart-product-tabs'); ?>
+                <?php _e('Add New Rule', 'smart-product-tabs-for-woocommerce'); ?>
                 <a href="<?php echo admin_url('admin.php?page=smart-product-tabs'); ?>" class="page-title-action">
-                    <?php _e('Back to Rules', 'smart-product-tabs'); ?>
+                    <?php _e('Back to Rules', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
             </h1>
             
@@ -181,15 +181,15 @@ class SPT_Admin {
         $rule = $this->get_rule_by_id($rule_id);
         
         if (!$rule) {
-            wp_die(__('Rule not found.', 'smart-product-tabs'));
+            wp_die(__('Rule not found.', 'smart-product-tabs-for-woocommerce'));
         }
         
         ?>
         <div class="wrap">
             <h1>
-                <?php _e('Edit Rule', 'smart-product-tabs'); ?>
+                <?php _e('Edit Rule', 'smart-product-tabs-for-woocommerce'); ?>
                 <a href="<?php echo admin_url('admin.php?page=smart-product-tabs'); ?>" class="page-title-action">
-                    <?php _e('Back to Rules', 'smart-product-tabs'); ?>
+                    <?php _e('Back to Rules', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
             </h1>
             
@@ -206,9 +206,9 @@ class SPT_Admin {
         ?>
         <div class="spt-rules-container">
             <div class="spt-rules-header">
-                <h2><?php _e('Tab Rules', 'smart-product-tabs'); ?></h2>
+                <h2><?php _e('Tab Rules', 'smart-product-tabs-for-woocommerce'); ?></h2>
                 <a href="<?php echo admin_url('admin.php?page=smart-product-tabs&spt_action=add_rule'); ?>" class="button-primary">
-                    <?php _e('Add New Rule', 'smart-product-tabs'); ?>
+                    <?php _e('Add New Rule', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
             </div>
             
@@ -217,18 +217,18 @@ class SPT_Admin {
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php _e('Rule Name', 'smart-product-tabs'); ?></th>
-                            <th><?php _e('Tab Title', 'smart-product-tabs'); ?></th>
-                            <th><?php _e('Conditions', 'smart-product-tabs'); ?></th>
-                            <th><?php _e('Priority', 'smart-product-tabs'); ?></th>
-                            <th><?php _e('Status', 'smart-product-tabs'); ?></th>
-                            <th><?php _e('Actions', 'smart-product-tabs'); ?></th>
+                            <th><?php _e('Rule Name', 'smart-product-tabs-for-woocommerce'); ?></th>
+                            <th><?php _e('Tab Title', 'smart-product-tabs-for-woocommerce'); ?></th>
+                            <th><?php _e('Conditions', 'smart-product-tabs-for-woocommerce'); ?></th>
+                            <th><?php _e('Priority', 'smart-product-tabs-for-woocommerce'); ?></th>
+                            <th><?php _e('Status', 'smart-product-tabs-for-woocommerce'); ?></th>
+                            <th><?php _e('Actions', 'smart-product-tabs-for-woocommerce'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($rules)): ?>
                         <tr>
-                            <td colspan="6"><?php _e('No rules found. Create your first rule!', 'smart-product-tabs'); ?></td>
+                            <td colspan="6"><?php _e('No rules found. Create your first rule!', 'smart-product-tabs-for-woocommerce'); ?></td>
                         </tr>
                         <?php else: ?>
                         <?php foreach ($rules as $rule): ?>
@@ -239,17 +239,17 @@ class SPT_Admin {
                             <td><?php echo esc_html($rule->priority); ?></td>
                             <td>
                                 <span class="status-<?php echo $rule->is_active ? 'active' : 'inactive'; ?>">
-                                    <?php echo $rule->is_active ? __('Active', 'smart-product-tabs') : __('Inactive', 'smart-product-tabs'); ?>
+                                    <?php echo $rule->is_active ? __('Active', 'smart-product-tabs-for-woocommerce') : __('Inactive', 'smart-product-tabs-for-woocommerce'); ?>
                                 </span>
                             </td>
                             <td>
                                 <a href="<?php echo admin_url('admin.php?page=smart-product-tabs&spt_action=edit_rule&rule_id=' . $rule->id); ?>" class="button">
-                                    <?php _e('Edit', 'smart-product-tabs'); ?>
+                                    <?php _e('Edit', 'smart-product-tabs-for-woocommerce'); ?>
                                 </a>
                                 <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=smart-product-tabs&spt_action=delete_rule&rule_id=' . $rule->id), 'spt_delete_rule_' . $rule->id); ?>" 
                                    class="button" 
-                                   onclick="return confirm('<?php _e('Are you sure you want to delete this rule?', 'smart-product-tabs'); ?>')">
-                                    <?php _e('Delete', 'smart-product-tabs'); ?>
+                                   onclick="return confirm('<?php _e('Are you sure you want to delete this rule?', 'smart-product-tabs-for-woocommerce'); ?>')">
+                                    <?php _e('Delete', 'smart-product-tabs-for-woocommerce'); ?>
                                 </a>
                             </td>
                         </tr>
@@ -279,25 +279,25 @@ class SPT_Admin {
                 <!-- Basic Info -->
                 <tr>
                     <th scope="row">
-                        <label for="rule_name"><?php _e('Rule Name', 'smart-product-tabs'); ?> <span class="required">*</span></label>
+                        <label for="rule_name"><?php _e('Rule Name', 'smart-product-tabs-for-woocommerce'); ?> <span class="required">*</span></label>
                     </th>
                     <td>
                         <input type="text" id="rule_name" name="rule_name" class="regular-text" 
                                value="<?php echo $is_edit ? esc_attr($rule->rule_name) : ''; ?>" required>
-                        <p class="description"><?php _e('Internal name for this rule (only visible in admin)', 'smart-product-tabs'); ?></p>
+                        <p class="description"><?php _e('Internal name for this rule (only visible in admin)', 'smart-product-tabs-for-woocommerce'); ?></p>
                     </td>
                 </tr>
                 
                 <tr>
                     <th scope="row">
-                        <label for="tab_title"><?php _e('Tab Title', 'smart-product-tabs'); ?> <span class="required">*</span></label>
+                        <label for="tab_title"><?php _e('Tab Title', 'smart-product-tabs-for-woocommerce'); ?> <span class="required">*</span></label>
                     </th>
                     <td>
                         <input type="text" id="tab_title" name="tab_title" class="regular-text" 
                                value="<?php echo $is_edit ? esc_attr($rule->tab_title) : ''; ?>" required>
                         <p class="description">
-                            <?php _e('Title displayed on the tab. Use merge tags like {product_name} for dynamic content.', 'smart-product-tabs'); ?><br>
-                            <strong><?php _e('Available merge tags:', 'smart-product-tabs'); ?></strong>
+                            <?php _e('Title displayed on the tab. Use merge tags like {product_name} for dynamic content.', 'smart-product-tabs-for-woocommerce'); ?><br>
+                            <strong><?php _e('Available merge tags:', 'smart-product-tabs-for-woocommerce'); ?></strong>
                             <code>{product_name}</code>, <code>{product_category}</code>, <code>{product_price}</code>
                         </p>
                     </td>
@@ -306,7 +306,7 @@ class SPT_Admin {
                 <!-- Display Conditions -->
                 <tr class="condition-row">
                     <th scope="row">
-                        <label for="condition_type"><?php _e('Show Tab When', 'smart-product-tabs'); ?></label>
+                        <label for="condition_type"><?php _e('Show Tab When', 'smart-product-tabs-for-woocommerce'); ?></label>
                     </th>
                     <td>
                         <?php 
@@ -314,23 +314,23 @@ class SPT_Admin {
                         $condition_type = isset($conditions['type']) ? $conditions['type'] : 'all';
                         ?>
                         <select id="condition_type" name="condition_type" class="enhanced-select">
-                            <option value="all" <?php selected($condition_type, 'all'); ?>><?php _e('All Products', 'smart-product-tabs'); ?></option>
-                            <optgroup label="<?php _e('Product Properties', 'smart-product-tabs'); ?>">
-                                <option value="category" <?php selected($condition_type, 'category'); ?>><?php _e('Product Category', 'smart-product-tabs'); ?></option>
-                                <option value="tags" <?php selected($condition_type, 'tags'); ?>><?php _e('Product Tags', 'smart-product-tabs'); ?></option>
-                                <option value="product_type" <?php selected($condition_type, 'product_type'); ?>><?php _e('Product Type', 'smart-product-tabs'); ?></option>
+                            <option value="all" <?php selected($condition_type, 'all'); ?>><?php _e('All Products', 'smart-product-tabs-for-woocommerce'); ?></option>
+                            <optgroup label="<?php _e('Product Properties', 'smart-product-tabs-for-woocommerce'); ?>">
+                                <option value="category" <?php selected($condition_type, 'category'); ?>><?php _e('Product Category', 'smart-product-tabs-for-woocommerce'); ?></option>
+                                <option value="tags" <?php selected($condition_type, 'tags'); ?>><?php _e('Product Tags', 'smart-product-tabs-for-woocommerce'); ?></option>
+                                <option value="product_type" <?php selected($condition_type, 'product_type'); ?>><?php _e('Product Type', 'smart-product-tabs-for-woocommerce'); ?></option>
                             </optgroup>
-                            <optgroup label="<?php _e('Pricing & Stock', 'smart-product-tabs'); ?>">
-                                <option value="price_range" <?php selected($condition_type, 'price_range'); ?>><?php _e('Price Range', 'smart-product-tabs'); ?></option>
-                                <option value="stock_status" <?php selected($condition_type, 'stock_status'); ?>><?php _e('Stock Status', 'smart-product-tabs'); ?></option>
-                                <option value="sale" <?php selected($condition_type, 'sale'); ?>><?php _e('On Sale Status', 'smart-product-tabs'); ?></option>
+                            <optgroup label="<?php _e('Pricing & Stock', 'smart-product-tabs-for-woocommerce'); ?>">
+                                <option value="price_range" <?php selected($condition_type, 'price_range'); ?>><?php _e('Price Range', 'smart-product-tabs-for-woocommerce'); ?></option>
+                                <option value="stock_status" <?php selected($condition_type, 'stock_status'); ?>><?php _e('Stock Status', 'smart-product-tabs-for-woocommerce'); ?></option>
+                                <option value="sale" <?php selected($condition_type, 'sale'); ?>><?php _e('On Sale Status', 'smart-product-tabs-for-woocommerce'); ?></option>
                             </optgroup>
-                            <optgroup label="<?php _e('Special Properties', 'smart-product-tabs'); ?>">
-                                <option value="featured" <?php selected($condition_type, 'featured'); ?>><?php _e('Featured Product', 'smart-product-tabs'); ?></option>
-                                <option value="custom_field" <?php selected($condition_type, 'custom_field'); ?>><?php _e('Custom Field', 'smart-product-tabs'); ?></option>
+                            <optgroup label="<?php _e('Special Properties', 'smart-product-tabs-for-woocommerce'); ?>">
+                                <option value="featured" <?php selected($condition_type, 'featured'); ?>><?php _e('Featured Product', 'smart-product-tabs-for-woocommerce'); ?></option>
+                                <option value="custom_field" <?php selected($condition_type, 'custom_field'); ?>><?php _e('Custom Field', 'smart-product-tabs-for-woocommerce'); ?></option>
                             </optgroup>
                         </select>
-                        <p class="description"><?php _e('Choose when this tab should appear on product pages', 'smart-product-tabs'); ?></p>
+                        <p class="description"><?php _e('Choose when this tab should appear on product pages', 'smart-product-tabs-for-woocommerce'); ?></p>
                         
                         <div id="condition_details" style="margin-top:15px;">
                             <?php $this->render_condition_fields($conditions); ?>
@@ -341,19 +341,19 @@ class SPT_Admin {
                 <!-- User Role Targeting -->
                 <tr>
                     <th scope="row">
-                        <label for="user_role_condition"><?php _e('Show Tab For', 'smart-product-tabs'); ?></label>
+                        <label for="user_role_condition"><?php _e('Show Tab For', 'smart-product-tabs-for-woocommerce'); ?></label>
                     </th>
                     <td>
                         <?php $user_role_condition = $is_edit ? $rule->user_role_condition : 'all'; ?>
                         <select id="user_role_condition" name="user_role_condition">
-                            <option value="all" <?php selected($user_role_condition, 'all'); ?>><?php _e('All Users (including guests)', 'smart-product-tabs'); ?></option>
-                            <option value="logged_in" <?php selected($user_role_condition, 'logged_in'); ?>><?php _e('Logged-in Users Only', 'smart-product-tabs'); ?></option>
-                            <option value="specific_role" <?php selected($user_role_condition, 'specific_role'); ?>><?php _e('Specific User Role(s)', 'smart-product-tabs'); ?></option>
+                            <option value="all" <?php selected($user_role_condition, 'all'); ?>><?php _e('All Users (including guests)', 'smart-product-tabs-for-woocommerce'); ?></option>
+                            <option value="logged_in" <?php selected($user_role_condition, 'logged_in'); ?>><?php _e('Logged-in Users Only', 'smart-product-tabs-for-woocommerce'); ?></option>
+                            <option value="specific_role" <?php selected($user_role_condition, 'specific_role'); ?>><?php _e('Specific User Role(s)', 'smart-product-tabs-for-woocommerce'); ?></option>
                         </select>
-                        <p class="description"><?php _e('Control which users can see this tab', 'smart-product-tabs'); ?></p>
+                        <p class="description"><?php _e('Control which users can see this tab', 'smart-product-tabs-for-woocommerce'); ?></p>
                         
                         <div id="role_selector" style="<?php echo $user_role_condition !== 'specific_role' ? 'display:none;' : ''; ?> margin-top:10px;" class="role-selector">
-                            <p><strong><?php _e('Select allowed roles:', 'smart-product-tabs'); ?></strong></p>
+                            <p><strong><?php _e('Select allowed roles:', 'smart-product-tabs-for-woocommerce'); ?></strong></p>
                             <div class="role-grid">
                                 <?php 
                                 $selected_roles = $is_edit ? json_decode($rule->user_roles, true) : array();
@@ -375,20 +375,20 @@ class SPT_Admin {
                 
                 <!-- Content Type -->
                 <tr>
-                    <th scope="row"><?php _e('Content Type', 'smart-product-tabs'); ?></th>
+                    <th scope="row"><?php _e('Content Type', 'smart-product-tabs-for-woocommerce'); ?></th>
                     <td>
                         <?php $content_type = $is_edit ? $rule->content_type : 'rich_editor'; ?>
                         <fieldset class="content-type-selector">
-                            <legend class="screen-reader-text"><?php _e('Content Type', 'smart-product-tabs'); ?></legend>
+                            <legend class="screen-reader-text"><?php _e('Content Type', 'smart-product-tabs-for-woocommerce'); ?></legend>
                             <label class="content-type-option">
                                 <input type="radio" name="content_type" value="rich_editor" <?php checked($content_type, 'rich_editor'); ?>>
-                                <span class="option-title"><?php _e('Rich Editor', 'smart-product-tabs'); ?></span>
-                                <span class="option-description"><?php _e('WYSIWYG editor with formatting options', 'smart-product-tabs'); ?></span>
+                                <span class="option-title"><?php _e('Rich Editor', 'smart-product-tabs-for-woocommerce'); ?></span>
+                                <span class="option-description"><?php _e('WYSIWYG editor with formatting options', 'smart-product-tabs-for-woocommerce'); ?></span>
                             </label>
                             <label class="content-type-option">
                                 <input type="radio" name="content_type" value="plain_text" <?php checked($content_type, 'plain_text'); ?>>
-                                <span class="option-title"><?php _e('Plain Text', 'smart-product-tabs'); ?></span>
-                                <span class="option-description"><?php _e('Simple text area without formatting', 'smart-product-tabs'); ?></span>
+                                <span class="option-title"><?php _e('Plain Text', 'smart-product-tabs-for-woocommerce'); ?></span>
+                                <span class="option-description"><?php _e('Simple text area without formatting', 'smart-product-tabs-for-woocommerce'); ?></span>
                             </label>
                         </fieldset>
                     </td>
@@ -397,7 +397,7 @@ class SPT_Admin {
                 <!-- Content Editor -->
                 <tr>
                     <th scope="row">
-                        <label for="tab_content"><?php _e('Tab Content', 'smart-product-tabs'); ?> <span class="required">*</span></label>
+                        <label for="tab_content"><?php _e('Tab Content', 'smart-product-tabs-for-woocommerce'); ?> <span class="required">*</span></label>
                     </th>
                     <td>
                         <div id="rich_editor_container" style="<?php echo $content_type === 'plain_text' ? 'display:none;' : ''; ?>">
@@ -415,30 +415,30 @@ class SPT_Admin {
                             ?>
                         </div>
                         <div id="plain_text_container" style="<?php echo $content_type === 'rich_editor' ? 'display:none;' : ''; ?>">
-                            <textarea id="tab_content_plain" name="tab_content_plain" rows="12" cols="50" class="large-text" placeholder="<?php _e('Enter your tab content here...', 'smart-product-tabs'); ?>"><?php echo $is_edit && $content_type === 'plain_text' ? esc_textarea($rule->tab_content) : ''; ?></textarea>
+                            <textarea id="tab_content_plain" name="tab_content_plain" rows="12" cols="50" class="large-text" placeholder="<?php _e('Enter your tab content here...', 'smart-product-tabs-for-woocommerce'); ?>"><?php echo $is_edit && $content_type === 'plain_text' ? esc_textarea($rule->tab_content) : ''; ?></textarea>
                         </div>
                         
                         <div class="merge-tags-help">
-                            <strong><?php _e('Available merge tags:', 'smart-product-tabs'); ?></strong><br>
+                            <strong><?php _e('Available merge tags:', 'smart-product-tabs-for-woocommerce'); ?></strong><br>
                             <div class="merge-tags-grid">
                                 <div class="tag-group">
-                                    <strong><?php _e('Product Info:', 'smart-product-tabs'); ?></strong>
+                                    <strong><?php _e('Product Info:', 'smart-product-tabs-for-woocommerce'); ?></strong>
                                     <code>{product_name}</code>
                                     <code>{product_category}</code>
                                     <code>{product_price}</code>
                                     <code>{product_sku}</code>
                                 </div>
                                 <div class="tag-group">
-                                    <strong><?php _e('Product Details:', 'smart-product-tabs'); ?></strong>
+                                    <strong><?php _e('Product Details:', 'smart-product-tabs-for-woocommerce'); ?></strong>
                                     <code>{product_weight}</code>
                                     <code>{product_dimensions}</code>
                                     <code>{product_stock_status}</code>
                                     <code>{product_stock_quantity}</code>
                                 </div>
                                 <div class="tag-group">
-                                    <strong><?php _e('Custom Fields:', 'smart-product-tabs'); ?></strong>
+                                    <strong><?php _e('Custom Fields:', 'smart-product-tabs-for-woocommerce'); ?></strong>
                                     <code>{custom_field_[key]}</code>
-                                    <small><?php _e('Replace [key] with actual field name', 'smart-product-tabs'); ?></small>
+                                    <small><?php _e('Replace [key] with actual field name', 'smart-product-tabs-for-woocommerce'); ?></small>
                                 </div>
                             </div>
                         </div>
@@ -447,33 +447,33 @@ class SPT_Admin {
                 
                 <!-- Display Settings -->
                 <tr>
-                    <th scope="row"><?php _e('Display Settings', 'smart-product-tabs'); ?></th>
+                    <th scope="row"><?php _e('Display Settings', 'smart-product-tabs-for-woocommerce'); ?></th>
                     <td>
                         <div class="display-settings-grid">
                             <div class="setting-group">
                                 <label for="priority">
-                                    <strong><?php _e('Priority:', 'smart-product-tabs'); ?></strong>
+                                    <strong><?php _e('Priority:', 'smart-product-tabs-for-woocommerce'); ?></strong>
                                     <input type="number" id="priority" name="priority" value="<?php echo $is_edit ? esc_attr($rule->priority) : '10'; ?>" min="1" max="100" style="width: 80px;">
                                 </label>
-                                <p class="description"><?php _e('Lower numbers appear first (1-100)', 'smart-product-tabs'); ?></p>
+                                <p class="description"><?php _e('Lower numbers appear first (1-100)', 'smart-product-tabs-for-woocommerce'); ?></p>
                             </div>
                             
                             <div class="setting-group">
                                 <label class="setting-checkbox">
                                     <input type="checkbox" name="mobile_hidden" id="mobile_hidden" value="1" <?php echo $is_edit ? checked($rule->mobile_hidden, 1) : ''; ?>>
                                     <span class="checkmark"></span>
-                                    <strong><?php _e('Hide on mobile devices', 'smart-product-tabs'); ?></strong>
+                                    <strong><?php _e('Hide on mobile devices', 'smart-product-tabs-for-woocommerce'); ?></strong>
                                 </label>
-                                <p class="description"><?php _e('Tab will not appear on mobile/tablet devices', 'smart-product-tabs'); ?></p>
+                                <p class="description"><?php _e('Tab will not appear on mobile/tablet devices', 'smart-product-tabs-for-woocommerce'); ?></p>
                             </div>
                             
                             <div class="setting-group">
                                 <label class="setting-checkbox">
                                     <input type="checkbox" name="is_active" id="is_active" value="1" <?php echo $is_edit ? checked($rule->is_active, 1) : 'checked'; ?>>
                                     <span class="checkmark"></span>
-                                    <strong><?php _e('Active', 'smart-product-tabs'); ?></strong>
+                                    <strong><?php _e('Active', 'smart-product-tabs-for-woocommerce'); ?></strong>
                                 </label>
-                                <p class="description"><?php _e('Uncheck to temporarily disable this tab', 'smart-product-tabs'); ?></p>
+                                <p class="description"><?php _e('Uncheck to temporarily disable this tab', 'smart-product-tabs-for-woocommerce'); ?></p>
                             </div>
                         </div>
                     </td>
@@ -481,9 +481,9 @@ class SPT_Admin {
             </table>
             
             <div class="form-actions">
-                <input type="submit" class="button-primary" value="<?php echo $is_edit ? __('Update Rule', 'smart-product-tabs') : __('Save Rule', 'smart-product-tabs'); ?>">
+                <input type="submit" class="button-primary" value="<?php echo $is_edit ? __('Update Rule', 'smart-product-tabs-for-woocommerce') : __('Save Rule', 'smart-product-tabs-for-woocommerce'); ?>">
                 <a href="<?php echo admin_url('admin.php?page=smart-product-tabs'); ?>" class="button">
-                    <?php _e('Cancel', 'smart-product-tabs'); ?>
+                    <?php _e('Cancel', 'smart-product-tabs-for-woocommerce'); ?>
                 </a>
             </div>
         </form>
@@ -527,23 +527,23 @@ class SPT_Admin {
     private function render_condition_fields($conditions = array()) {
         ?>
         <div class="condition-field" data-condition="category" style="display:none;">
-            <label for="condition_category"><?php _e('Select Categories:', 'smart-product-tabs'); ?></label>
+            <label for="condition_category"><?php _e('Select Categories:', 'smart-product-tabs-for-woocommerce'); ?></label>
             <select name="condition_category[]" id="condition_category" multiple style="width: 300px; height: 150px;">
                 <?php echo $this->get_hierarchical_category_options($conditions); ?>
             </select>
-            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple categories', 'smart-product-tabs'); ?></p>
+            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple categories', 'smart-product-tabs-for-woocommerce'); ?></p>
         </div>
         
         <div class="condition-field" data-condition="price_range" style="display:none;">
-            <label><?php _e('Min Price:', 'smart-product-tabs'); ?></label>
+            <label><?php _e('Min Price:', 'smart-product-tabs-for-woocommerce'); ?></label>
             <input type="number" name="condition_price_min" step="0.01" style="width: 100px;" 
                    value="<?php echo isset($conditions['min']) ? esc_attr($conditions['min']) : ''; ?>" 
                    placeholder="0.00">
-            <label style="margin-left: 20px;"><?php _e('Max Price:', 'smart-product-tabs'); ?></label>
+            <label style="margin-left: 20px;"><?php _e('Max Price:', 'smart-product-tabs-for-woocommerce'); ?></label>
             <input type="number" name="condition_price_max" step="0.01" style="width: 100px;" 
                    value="<?php echo isset($conditions['max']) ? esc_attr($conditions['max']) : ''; ?>" 
                    placeholder="999999">
-            <p class="description"><?php _e('Leave empty for no limit', 'smart-product-tabs'); ?></p>
+            <p class="description"><?php _e('Leave empty for no limit', 'smart-product-tabs-for-woocommerce'); ?></p>
         </div>
         
         <div class="condition-field" data-condition="stock_status" style="display:none;">
@@ -554,30 +554,30 @@ class SPT_Admin {
                     $stock_value = 'instock';
                 }
                 ?>
-                <option value="instock" <?php selected($stock_value, 'instock'); ?>><?php _e('In Stock', 'smart-product-tabs'); ?></option>
-                <option value="outofstock" <?php selected($stock_value, 'outofstock'); ?>><?php _e('Out of Stock', 'smart-product-tabs'); ?></option>
-                <option value="onbackorder" <?php selected($stock_value, 'onbackorder'); ?>><?php _e('On Backorder', 'smart-product-tabs'); ?></option>
+                <option value="instock" <?php selected($stock_value, 'instock'); ?>><?php _e('In Stock', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="outofstock" <?php selected($stock_value, 'outofstock'); ?>><?php _e('Out of Stock', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="onbackorder" <?php selected($stock_value, 'onbackorder'); ?>><?php _e('On Backorder', 'smart-product-tabs-for-woocommerce'); ?></option>
             </select>
         </div>
         
         <div class="condition-field" data-condition="custom_field" style="display:none;">
-            <label for="condition_custom_field_key"><?php _e('Field Key:', 'smart-product-tabs'); ?></label>
+            <label for="condition_custom_field_key"><?php _e('Field Key:', 'smart-product-tabs-for-woocommerce'); ?></label>
             <input type="text" name="condition_custom_field_key" id="condition_custom_field_key" style="width: 200px;" 
                    value="<?php echo isset($conditions['key']) ? esc_attr($conditions['key']) : ''; ?>" 
                    placeholder="_custom_field_key">
             <br><br>
-            <label for="condition_custom_field_value"><?php _e('Field Value:', 'smart-product-tabs'); ?></label>
+            <label for="condition_custom_field_value"><?php _e('Field Value:', 'smart-product-tabs-for-woocommerce'); ?></label>
             <input type="text" name="condition_custom_field_value" id="condition_custom_field_value" style="width: 200px;" 
                    value="<?php echo isset($conditions['value']) ? esc_attr($conditions['value']) : ''; ?>" 
                    placeholder="Expected value">
             <br><br>
-            <label for="condition_custom_field_operator"><?php _e('Operator:', 'smart-product-tabs'); ?></label>
+            <label for="condition_custom_field_operator"><?php _e('Operator:', 'smart-product-tabs-for-woocommerce'); ?></label>
             <select name="condition_custom_field_operator" id="condition_custom_field_operator">
-                <option value="equals" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'equals', false) : ''; ?>><?php _e('Equals', 'smart-product-tabs'); ?></option>
-                <option value="not_equals" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'not_equals', false) : ''; ?>><?php _e('Not Equals', 'smart-product-tabs'); ?></option>
-                <option value="contains" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'contains', false) : ''; ?>><?php _e('Contains', 'smart-product-tabs'); ?></option>
-                <option value="not_empty" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'not_empty', false) : ''; ?>><?php _e('Not Empty', 'smart-product-tabs'); ?></option>
-                <option value="empty" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'empty', false) : ''; ?>><?php _e('Empty', 'smart-product-tabs'); ?></option>
+                <option value="equals" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'equals', false) : ''; ?>><?php _e('Equals', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="not_equals" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'not_equals', false) : ''; ?>><?php _e('Not Equals', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="contains" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'contains', false) : ''; ?>><?php _e('Contains', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="not_empty" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'not_empty', false) : ''; ?>><?php _e('Not Empty', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="empty" <?php echo isset($conditions['operator']) ? selected($conditions['operator'], 'empty', false) : ''; ?>><?php _e('Empty', 'smart-product-tabs-for-woocommerce'); ?></option>
             </select>
         </div>
         
@@ -592,7 +592,7 @@ class SPT_Admin {
                 }
                 ?>
             </select>
-            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple types', 'smart-product-tabs'); ?></p>
+            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple types', 'smart-product-tabs-for-woocommerce'); ?></p>
         </div>
         
         <div class="condition-field" data-condition="tags" style="display:none;">
@@ -611,7 +611,7 @@ class SPT_Admin {
                 }
                 ?>
             </select>
-            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple tags', 'smart-product-tabs'); ?></p>
+            <p class="description"><?php _e('Hold Ctrl/Cmd to select multiple tags', 'smart-product-tabs-for-woocommerce'); ?></p>
         </div>
         
         <div class="condition-field" data-condition="featured" style="display:none;">
@@ -622,8 +622,8 @@ class SPT_Admin {
                     $featured_value = '';
                 }
                 ?>
-                <option value="1" <?php selected($featured_value, '1'); ?>><?php _e('Is Featured', 'smart-product-tabs'); ?></option>
-                <option value="0" <?php selected($featured_value, '0'); ?>><?php _e('Is Not Featured', 'smart-product-tabs'); ?></option>
+                <option value="1" <?php selected($featured_value, '1'); ?>><?php _e('Is Featured', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="0" <?php selected($featured_value, '0'); ?>><?php _e('Is Not Featured', 'smart-product-tabs-for-woocommerce'); ?></option>
             </select>
         </div>
         
@@ -635,8 +635,8 @@ class SPT_Admin {
                     $sale_value = '';
                 }
                 ?>
-                <option value="1" <?php selected($sale_value, '1'); ?>><?php _e('On Sale', 'smart-product-tabs'); ?></option>
-                <option value="0" <?php selected($sale_value, '0'); ?>><?php _e('Not On Sale', 'smart-product-tabs'); ?></option>
+                <option value="1" <?php selected($sale_value, '1'); ?>><?php _e('On Sale', 'smart-product-tabs-for-woocommerce'); ?></option>
+                <option value="0" <?php selected($sale_value, '0'); ?>><?php _e('Not On Sale', 'smart-product-tabs-for-woocommerce'); ?></option>
             </select>
         </div>
         <?php
@@ -687,8 +687,8 @@ class SPT_Admin {
         $tab_settings = $this->get_tab_settings();
         ?>
         <div class="spt-default-tabs">
-            <h2><?php _e('Manage Default Tabs', 'smart-product-tabs'); ?></h2>
-            <p><?php _e('Reorder and configure WooCommerce default tabs and your custom rules.', 'smart-product-tabs'); ?></p>
+            <h2><?php _e('Manage Default Tabs', 'smart-product-tabs-for-woocommerce'); ?></h2>
+            <p><?php _e('Reorder and configure WooCommerce default tabs and your custom rules.', 'smart-product-tabs-for-woocommerce'); ?></p>
             
             <form method="post" action="">
                 <?php wp_nonce_field('spt_save_default_tabs', 'spt_default_tabs_nonce'); ?>
@@ -715,12 +715,12 @@ class SPT_Admin {
                                 <label>
                                     <input type="checkbox" name="tab_order[<?php echo esc_attr($tab->tab_key); ?>][is_enabled]" 
                                            value="1" <?php checked($tab->is_enabled); ?>>
-                                    <?php _e('Enabled', 'smart-product-tabs'); ?>
+                                    <?php _e('Enabled', 'smart-product-tabs-for-woocommerce'); ?>
                                 </label>
                                 <label>
                                     <input type="checkbox" name="tab_order[<?php echo esc_attr($tab->tab_key); ?>][mobile_hidden]" 
                                            value="1" <?php checked($tab->mobile_hidden); ?>>
-                                    <?php _e('Hide on Mobile', 'smart-product-tabs'); ?>
+                                    <?php _e('Hide on Mobile', 'smart-product-tabs-for-woocommerce'); ?>
                                 </label>
                             </div>
                         </li>
@@ -728,7 +728,7 @@ class SPT_Admin {
                     </ul>
                     
                     <p class="submit">
-                        <input type="submit" class="button-primary" value="<?php _e('Save Changes', 'smart-product-tabs'); ?>">
+                        <input type="submit" class="button-primary" value="<?php _e('Save Changes', 'smart-product-tabs-for-woocommerce'); ?>">
                     </p>
                 </div>
             </form>
@@ -782,7 +782,7 @@ jQuery(document).ready(function($) {
      */
     private function save_rule() {
         if (!current_user_can('manage_woocommerce')) {
-            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+            wp_die(__('Insufficient permissions', 'smart-product-tabs-for-woocommerce'));
         }
         
         global $wpdb;
@@ -813,17 +813,17 @@ jQuery(document).ready(function($) {
         
         if ($rule_id > 0) {
             $result = $wpdb->update($table, $rule_data, array('id' => $rule_id));
-            $message = __('Rule updated successfully', 'smart-product-tabs');
+            $message = __('Rule updated successfully', 'smart-product-tabs-for-woocommerce');
         } else {
             $result = $wpdb->insert($table, $rule_data);
-            $message = __('Rule created successfully', 'smart-product-tabs');
+            $message = __('Rule created successfully', 'smart-product-tabs-for-woocommerce');
         }
         
         if ($result !== false) {
             wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_message=' . urlencode($message)));
             exit;
         } else {
-            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_error=' . urlencode(__('Failed to save rule', 'smart-product-tabs'))));
+            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_error=' . urlencode(__('Failed to save rule', 'smart-product-tabs-for-woocommerce'))));
             exit;
         }
     }
@@ -890,7 +890,7 @@ jQuery(document).ready(function($) {
         $conditions = json_decode($conditions_json, true);
         
         if (empty($conditions) || $conditions['type'] === 'all') {
-            return '<span class="condition-all">' . __('All Products', 'smart-product-tabs') . '</span>';
+            return '<span class="condition-all">' . __('All Products', 'smart-product-tabs-for-woocommerce') . '</span>';
         }
         
         $type = $conditions['type'];
@@ -898,7 +898,7 @@ jQuery(document).ready(function($) {
         switch ($type) {
             case 'category':
                 if (empty($conditions['value'])) {
-                    return '<span class="condition-invalid">' . __('No categories selected', 'smart-product-tabs') . '</span>';
+                    return '<span class="condition-invalid">' . __('No categories selected', 'smart-product-tabs-for-woocommerce') . '</span>';
                 }
                 
                 $category_names = array();
@@ -911,15 +911,15 @@ jQuery(document).ready(function($) {
                 
                 return sprintf(
                     '<span class="condition-category">%s: %s</span>',
-                    __('Category', 'smart-product-tabs'),
-                    !empty($category_names) ? implode(', ', $category_names) : __('Invalid categories', 'smart-product-tabs')
+                    __('Category', 'smart-product-tabs-for-woocommerce'),
+                    !empty($category_names) ? implode(', ', $category_names) : __('Invalid categories', 'smart-product-tabs-for-woocommerce')
                 );
                 
             case 'price_range':
                 $currency = get_woocommerce_currency_symbol();
                 return sprintf(
                     '<span class="condition-price">%s: %s%s - %s%s</span>',
-                    __('Price Range', 'smart-product-tabs'),
+                    __('Price Range', 'smart-product-tabs-for-woocommerce'),
                     $currency,
                     number_format($conditions['min'] ?? 0, 2),
                     $currency,
@@ -928,14 +928,14 @@ jQuery(document).ready(function($) {
                 
             case 'stock_status':
                 $status_labels = array(
-                    'instock' => __('In Stock', 'smart-product-tabs'),
-                    'outofstock' => __('Out of Stock', 'smart-product-tabs'),
-                    'onbackorder' => __('On Backorder', 'smart-product-tabs')
+                    'instock' => __('In Stock', 'smart-product-tabs-for-woocommerce'),
+                    'outofstock' => __('Out of Stock', 'smart-product-tabs-for-woocommerce'),
+                    'onbackorder' => __('On Backorder', 'smart-product-tabs-for-woocommerce')
                 );
                 $status = $conditions['value'] ?? 'instock';
                 return sprintf(
                     '<span class="condition-stock">%s: %s</span>',
-                    __('Stock Status', 'smart-product-tabs'),
+                    __('Stock Status', 'smart-product-tabs-for-woocommerce'),
                     $status_labels[$status] ?? $status
                 );
                 
@@ -951,7 +951,7 @@ jQuery(document).ready(function($) {
                 
                 return sprintf(
                     '<span class="condition-custom">%s: %s %s %s</span>',
-                    __('Custom Field', 'smart-product-tabs'),
+                    __('Custom Field', 'smart-product-tabs-for-woocommerce'),
                     esc_html($field_key),
                     esc_html($field_operator),
                     esc_html($field_value)
@@ -966,13 +966,13 @@ jQuery(document).ready(function($) {
                 }
                 return sprintf(
                     '<span class="condition-type">%s: %s</span>',
-                    __('Product Type', 'smart-product-tabs'),
+                    __('Product Type', 'smart-product-tabs-for-woocommerce'),
                     implode(', ', $type_names)
                 );
                 
             case 'tags':
                 if (empty($conditions['value'])) {
-                    return '<span class="condition-invalid">' . __('No tags selected', 'smart-product-tabs') . '</span>';
+                    return '<span class="condition-invalid">' . __('No tags selected', 'smart-product-tabs-for-woocommerce') . '</span>';
                 }
                 
                 $tag_names = array();
@@ -985,26 +985,26 @@ jQuery(document).ready(function($) {
                 
                 return sprintf(
                     '<span class="condition-tags">%s: %s</span>',
-                    __('Tags', 'smart-product-tabs'),
-                    !empty($tag_names) ? implode(', ', $tag_names) : __('Invalid tags', 'smart-product-tabs')
+                    __('Tags', 'smart-product-tabs-for-woocommerce'),
+                    !empty($tag_names) ? implode(', ', $tag_names) : __('Invalid tags', 'smart-product-tabs-for-woocommerce')
                 );
                 
             case 'featured':
                 $value = $conditions['value'] ?? 1;
                 return sprintf(
                     '<span class="condition-featured">%s</span>',
-                    $value ? __('Featured Products', 'smart-product-tabs') : __('Non-Featured Products', 'smart-product-tabs')
+                    $value ? __('Featured Products', 'smart-product-tabs-for-woocommerce') : __('Non-Featured Products', 'smart-product-tabs-for-woocommerce')
                 );
                 
             case 'sale':
                 $value = $conditions['value'] ?? 1;
                 return sprintf(
                     '<span class="condition-sale">%s</span>',
-                    $value ? __('On Sale Products', 'smart-product-tabs') : __('Regular Price Products', 'smart-product-tabs')
+                    $value ? __('On Sale Products', 'smart-product-tabs-for-woocommerce') : __('Regular Price Products', 'smart-product-tabs-for-woocommerce')
                 );
                 
             default:
-                return '<span class="condition-unknown">' . sprintf(__('Unknown: %s', 'smart-product-tabs'), ucfirst($type)) . '</span>';
+                return '<span class="condition-unknown">' . sprintf(__('Unknown: %s', 'smart-product-tabs-for-woocommerce'), ucfirst($type)) . '</span>';
         }
     }
     
@@ -1013,7 +1013,7 @@ jQuery(document).ready(function($) {
      */
     private function delete_rule($rule_id) {
         if (!current_user_can('manage_woocommerce')) {
-            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+            wp_die(__('Insufficient permissions', 'smart-product-tabs-for-woocommerce'));
         }
         
         global $wpdb;
@@ -1023,9 +1023,9 @@ jQuery(document).ready(function($) {
         $result = $wpdb->delete($table, array('id' => $rule_id));
         
         if ($result !== false) {
-            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_message=' . urlencode(__('Rule deleted successfully', 'smart-product-tabs'))));
+            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_message=' . urlencode(__('Rule deleted successfully', 'smart-product-tabs-for-woocommerce'))));
         } else {
-            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_error=' . urlencode(__('Failed to delete rule', 'smart-product-tabs'))));
+            wp_redirect(admin_url('admin.php?page=smart-product-tabs&spt_error=' . urlencode(__('Failed to delete rule', 'smart-product-tabs-for-woocommerce'))));
         }
         exit;
     }
@@ -1035,7 +1035,7 @@ jQuery(document).ready(function($) {
      */
     private function save_default_tabs() {
         if (!current_user_can('manage_woocommerce')) {
-            wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+            wp_die(__('Insufficient permissions', 'smart-product-tabs-for-woocommerce'));
         }
         
         global $wpdb;
@@ -1064,7 +1064,7 @@ jQuery(document).ready(function($) {
             }
         }
         
-        wp_redirect(admin_url('admin.php?page=smart-product-tabs&tab=default-tabs&spt_message=' . urlencode(__('Tab settings saved successfully', 'smart-product-tabs'))));
+        wp_redirect(admin_url('admin.php?page=smart-product-tabs&tab=default-tabs&spt_message=' . urlencode(__('Tab settings saved successfully', 'smart-product-tabs-for-woocommerce'))));
         exit;
     }
     
@@ -1091,7 +1091,7 @@ jQuery(document).ready(function($) {
             );
         }
         
-        wp_send_json_success(__('Tab order updated successfully', 'smart-product-tabs'));
+        wp_send_json_success(__('Tab order updated successfully', 'smart-product-tabs-for-woocommerce'));
     }
     
     /**
@@ -1105,8 +1105,8 @@ jQuery(document).ready(function($) {
         ?>
         <div class="spt-templates">
             <div class="templates-header">
-                <h2><?php _e('Templates', 'smart-product-tabs'); ?></h2>
-                <p><?php _e('Import pre-built templates or export your current configuration.', 'smart-product-tabs'); ?></p>
+                <h2><?php _e('Templates', 'smart-product-tabs-for-woocommerce'); ?></h2>
+                <p><?php _e('Import pre-built templates or export your current configuration.', 'smart-product-tabs-for-woocommerce'); ?></p>
             </div>
             
             
@@ -1135,9 +1135,9 @@ jQuery(document).ready(function($) {
                     <p><?php echo esc_html($description); ?></p>
                     
                     <div class="template-meta">
-                        <span><?php printf(__('Version %s', 'smart-product-tabs'), esc_html($version)); ?></span>
+                        <span><?php printf(__('Version %s', 'smart-product-tabs-for-woocommerce'), esc_html($version)); ?></span>
                         <span class="tabs-count">
-                            <?php printf(_n('%d Tab', '%d Tabs', $tabs_count, 'smart-product-tabs'), $tabs_count); ?>
+                            <?php printf(_n('%d Tab', '%d Tabs', $tabs_count, 'smart-product-tabs-for-woocommerce'), $tabs_count); ?>
                         </span>
                     </div>
                     
@@ -1145,12 +1145,12 @@ jQuery(document).ready(function($) {
                         <button class="button button-secondary template-preview-btn" 
                                 data-template-key="<?php echo esc_attr($template_key); ?>" 
                                 data-template-name="<?php echo esc_attr($template_name); ?>">
-                            <?php _e('Details', 'smart-product-tabs'); ?>
+                            <?php _e('Details', 'smart-product-tabs-for-woocommerce'); ?>
                         </button>
                         <button class="button button-primary template-install" 
                                 data-template-key="<?php echo esc_attr($template_key); ?>" 
                                 data-template-name="<?php echo esc_attr($template_name); ?>">
-                            <?php _e('Install', 'smart-product-tabs'); ?>
+                            <?php _e('Install', 'smart-product-tabs-for-woocommerce'); ?>
                         </button>
                     </div>
                 </div>
@@ -1167,35 +1167,35 @@ jQuery(document).ready(function($) {
     <!-- Import/Export Section -->
     <div class="import-export-section">
         <div class="import-section">
-            <h4><?php _e('Import Template', 'smart-product-tabs'); ?></h4>
+            <h4><?php _e('Import Template', 'smart-product-tabs-for-woocommerce'); ?></h4>
 
             <!-- File Upload Form - FIXED VERSION -->
             <form class="template-upload-form" method="post" enctype="multipart/form-data">
                 <table class="form-table">
                     <tr>
-                        <th><?php _e('Upload File', 'smart-product-tabs'); ?></th>
+                        <th><?php _e('Upload File', 'smart-product-tabs-for-woocommerce'); ?></th>
                         <td>
                             <div class="file-upload-area">
                                 <input type="file" name="template_file" accept=".json" id="template-file-input" required>
-                                <p><?php _e('Select a .json template file to upload', 'smart-product-tabs'); ?></p>
-                                <small><?php _e('Maximum file size: 5MB', 'smart-product-tabs'); ?></small>
+                                <p><?php _e('Select a .json template file to upload', 'smart-product-tabs-for-woocommerce'); ?></p>
+                                <small><?php _e('Maximum file size: 5MB', 'smart-product-tabs-for-woocommerce'); ?></small>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <th><?php _e('Import Options', 'smart-product-tabs'); ?></th>
+                        <th><?php _e('Import Options', 'smart-product-tabs-for-woocommerce'); ?></th>
                         <td>
                             <label>
                                 <input type="checkbox" name="replace_existing" value="1">
-                                <?php _e('Replace existing rules with same names', 'smart-product-tabs'); ?>
+                                <?php _e('Replace existing rules with same names', 'smart-product-tabs-for-woocommerce'); ?>
                             </label>
-                            <p class="description"><?php _e('If unchecked, rules with duplicate names will be skipped', 'smart-product-tabs'); ?></p>
+                            <p class="description"><?php _e('If unchecked, rules with duplicate names will be skipped', 'smart-product-tabs-for-woocommerce'); ?></p>
                         </td>
                     </tr>
                 </table>
 
                 <p class="submit">
-                    <input type="submit" class="button-primary" value="<?php _e('Import Template', 'smart-product-tabs'); ?>">
+                    <input type="submit" class="button-primary" value="<?php _e('Import Template', 'smart-product-tabs-for-woocommerce'); ?>">
                     <span class="spinner" id="upload-spinner" style="display: none;"></span>
                 </p>
 
@@ -1210,24 +1210,24 @@ jQuery(document).ready(function($) {
 
             <!-- Import Instructions -->
             <div class="import-instructions" style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0073aa;">
-                <h5><?php _e('Import Instructions:', 'smart-product-tabs'); ?></h5>
+                <h5><?php _e('Import Instructions:', 'smart-product-tabs-for-woocommerce'); ?></h5>
                 <ul style="margin: 10px 0; padding-left: 20px;">
-                    <li><?php _e('Only JSON files exported from Smart Product Tabs are supported', 'smart-product-tabs'); ?></li>
-                    <li><?php _e('Maximum file size is 5MB', 'smart-product-tabs'); ?></li>
-                    <li><?php _e('Backup your existing rules before importing', 'smart-product-tabs'); ?></li>
-                    <li><?php _e('Rules with duplicate names will be skipped unless you check "Replace existing"', 'smart-product-tabs'); ?></li>
+                    <li><?php _e('Only JSON files exported from Smart Product Tabs are supported', 'smart-product-tabs-for-woocommerce'); ?></li>
+                    <li><?php _e('Maximum file size is 5MB', 'smart-product-tabs-for-woocommerce'); ?></li>
+                    <li><?php _e('Backup your existing rules before importing', 'smart-product-tabs-for-woocommerce'); ?></li>
+                    <li><?php _e('Rules with duplicate names will be skipped unless you check "Replace existing"', 'smart-product-tabs-for-woocommerce'); ?></li>
                 </ul>
             </div>
         </div>
 
         <div class="export-section">
-            <h4><?php _e('Export Current Rules', 'smart-product-tabs'); ?></h4>
-            <p><?php _e('Download your current rules as a JSON file for backup or transfer to another site.', 'smart-product-tabs'); ?></p>
+            <h4><?php _e('Export Current Rules', 'smart-product-tabs-for-woocommerce'); ?></h4>
+            <p><?php _e('Download your current rules as a JSON file for backup or transfer to another site.', 'smart-product-tabs-for-woocommerce'); ?></p>
 
             <form id="export-form">
                 <p class="submit">
                     <button type="button" class="button-primary" id="export-rules">
-                        <?php _e('Download Export File', 'smart-product-tabs'); ?>
+                        <?php _e('Download Export File', 'smart-product-tabs-for-woocommerce'); ?>
                     </button>
                 </p>
             </form>
@@ -1240,8 +1240,8 @@ jQuery(document).ready(function($) {
             <div class="spt-modal-content">
                 <!-- Fixed Header -->
                 <div class="spt-modal-header">
-                    <h3 id="preview-template-title"><?php _e('Template Preview', 'smart-product-tabs'); ?></h3>
-                    <button type="button" class="spt-modal-close" aria-label="<?php _e('Close', 'smart-product-tabs'); ?>">&times;</button>
+                    <h3 id="preview-template-title"><?php _e('Template Preview', 'smart-product-tabs-for-woocommerce'); ?></h3>
+                    <button type="button" class="spt-modal-close" aria-label="<?php _e('Close', 'smart-product-tabs-for-woocommerce'); ?>">&times;</button>
                 </div>
 
                 <!-- Scrollable Body -->
@@ -1254,10 +1254,10 @@ jQuery(document).ready(function($) {
                 <!-- Fixed Footer -->
                 <div class="spt-modal-footer">
                     <button type="button" class="button button-primary" id="install-from-preview">
-                        <?php _e('Install This Template', 'smart-product-tabs'); ?>
+                        <?php _e('Install This Template', 'smart-product-tabs-for-woocommerce'); ?>
                     </button>
                     <button type="button" class="button" id="close-preview">
-                        <?php _e('Close', 'smart-product-tabs'); ?>
+                        <?php _e('Close', 'smart-product-tabs-for-woocommerce'); ?>
                     </button>
                 </div>
             </div>
@@ -1799,18 +1799,18 @@ jQuery(document).ready(function($) {
         ?>
         <div class="spt-analytics">
             <div class="analytics-header">
-                <h2><?php _e('Analytics Dashboard', 'smart-product-tabs'); ?></h2>
+                <h2><?php _e('Analytics Dashboard', 'smart-product-tabs-for-woocommerce'); ?></h2>
                 <div class="analytics-controls">
                     <select id="analytics-period">
-                        <option value="7"><?php _e('Last 7 days', 'smart-product-tabs'); ?></option>
-                        <option value="30" selected><?php _e('Last 30 days', 'smart-product-tabs'); ?></option>
-                        <option value="90"><?php _e('Last 90 days', 'smart-product-tabs'); ?></option>
+                        <option value="7"><?php _e('Last 7 days', 'smart-product-tabs-for-woocommerce'); ?></option>
+                        <option value="30" selected><?php _e('Last 30 days', 'smart-product-tabs-for-woocommerce'); ?></option>
+                        <option value="90"><?php _e('Last 90 days', 'smart-product-tabs-for-woocommerce'); ?></option>
                     </select>
                     <button type="button" class="button" id="refresh-analytics">
-                        <?php _e('Refresh', 'smart-product-tabs'); ?>
+                        <?php _e('Refresh', 'smart-product-tabs-for-woocommerce'); ?>
                     </button>
                     <button type="button" class="button" id="export-analytics">
-                        <?php _e('Export Data', 'smart-product-tabs'); ?>
+                        <?php _e('Export Data', 'smart-product-tabs-for-woocommerce'); ?>
                     </button>
                 </div>
             </div>
@@ -1818,33 +1818,33 @@ jQuery(document).ready(function($) {
             <!-- Summary Cards -->
             <div class="analytics-summary">
                 <div class="analytics-card">
-                    <h3><?php _e('Total Views', 'smart-product-tabs'); ?></h3>
+                    <h3><?php _e('Total Views', 'smart-product-tabs-for-woocommerce'); ?></h3>
                     <div class="metric-value"><?php echo number_format($summary['total_views']); ?></div>
-                    <div class="metric-change"><?php _e('Last 30 days', 'smart-product-tabs'); ?></div>
+                    <div class="metric-change"><?php _e('Last 30 days', 'smart-product-tabs-for-woocommerce'); ?></div>
                 </div>
 
                 <div class="analytics-card">
-                    <h3><?php _e('Unique Products', 'smart-product-tabs'); ?></h3>
+                    <h3><?php _e('Unique Products', 'smart-product-tabs-for-woocommerce'); ?></h3>
                     <div class="metric-value"><?php echo number_format($summary['unique_products']); ?></div>
-                    <div class="metric-change"><?php _e('With tab views', 'smart-product-tabs'); ?></div>
+                    <div class="metric-change"><?php _e('With tab views', 'smart-product-tabs-for-woocommerce'); ?></div>
                 </div>
 
                 <div class="analytics-card">
-                    <h3><?php _e('Active Tabs', 'smart-product-tabs'); ?></h3>
+                    <h3><?php _e('Active Tabs', 'smart-product-tabs-for-woocommerce'); ?></h3>
                     <div class="metric-value"><?php echo number_format($summary['active_tabs']); ?></div>
-                    <div class="metric-change"><?php _e('Different tabs viewed', 'smart-product-tabs'); ?></div>
+                    <div class="metric-change"><?php _e('Different tabs viewed', 'smart-product-tabs-for-woocommerce'); ?></div>
                 </div>
 
                 <div class="analytics-card">
-                    <h3><?php _e('Avg Daily Views', 'smart-product-tabs'); ?></h3>
+                    <h3><?php _e('Avg Daily Views', 'smart-product-tabs-for-woocommerce'); ?></h3>
                     <div class="metric-value"><?php echo number_format($summary['avg_daily_views'], 1); ?></div>
-                    <div class="metric-change"><?php _e('Per day average', 'smart-product-tabs'); ?></div>
+                    <div class="metric-change"><?php _e('Per day average', 'smart-product-tabs-for-woocommerce'); ?></div>
                 </div>
 
                 <div class="analytics-card">
-                    <h3><?php _e('Engagement Rate', 'smart-product-tabs'); ?></h3>
+                    <h3><?php _e('Engagement Rate', 'smart-product-tabs-for-woocommerce'); ?></h3>
                     <div class="metric-value"><?php echo number_format($engagement['engagement_rate'], 1); ?>%</div>
-                    <div class="metric-change"><?php _e('Products with views', 'smart-product-tabs'); ?></div>
+                    <div class="metric-change"><?php _e('Products with views', 'smart-product-tabs-for-woocommerce'); ?></div>
                 </div>
             </div>
 
@@ -1852,15 +1852,15 @@ jQuery(document).ready(function($) {
             <!-- Simplified Charts Section -->
             <div class="analytics-charts">
                 <div class="chart-container">
-                    <h4><?php _e('Popular Tabs (Last 30 Days)', 'smart-product-tabs'); ?></h4>
+                    <h4><?php _e('Popular Tabs (Last 30 Days)', 'smart-product-tabs-for-woocommerce'); ?></h4>
                     <?php if (!empty($popular_tabs)): ?>
                         <div class="enhanced-chart-table">
                             <table class="wp-list-table widefat fixed striped">
                                 <thead>
                                     <tr>
-                                        <th style="width: 70%;"><?php _e('Tab Name', 'smart-product-tabs'); ?></th>
-                                        <th style="width: 15%; text-align: center;"><?php _e('Views', 'smart-product-tabs'); ?></th>
-                                        <th style="width: 15%; text-align: center;"><?php _e('Products', 'smart-product-tabs'); ?></th>
+                                        <th style="width: 70%;"><?php _e('Tab Name', 'smart-product-tabs-for-woocommerce'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Views', 'smart-product-tabs-for-woocommerce'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Products', 'smart-product-tabs-for-woocommerce'); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1895,21 +1895,21 @@ jQuery(document).ready(function($) {
                         </div>
                     <?php else: ?>
                         <div class="chart-placeholder">
-                            <p><?php _e('No custom tab data available yet. Tab views will appear here once users interact with your custom product tabs.', 'smart-product-tabs'); ?></p>
+                            <p><?php _e('No custom tab data available yet. Tab views will appear here once users interact with your custom product tabs.', 'smart-product-tabs-for-woocommerce'); ?></p>
                         </div>
                     <?php endif; ?>
                 </div>
 
                 <div class="chart-container">
-                    <h4><?php _e('Top Performing Products', 'smart-product-tabs'); ?></h4>
+                    <h4><?php _e('Top Performing Products', 'smart-product-tabs-for-woocommerce'); ?></h4>
                     <?php if (!empty($top_products)): ?>
                         <div class="enhanced-chart-table">
                             <table class="wp-list-table widefat fixed striped">
                                 <thead>
                                     <tr>
-                                        <th style="width: 70%;"><?php _e('Product Name', 'smart-product-tabs'); ?></th>
-                                        <th style="width: 15%; text-align: center;"><?php _e('Views', 'smart-product-tabs'); ?></th>
-                                        <th style="width: 15%; text-align: center;"><?php _e('Tabs', 'smart-product-tabs'); ?></th>
+                                        <th style="width: 70%;"><?php _e('Product Name', 'smart-product-tabs-for-woocommerce'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Views', 'smart-product-tabs-for-woocommerce'); ?></th>
+                                        <th style="width: 15%; text-align: center;"><?php _e('Tabs', 'smart-product-tabs-for-woocommerce'); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1947,7 +1947,7 @@ jQuery(document).ready(function($) {
                         </div>
                     <?php else: ?>
                         <div class="chart-placeholder">
-                            <p><?php _e('No product data available yet.', 'smart-product-tabs'); ?></p>
+                            <p><?php _e('No product data available yet.', 'smart-product-tabs-for-woocommerce'); ?></p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1956,15 +1956,15 @@ jQuery(document).ready(function($) {
             <!-- Daily Analytics Chart -->
             <?php if (!empty($daily_data)): ?>
             <div class="chart-container" style="margin-top: 30px;">
-                <h4><?php _e('Daily Analytics Trend', 'smart-product-tabs'); ?></h4>
+                <h4><?php _e('Daily Analytics Trend', 'smart-product-tabs-for-woocommerce'); ?></h4>
                 <div class="daily-chart">
                     <table class="wp-list-table widefat fixed striped">
                         <thead>
                             <tr>
-                                <th><?php _e('Date', 'smart-product-tabs'); ?></th>
-                                <th><?php _e('Total Views', 'smart-product-tabs'); ?></th>
-                                <th><?php _e('Unique Tabs', 'smart-product-tabs'); ?></th>
-                                <th><?php _e('Unique Products', 'smart-product-tabs'); ?></th>
+                                <th><?php _e('Date', 'smart-product-tabs-for-woocommerce'); ?></th>
+                                <th><?php _e('Total Views', 'smart-product-tabs-for-woocommerce'); ?></th>
+                                <th><?php _e('Unique Tabs', 'smart-product-tabs-for-woocommerce'); ?></th>
+                                <th><?php _e('Unique Products', 'smart-product-tabs-for-woocommerce'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1984,36 +1984,36 @@ jQuery(document).ready(function($) {
 
             <!-- Analytics Settings (moved from removed settings tab) -->
             <div class="analytics-settings" style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 6px;">
-                <h4><?php _e('Analytics Settings', 'smart-product-tabs'); ?></h4>
+                <h4><?php _e('Analytics Settings', 'smart-product-tabs-for-woocommerce'); ?></h4>
                 <form method="post" action="">
                     <?php wp_nonce_field('spt_analytics_settings'); ?>
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php _e('Enable Analytics', 'smart-product-tabs'); ?></th>
+                            <th scope="row"><?php _e('Enable Analytics', 'smart-product-tabs-for-woocommerce'); ?></th>
                             <td>
                                 <label>
                                     <input type="checkbox" name="spt_enable_analytics" value="1" <?php checked(get_option('spt_enable_analytics', 1)); ?>>
-                                    <?php _e('Track tab views and performance metrics', 'smart-product-tabs'); ?>
+                                    <?php _e('Track tab views and performance metrics', 'smart-product-tabs-for-woocommerce'); ?>
                                 </label>
-                                <p class="description"><?php _e('Disable this to stop collecting analytics data.', 'smart-product-tabs'); ?></p>
+                                <p class="description"><?php _e('Disable this to stop collecting analytics data.', 'smart-product-tabs-for-woocommerce'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Data Retention', 'smart-product-tabs'); ?></th>
+                            <th scope="row"><?php _e('Data Retention', 'smart-product-tabs-for-woocommerce'); ?></th>
                             <td>
                                 <select name="spt_analytics_retention_days">
                                     <option value="30" <?php selected(get_option('spt_analytics_retention_days', 90), 30); ?>>30 days</option>
                                     <option value="90" <?php selected(get_option('spt_analytics_retention_days', 90), 90); ?>>90 days</option>
                                     <option value="365" <?php selected(get_option('spt_analytics_retention_days', 90), 365); ?>>1 year</option>
                                 </select>
-                                <p class="description"><?php _e('How long to keep analytics data before automatic cleanup.', 'smart-product-tabs'); ?></p>
+                                <p class="description"><?php _e('How long to keep analytics data before automatic cleanup.', 'smart-product-tabs-for-woocommerce'); ?></p>
                             </td>
                         </tr>
                     </table>
                     <p class="submit">
-                        <input type="submit" name="save_analytics_settings" class="button-primary" value="<?php _e('Save Settings', 'smart-product-tabs'); ?>">
+                        <input type="submit" name="save_analytics_settings" class="button-primary" value="<?php _e('Save Settings', 'smart-product-tabs-for-woocommerce'); ?>">
                         <button type="button" class="button" id="reset-analytics" style="margin-left: 10px;">
-                            <?php _e('Reset All Data', 'smart-product-tabs'); ?>
+                            <?php _e('Reset All Data', 'smart-product-tabs-for-woocommerce'); ?>
                         </button>
                     </p>
                 </form>
@@ -2022,15 +2022,15 @@ jQuery(document).ready(function($) {
             <!-- Debug Information (only for admins when WP_DEBUG is on) -->
             <?php if (WP_DEBUG && current_user_can('manage_options')): ?>
             <div class="analytics-debug" style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                <h4><?php _e('Debug Information', 'smart-product-tabs'); ?></h4>
+                <h4><?php _e('Debug Information', 'smart-product-tabs-for-woocommerce'); ?></h4>
                 <?php
                 global $wpdb;
                 $table_stats = $analytics->get_table_size();
                 $total_records = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}spt_analytics");
                 ?>
-                <p><strong><?php _e('Database Records:', 'smart-product-tabs'); ?></strong> <?php echo number_format($total_records); ?></p>
-                <p><strong><?php _e('Table Size:', 'smart-product-tabs'); ?></strong> <?php echo $table_stats->size_mb; ?> MB</p>
-                <p><strong><?php _e('Analytics Enabled:', 'smart-product-tabs'); ?></strong> <?php echo get_option('spt_enable_analytics', 1) ? 'Yes' : 'No'; ?></p>
+                <p><strong><?php _e('Database Records:', 'smart-product-tabs-for-woocommerce'); ?></strong> <?php echo number_format($total_records); ?></p>
+                <p><strong><?php _e('Table Size:', 'smart-product-tabs-for-woocommerce'); ?></strong> <?php echo $table_stats->size_mb; ?> MB</p>
+                <p><strong><?php _e('Analytics Enabled:', 'smart-product-tabs-for-woocommerce'); ?></strong> <?php echo get_option('spt_enable_analytics', 1) ? 'Yes' : 'No'; ?></p>
             </div>
             <?php endif; ?>
         </div>
@@ -2050,16 +2050,16 @@ jQuery(document).ready(function($) {
 
             // Handle reset analytics
             $('#reset-analytics').on('click', function() {
-                if (confirm('<?php _e('Are you sure you want to reset all analytics data? This cannot be undone.', 'smart-product-tabs'); ?>')) {
+                if (confirm('<?php _e('Are you sure you want to reset all analytics data? This cannot be undone.', 'smart-product-tabs-for-woocommerce'); ?>')) {
                     $.post(ajaxurl, {
                         action: 'spt_reset_analytics',
                         nonce: '<?php echo wp_create_nonce('spt_reset_analytics'); ?>'
                     }, function(response) {
                         if (response.success) {
-                            alert('<?php _e('Analytics data has been reset.', 'smart-product-tabs'); ?>');
+                            alert('<?php _e('Analytics data has been reset.', 'smart-product-tabs-for-woocommerce'); ?>');
                             location.reload();
                         } else {
-                            alert('<?php _e('Failed to reset analytics data.', 'smart-product-tabs'); ?>');
+                            alert('<?php _e('Failed to reset analytics data.', 'smart-product-tabs-for-woocommerce'); ?>');
                         }
                     });
                 }
@@ -2081,20 +2081,20 @@ jQuery(document).ready(function($) {
     private function render_settings_tab() {
         if (isset($_POST['submit']) && wp_verify_nonce($_POST['_wpnonce'], 'spt_settings')) {
             update_option('spt_enable_analytics', isset($_POST['spt_enable_analytics']) ? 1 : 0);
-            echo '<div class="notice notice-success"><p>' . __('Settings saved.', 'smart-product-tabs') . '</p></div>';
+            echo '<div class="notice notice-success"><p>' . __('Settings saved.', 'smart-product-tabs-for-woocommerce') . '</p></div>';
         }
         ?>
         <div class="spt-settings">
-            <h2><?php _e('Settings', 'smart-product-tabs'); ?></h2>
+            <h2><?php _e('Settings', 'smart-product-tabs-for-woocommerce'); ?></h2>
             <form method="post" action="">
                 <?php wp_nonce_field('spt_settings'); ?>
                 <table class="form-table">
                     <tr>
-                        <th scope="row"><?php _e('Enable Analytics', 'smart-product-tabs'); ?></th>
+                        <th scope="row"><?php _e('Enable Analytics', 'smart-product-tabs-for-woocommerce'); ?></th>
                         <td>
                             <label>
                                 <input type="checkbox" name="spt_enable_analytics" value="1" <?php checked(get_option('spt_enable_analytics', 1)); ?>>
-                                <?php _e('Track tab views and performance', 'smart-product-tabs'); ?>
+                                <?php _e('Track tab views and performance', 'smart-product-tabs-for-woocommerce'); ?>
                             </label>
                         </td>
                     </tr>
@@ -2165,9 +2165,9 @@ jQuery(document).ready(function($) {
         $result = $analytics->reset_analytics();
 
         if ($result) {
-            wp_send_json_success(__('Analytics data has been reset successfully.', 'smart-product-tabs'));
+            wp_send_json_success(__('Analytics data has been reset successfully.', 'smart-product-tabs-for-woocommerce'));
         } else {
-            wp_send_json_error(__('Failed to reset analytics data.', 'smart-product-tabs'));
+            wp_send_json_error(__('Failed to reset analytics data.', 'smart-product-tabs-for-woocommerce'));
         }
     }    
     
@@ -2180,7 +2180,7 @@ jQuery(document).ready(function($) {
             wp_verify_nonce($_GET['_wpnonce'], 'spt_export_analytics')) {
 
             if (!current_user_can('manage_woocommerce')) {
-                wp_die(__('Insufficient permissions', 'smart-product-tabs'));
+                wp_die(__('Insufficient permissions', 'smart-product-tabs-for-woocommerce'));
             }
 
             $period = isset($_GET['period']) ? intval($_GET['period']) : 30;

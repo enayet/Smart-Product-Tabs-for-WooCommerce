@@ -322,7 +322,7 @@ class SPT_Frontend {
         global $product;
         
         if (!isset($tab['rule'])) {
-            echo '<p>' . __('Tab content not available.', 'smart-product-tabs') . '</p>';
+            echo '<p>' . __('Tab content not available.', 'smart-product-tabs-for-woocommerce') . '</p>';
             return;
         }
         
@@ -347,7 +347,7 @@ class SPT_Frontend {
         if (!empty($content)) {
             echo wp_kses_post($content);
         } else {
-            echo '<p>' . __('No content available for this tab.', 'smart-product-tabs') . '</p>';
+            echo '<p>' . __('No content available for this tab.', 'smart-product-tabs-for-woocommerce') . '</p>';
         }
         
         echo '</div>';
@@ -551,8 +551,8 @@ class SPT_Frontend {
             '{product_stock_status}' => $product->get_stock_status(),
             '{product_stock_quantity}' => $product->get_stock_quantity(),
             '{product_type}' => $product->get_type(),
-            '{product_featured}' => $product->is_featured() ? __('Yes', 'smart-product-tabs') : __('No', 'smart-product-tabs'),
-            '{product_on_sale}' => $product->is_on_sale() ? __('Yes', 'smart-product-tabs') : __('No', 'smart-product-tabs'),
+            '{product_featured}' => $product->is_featured() ? __('Yes', 'smart-product-tabs-for-woocommerce') : __('No', 'smart-product-tabs-for-woocommerce'),
+            '{product_on_sale}' => $product->is_on_sale() ? __('Yes', 'smart-product-tabs-for-woocommerce') : __('No', 'smart-product-tabs-for-woocommerce'),
             '{product_permalink}' => $product->get_permalink(),
             '{product_rating}' => $product->get_average_rating(),
             '{product_review_count}' => $product->get_review_count(),

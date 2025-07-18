@@ -272,9 +272,9 @@ class SPT_Analytics {
 
         // Check default WooCommerce tabs
         $default_tabs = array(
-            'description' => __('Description', 'smart-product-tabs'),
-            'additional_information' => __('Additional Information', 'smart-product-tabs'),
-            'reviews' => __('Reviews', 'smart-product-tabs')
+            'description' => __('Description', 'smart-product-tabs-for-woocommerce'),
+            'additional_information' => __('Additional Information', 'smart-product-tabs-for-woocommerce'),
+            'reviews' => __('Reviews', 'smart-product-tabs-for-woocommerce')
         );
 
         if (isset($default_tabs[$tab_key])) {
@@ -418,7 +418,7 @@ class SPT_Analytics {
                 $result->product_price = $product->get_price();
                 $result->product_status = $product->get_status();
             } else {
-                $result->product_name = __('Product Not Found', 'smart-product-tabs');
+                $result->product_name = __('Product Not Found', 'smart-product-tabs-for-woocommerce');
                 $result->product_url = '';
                 $result->product_price = 0;
                 $result->product_status = 'not_found';

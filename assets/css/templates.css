@@ -2,6 +2,29 @@
    SMART PRODUCT TABS - TEMPLATE STYLING CSS
    ================================================ */
 
+/* ===== CSS VARIABLES FOR CONSISTENCY ===== */
+:root {
+  --primary-color: #1a365d;
+  --primary-light: #2b4b73;
+  --secondary-color: #e2e8f0;
+  --accent-color: #3182ce;
+  --accent-light: #63b3ed;
+  --success-color: #38a169;
+  --warning-color: #d69e2e;
+  --error-color: #e53e3e;
+  --text-dark: #2d3748;
+  --text-medium: #4a5568;
+  --text-light: #718096;
+  --border-color: #e2e8f0;
+  --background-light: #f7fafc;
+  --white: #ffffff;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+}
+
 /* ===== DIGITAL PRODUCTS PACK ===== */
 
 /* System Requirements Section */
@@ -380,171 +403,231 @@
 
 /* ===== ELECTRONICS PACK ===== */
 
-/* Specifications Section */
-.specifications-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    margin: 20px 0;
+/* ============================================
+   PROFESSIONAL ELECTRONICS PRODUCT TABS CSS
+   Modern, clean design with professional aesthetics
+============================================ */
+
+/* ===== BASE SECTION STYLES ===== */
+.specifications-section,
+.warranty-section,
+.manual-section,
+.compatibility-section {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    margin: 24px 0;
+    padding: 32px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease;
 }
 
-.specifications-section h3 {
-    color: #fff;
+.specifications-section:hover,
+.warranty-section:hover,
+.manual-section:hover,
+.compatibility-section:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* ===== SECTION HEADERS ===== */
+.specifications-section h3,
+.warranty-section h3,
+.manual-section h3,
+.compatibility-section h3 {
+    color: var(--primary-color);
     font-size: 28px;
+    font-weight: 600;
     text-align: center;
-    margin-bottom: 25px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 32px;
+    position: relative;
+    padding-bottom: 16px;
 }
 
+.specifications-section h3::after,
+.warranty-section h3::after,
+.manual-section h3::after,
+.compatibility-section h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-light));
+    border-radius: 2px;
+}
+
+/* ===== SPECIFICATIONS SECTION ===== */
 .spec-table-container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 25px;
-    margin-bottom: 25px;
+    background: var(--background-light);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 24px;
 }
 
 .specifications-table {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 8px;
+    background: var(--white);
+    border-radius: var(--border-radius);
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
 }
 
 .spec-row {
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.spec-row:last-child {
+    border-bottom: none;
 }
 
 .spec-row:hover {
-    background-color: rgba(102, 126, 234, 0.1) !important;
+    background-color: var(--background-light);
 }
 
 .spec-row.alt {
-    background: #f8f9fa;
+    background: #fafbfc;
 }
 
 .spec-label {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: #fff;
-    padding: 15px 20px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: var(--white);
+    padding: 16px 20px;
     font-weight: 600;
     font-size: 14px;
-    width: 40%;
-    border-right: 1px solid rgba(255,255,255,0.3);
+    width: 35%;
+    border-right: 1px solid var(--border-color);
+    vertical-align: top;
 }
 
 .spec-value {
-    padding: 15px 20px;
-    color: #333;
+    padding: 16px 20px;
+    color: var(--text-dark);
     font-size: 14px;
     font-weight: 500;
+    line-height: 1.5;
 }
 
-.technical-highlights, .package-contents {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 25px;
+/* ===== FEATURE LISTS ===== */
+.technical-highlights,
+.package-contents {
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 24px;
     margin: 20px 0;
-    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.technical-highlights h4, .package-contents h4 {
-    color: #fff;
+.technical-highlights h4,
+.package-contents h4 {
+    color: var(--primary-color);
     font-size: 20px;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
     font-weight: 600;
 }
 
-.feature-list, .contents-list {
+.feature-list,
+.contents-list {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
-.feature-list li, .contents-list li {
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 10px;
-    padding-left: 25px;
+.feature-list li,
+.contents-list li {
+    color: var(--text-medium);
+    margin-bottom: 12px;
+    padding-left: 28px;
     position: relative;
     font-size: 14px;
     line-height: 1.6;
 }
 
-.feature-list li::before, .contents-list li::before {
+.feature-list li::before,
+.contents-list li::before {
     content: '✓';
     position: absolute;
     left: 0;
-    color: #38ef7d;
+    top: 2px;
+    color: var(--success-color);
     font-weight: bold;
     font-size: 16px;
+    width: 20px;
+    height: 20px;
+    background: rgba(56, 161, 105, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
 }
 
-/* Warranty Section */
+/* ===== WARRANTY SECTION ===== */
 .warranty-section {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    margin: 20px 0;
-}
-
-.warranty-section h3 {
-    color: #fff;
-    font-size: 28px;
-    text-align: center;
-    margin-bottom: 25px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    border-left: 4px solid var(--success-color);
 }
 
 .warranty-details {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
 }
 
 .warranty-card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    padding: 25px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    padding: 24px;
+    border-radius: var(--border-radius);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.warranty-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .warranty-card h4 {
-    color: #fff;
-    font-size: 20px;
-    margin-bottom: 15px;
+    color: var(--primary-color);
+    font-size: 18px;
+    margin-bottom: 16px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .warranty-card p {
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 10px;
+    color: var(--text-medium);
+    margin-bottom: 12px;
     font-size: 14px;
+    line-height: 1.5;
 }
 
 .warranty-card ul {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 .warranty-card li {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-medium);
     margin-bottom: 8px;
     padding-left: 20px;
     position: relative;
     font-size: 14px;
+    line-height: 1.5;
 }
 
 .warranty-card li::before {
     content: '•';
     position: absolute;
     left: 0;
-    color: #fff;
+    color: var(--accent-color);
     font-weight: bold;
 }
 
@@ -552,121 +635,145 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
-    margin-top: 25px;
+    margin-top: 32px;
 }
 
 .support-item {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--white);
+    border: 1px solid var(--border-color);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: var(--border-radius);
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.support-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .support-item h4 {
-    color: #fff;
-    font-size: 18px;
-    margin-bottom: 10px;
+    color: var(--primary-color);
+    font-size: 16px;
+    margin-bottom: 12px;
+    font-weight: 600;
 }
 
 .support-item p {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-light);
     font-size: 13px;
-    margin: 5px 0;
+    margin: 6px 0;
+    line-height: 1.4;
 }
 
-/* Manual Section */
+/* ===== MANUAL SECTION ===== */
 .manual-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    margin: 20px 0;
+    border-left: 4px solid var(--accent-color);
 }
 
 .download-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-top: 25px;
+    gap: 24px;
+    margin-top: 32px;
 }
 
 .download-item {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    padding: 25px;
-    border-radius: 12px;
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    padding: 24px;
+    border-radius: var(--border-radius);
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.download-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s ease;
 }
 
 .download-item:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-5px);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-color);
+}
+
+.download-item:hover::before {
+    left: 100%;
 }
 
 .download-icon {
     font-size: 48px;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
     display: block;
+    color: var(--accent-color);
 }
 
 .download-item h4 {
-    color: #fff;
+    color: var(--primary-color);
     font-size: 18px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    font-weight: 600;
 }
 
 .download-item p {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-medium);
     font-size: 14px;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
     line-height: 1.5;
 }
 
 .download-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 6px;
+    background: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    color: var(--white);
+    padding: 12px 24px;
+    border-radius: var(--border-radius);
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.3s ease;
+    font-size: 14px;
+    display: inline-block;
+    transition: all 0.2s ease;
 }
 
 .download-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
+    background: var(--accent-light);
+    border-color: var(--accent-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    color: var(--white);
+    text-decoration: none;
 }
 
-/* Compatibility Section */
+/* ===== COMPATIBILITY SECTION ===== */
 .compatibility-section {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    margin: 20px 0;
+    border-left: 4px solid var(--warning-color);
 }
 
 .compatibility-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 25px;
-    margin-top: 25px;
+    gap: 24px;
+    margin-top: 32px;
 }
 
 .compat-category {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 24px;
 }
 
 .compat-category h4 {
-    color: #fff;
+    color: var(--primary-color);
     font-size: 20px;
     margin-bottom: 20px;
     font-weight: 600;
@@ -674,42 +781,53 @@
 
 .os-list {
     display: grid;
-    gap: 15px;
+    gap: 16px;
 }
 
 .os-item {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    border-radius: var(--border-radius);
     display: flex;
     align-items: center;
-    gap: 15px;
-    border-left: 4px solid transparent;
+    gap: 16px;
+    transition: all 0.2s ease;
+}
+
+.os-item:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateX(4px);
 }
 
 .os-item.supported {
-    border-left-color: #38ef7d;
+    border-left: 4px solid var(--success-color);
 }
 
 .os-item.partial {
-    border-left-color: #ffd93d;
+    border-left: 4px solid var(--warning-color);
 }
 
 .os-icon {
-    font-size: 24px;
+    font-size: 28px;
     flex-shrink: 0;
+    width: 40px;
+    text-align: center;
 }
 
-.os-details h5, .os-details strong {
-    color: #fff;
-    margin-bottom: 5px;
+.os-details h5,
+.os-details strong {
+    color: var(--primary-color);
+    margin-bottom: 4px;
     font-size: 16px;
+    font-weight: 600;
 }
 
 .os-details p {
-    color: rgba(255, 255, 255, 0.8);
-    margin: 5px 0;
+    color: var(--text-light);
+    margin: 4px 0;
     font-size: 13px;
+    line-height: 1.4;
 }
 
 .status {
@@ -718,35 +836,232 @@
     border-radius: 4px;
     font-size: 11px;
     font-weight: 600;
-    margin-top: 5px;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
+.status:contains("✅") {
+    background: rgba(56, 161, 105, 0.1);
+    color: var(--success-color);
+}
+
+.status:contains("⚠️") {
+    background: rgba(214, 158, 46, 0.1);
+    color: var(--warning-color);
+}
+
+/* ===== TABLES ===== */
 .req-table {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 8px;
+    background: var(--white);
+    border-radius: var(--border-radius);
     overflow: hidden;
-    margin-top: 15px;
+    margin-top: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
 }
 
 .req-table th {
-    background: rgba(17, 153, 142, 0.8);
-    color: #fff;
-    padding: 12px;
+    background: var(--primary-color);
+    color: var(--white);
+    padding: 14px 16px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
+    text-align: left;
 }
 
 .req-table td {
-    padding: 10px 12px;
-    color: #333;
-    font-size: 12px;
-    border-bottom: 1px solid #eee;
+    padding: 12px 16px;
+    color: var(--text-dark);
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+    line-height: 1.4;
+}
+
+.req-table tr:last-child td {
+    border-bottom: none;
 }
 
 .req-table tr:hover {
-    background: rgba(17, 153, 142, 0.1);
+    background: var(--background-light);
+}
+
+/* ===== BUTTONS & INTERACTIVE ELEMENTS ===== */
+.button,
+.btn {
+    background: var(--accent-color);
+    color: var(--white);
+    border: 1px solid var(--accent-color);
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.button:hover,
+.btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    color: var(--white);
+    text-decoration: none;
+}
+
+.button.secondary {
+    background: var(--white);
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+}
+
+.button.secondary:hover {
+    background: var(--accent-color);
+    color: var(--white);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .specifications-section,
+    .warranty-section,
+    .manual-section,
+    .compatibility-section {
+        padding: 20px;
+        margin: 16px 0;
+    }
+    
+    .warranty-details,
+    .download-grid,
+    .compatibility-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .support-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    
+    .spec-label {
+        width: 40%;
+        font-size: 13px;
+        padding: 12px 16px;
+    }
+    
+    .spec-value {
+        font-size: 13px;
+        padding: 12px 16px;
+    }
+    
+    .specifications-section h3,
+    .warranty-section h3,
+    .manual-section h3,
+    .compatibility-section h3 {
+        font-size: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .technical-highlights h4,
+    .package-contents h4,
+    .compat-category h4 {
+        font-size: 18px;
+    }
+    
+    .download-item,
+    .warranty-card,
+    .compat-category {
+        padding: 20px;
+    }
+    
+    .os-item {
+        padding: 12px;
+        gap: 12px;
+    }
+    
+    .os-icon {
+        font-size: 24px;
+        width: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .specifications-section,
+    .warranty-section,
+    .manual-section,
+    .compatibility-section {
+        padding: 16px;
+    }
+    
+    .spec-table-container,
+    .technical-highlights,
+    .package-contents {
+        padding: 16px;
+    }
+    
+    .req-table {
+        font-size: 12px;
+    }
+    
+    .req-table th,
+    .req-table td {
+        padding: 8px 12px;
+    }
+    
+    .support-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .button,
+    .btn,
+    .download-btn {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+@media (prefers-reduced-motion: reduce) {
+    .spec-row,
+    .download-item,
+    .warranty-card,
+    .support-item,
+    .os-item,
+    .button,
+    .download-btn {
+        transition: none;
+    }
+    
+    .download-item::before {
+        transition: none;
+    }
+}
+
+/* Focus styles for keyboard navigation */
+.download-btn:focus,
+.button:focus,
+.btn:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-light: #000000;
+        --text-medium: #000000;
+    }
+    
+    .spec-row:hover,
+    .req-table tr:hover {
+        background: #f0f0f0;
+    }
 }
 
 /* ===== FASHION PACK ===== */

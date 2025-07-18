@@ -6,7 +6,7 @@
  * Version: 1.0.0
  * Author: Your Name
  * Author URI: https://your-domain.com
- * Text Domain: smart-product-tabs
+ * Text Domain: smart-product-tabs-for-woocommerce
  * Domain Path: /languages
  * Requires at least: 5.0
  * Tested up to: 6.4
@@ -149,16 +149,16 @@ public function enqueue_admin_assets($hook) {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('spt_ajax_nonce'),
             'strings' => array(
-                'loading' => __('Loading...', 'smart-product-tabs'),
-                'error' => __('An error occurred', 'smart-product-tabs'),
-                'confirm_delete' => __('Are you sure?', 'smart-product-tabs'),
-                'success' => __('Success!', 'smart-product-tabs'),
-                'failed' => __('Failed!', 'smart-product-tabs'),
-                'saving' => __('Saving...', 'smart-product-tabs'),
-                'deleting' => __('Deleting...', 'smart-product-tabs'),
-                'importing' => __('Importing...', 'smart-product-tabs'),
-                'exporting' => __('Exporting...', 'smart-product-tabs'),
-                'installing' => __('Installing...', 'smart-product-tabs')
+                'loading' => __('Loading...', 'smart-product-tabs-for-woocommerce'),
+                'error' => __('An error occurred', 'smart-product-tabs-for-woocommerce'),
+                'confirm_delete' => __('Are you sure?', 'smart-product-tabs-for-woocommerce'),
+                'success' => __('Success!', 'smart-product-tabs-for-woocommerce'),
+                'failed' => __('Failed!', 'smart-product-tabs-for-woocommerce'),
+                'saving' => __('Saving...', 'smart-product-tabs-for-woocommerce'),
+                'deleting' => __('Deleting...', 'smart-product-tabs-for-woocommerce'),
+                'importing' => __('Importing...', 'smart-product-tabs-for-woocommerce'),
+                'exporting' => __('Exporting...', 'smart-product-tabs-for-woocommerce'),
+                'installing' => __('Installing...', 'smart-product-tabs-for-woocommerce')
             )
         );
         
@@ -357,7 +357,7 @@ public function enqueue_admin_assets($hook) {
      * Load plugin textdomain
      */
     public function load_textdomain() {
-        load_plugin_textdomain('smart-product-tabs', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+        load_plugin_textdomain('smart-product-tabs-for-woocommerce', false, dirname(plugin_basename(__FILE__)) . '/languages/');
     }
     
     /**

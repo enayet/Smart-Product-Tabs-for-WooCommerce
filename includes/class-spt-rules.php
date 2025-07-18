@@ -451,15 +451,15 @@ class SPT_Rules {
      */
     public function get_condition_types() {
         return array(
-            'all' => __('All Products', 'smart-product-tabs'),
-            'category' => __('Product Category', 'smart-product-tabs'),
-            'price_range' => __('Price Range', 'smart-product-tabs'),
-            'stock_status' => __('Stock Status', 'smart-product-tabs'),
-            'custom_field' => __('Custom Field', 'smart-product-tabs'),
-            'product_type' => __('Product Type', 'smart-product-tabs'),
-            'tags' => __('Product Tags', 'smart-product-tabs'),
-            'featured' => __('Featured Product', 'smart-product-tabs'),
-            'sale' => __('On Sale', 'smart-product-tabs')
+            'all' => __('All Products', 'smart-product-tabs-for-woocommerce'),
+            'category' => __('Product Category', 'smart-product-tabs-for-woocommerce'),
+            'price_range' => __('Price Range', 'smart-product-tabs-for-woocommerce'),
+            'stock_status' => __('Stock Status', 'smart-product-tabs-for-woocommerce'),
+            'custom_field' => __('Custom Field', 'smart-product-tabs-for-woocommerce'),
+            'product_type' => __('Product Type', 'smart-product-tabs-for-woocommerce'),
+            'tags' => __('Product Tags', 'smart-product-tabs-for-woocommerce'),
+            'featured' => __('Featured Product', 'smart-product-tabs-for-woocommerce'),
+            'sale' => __('On Sale', 'smart-product-tabs-for-woocommerce')
         );
     }
     
@@ -473,47 +473,47 @@ class SPT_Rules {
             case 'category':
             case 'tags':
                 $operators = array(
-                    'in' => __('In any of', 'smart-product-tabs'),
-                    'not_in' => __('Not in any of', 'smart-product-tabs'),
-                    'all' => __('In all of', 'smart-product-tabs')
+                    'in' => __('In any of', 'smart-product-tabs-for-woocommerce'),
+                    'not_in' => __('Not in any of', 'smart-product-tabs-for-woocommerce'),
+                    'all' => __('In all of', 'smart-product-tabs-for-woocommerce')
                 );
                 break;
                 
             case 'custom_field':
                 $operators = array(
-                    'equals' => __('Equals', 'smart-product-tabs'),
-                    'not_equals' => __('Not equals', 'smart-product-tabs'),
-                    'contains' => __('Contains', 'smart-product-tabs'),
-                    'not_contains' => __('Does not contain', 'smart-product-tabs'),
-                    'empty' => __('Is empty', 'smart-product-tabs'),
-                    'not_empty' => __('Is not empty', 'smart-product-tabs'),
-                    'greater_than' => __('Greater than', 'smart-product-tabs'),
-                    'less_than' => __('Less than', 'smart-product-tabs')
+                    'equals' => __('Equals', 'smart-product-tabs-for-woocommerce'),
+                    'not_equals' => __('Not equals', 'smart-product-tabs-for-woocommerce'),
+                    'contains' => __('Contains', 'smart-product-tabs-for-woocommerce'),
+                    'not_contains' => __('Does not contain', 'smart-product-tabs-for-woocommerce'),
+                    'empty' => __('Is empty', 'smart-product-tabs-for-woocommerce'),
+                    'not_empty' => __('Is not empty', 'smart-product-tabs-for-woocommerce'),
+                    'greater_than' => __('Greater than', 'smart-product-tabs-for-woocommerce'),
+                    'less_than' => __('Less than', 'smart-product-tabs-for-woocommerce')
                 );
                 break;
                 
             case 'price_range':
                 $operators = array(
-                    'between' => __('Between', 'smart-product-tabs'),
-                    'greater_than' => __('Greater than', 'smart-product-tabs'),
-                    'less_than' => __('Less than', 'smart-product-tabs'),
-                    'equals' => __('Equals', 'smart-product-tabs'),
-                    'not_equals' => __('Not equals', 'smart-product-tabs')
+                    'between' => __('Between', 'smart-product-tabs-for-woocommerce'),
+                    'greater_than' => __('Greater than', 'smart-product-tabs-for-woocommerce'),
+                    'less_than' => __('Less than', 'smart-product-tabs-for-woocommerce'),
+                    'equals' => __('Equals', 'smart-product-tabs-for-woocommerce'),
+                    'not_equals' => __('Not equals', 'smart-product-tabs-for-woocommerce')
                 );
                 break;
                 
             case 'stock_status':
             case 'product_type':
                 $operators = array(
-                    'equals' => __('Is', 'smart-product-tabs'),
-                    'not_equals' => __('Is not', 'smart-product-tabs')
+                    'equals' => __('Is', 'smart-product-tabs-for-woocommerce'),
+                    'not_equals' => __('Is not', 'smart-product-tabs-for-woocommerce')
                 );
                 break;
                 
             default:
                 $operators = array(
-                    'equals' => __('Equals', 'smart-product-tabs'),
-                    'not_equals' => __('Not equals', 'smart-product-tabs')
+                    'equals' => __('Equals', 'smart-product-tabs-for-woocommerce'),
+                    'not_equals' => __('Not equals', 'smart-product-tabs-for-woocommerce')
                 );
         }
         
