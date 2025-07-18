@@ -79,9 +79,9 @@ class SPT_Analytics {
         // Verify table was created
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
         if ($table_exists != $this->table_name) {
-            error_log('SPT Analytics: Failed to create table ' . $this->table_name);
+            debug_log('SPT Analytics: Failed to create table ' . $this->table_name);
         } else {
-            error_log('SPT Analytics: Table created successfully: ' . $this->table_name);
+            debug_log('SPT Analytics: Table created successfully: ' . $this->table_name);
         }
     }
     
@@ -90,23 +90,23 @@ class SPT_Analytics {
      */
     public function track_tab_view($tab_key, $product_id) {
         // Debug start
-        error_log('SPT Analytics: track_tab_view called with tab_key=' . $tab_key . ', product_id=' . $product_id);
+        debug_log('SPT Analytics: track_tab_view called with tab_key=' . $tab_key . ', product_id=' . $product_id);
         
         // Check if analytics is enabled
         if (!get_option('spt_enable_analytics', 1)) {
-            error_log('SPT Analytics: Tracking disabled in settings');
+            debug_log('SPT Analytics: Tracking disabled in settings');
             return false;
         }
         
         // Don't track admin users or bots
         if ($this->is_bot()) {
-            error_log('SPT Analytics: Skipping tracking - admin user or bot detected');
+            debug_log('SPT Analytics: Skipping tracking - admin user or bot detected');
             return false;
         }
         
         // Validate inputs
         if (empty($tab_key) || empty($product_id)) {
-            error_log('SPT Analytics: Invalid parameters - tab_key: "' . $tab_key . '", product_id: "' . $product_id . '"');
+            debug_log('SPT Analytics: Invalid parameters - tab_key: "' . $tab_key . '", product_id: "' . $product_id . '"');
             return false;
         }
         
@@ -115,14 +115,14 @@ class SPT_Analytics {
         // Check if table exists
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
         if ($table_exists != $this->table_name) {
-            error_log('SPT Analytics: Table does not exist: ' . $this->table_name);
+            debug_log('SPT Analytics: Table does not exist: ' . $this->table_name);
             // Try to create it
             $this->create_analytics_table();
             
             // Check again
             $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
             if ($table_exists != $this->table_name) {
-                error_log('SPT Analytics: Failed to create table after retry');
+                debug_log('SPT Analytics: Failed to create table after retry');
                 return false;
             }
         }
@@ -132,7 +132,7 @@ class SPT_Analytics {
         // Clean tab key (remove # and tab- prefix if present)
         $tab_key = str_replace(array('#', 'tab-'), '', $tab_key);
         
-        error_log("SPT Analytics: Attempting to track - Tab: {$tab_key}, Product: {$product_id}, Date: {$today}");
+        debug_log("SPT Analytics: Attempting to track - Tab: {$tab_key}, Product: {$product_id}, Date: {$today}");
         
         // Try to insert or update using INSERT ... ON DUPLICATE KEY UPDATE
         $sql = $wpdb->prepare(
@@ -144,13 +144,13 @@ class SPT_Analytics {
             $today
         );
         
-        error_log('SPT Analytics: SQL Query: ' . $sql);
+        debug_log('SPT Analytics: SQL Query: ' . $sql);
         
         $result = $wpdb->query($sql);
         
         if ($result === false) {
-            error_log('SPT Analytics: Database error - ' . $wpdb->last_error);
-            error_log('SPT Analytics: Last query: ' . $wpdb->last_query);
+            debug_log('SPT Analytics: Database error - ' . $wpdb->last_error);
+            debug_log('SPT Analytics: Last query: ' . $wpdb->last_query);
             
             // Try alternative approach - check if record exists first
             $existing = $wpdb->get_row($wpdb->prepare(
@@ -171,10 +171,10 @@ class SPT_Analytics {
                 );
                 
                 if ($update_result !== false) {
-                    error_log("SPT Analytics: Successfully updated existing record (ID: {$existing->id})");
+                    debug_log("SPT Analytics: Successfully updated existing record (ID: {$existing->id})");
                     return true;
                 } else {
-                    error_log('SPT Analytics: Failed to update existing record - ' . $wpdb->last_error);
+                    debug_log('SPT Analytics: Failed to update existing record - ' . $wpdb->last_error);
                     return false;
                 }
             } else {
@@ -191,16 +191,16 @@ class SPT_Analytics {
                 );
                 
                 if ($insert_result !== false) {
-                    error_log("SPT Analytics: Successfully inserted new record (ID: {$wpdb->insert_id})");
+                    debug_log("SPT Analytics: Successfully inserted new record (ID: {$wpdb->insert_id})");
                     return true;
                 } else {
-                    error_log('SPT Analytics: Failed to insert new record - ' . $wpdb->last_error);
+                    debug_log('SPT Analytics: Failed to insert new record - ' . $wpdb->last_error);
                     return false;
                 }
             }
         } else {
             // Success with ON DUPLICATE KEY UPDATE
-            error_log("SPT Analytics: Successfully tracked view for tab: {$tab_key} (affected rows: {$result})");
+            debug_log("SPT Analytics: Successfully tracked view for tab: {$tab_key} (affected rows: {$result})");
             
             // Verify the data was actually saved
             $verification = $wpdb->get_row($wpdb->prepare(
@@ -211,10 +211,10 @@ class SPT_Analytics {
             ));
             
             if ($verification) {
-                error_log("SPT Analytics: Verification successful - Record ID: {$verification->id}, Views: {$verification->views}");
+                debug_log("SPT Analytics: Verification successful - Record ID: {$verification->id}, Views: {$verification->views}");
                 return true;
             } else {
-                error_log('SPT Analytics: Verification failed - record not found after insert');
+                debug_log('SPT Analytics: Verification failed - record not found after insert');
                 return false;
             }
         }
@@ -272,9 +272,9 @@ class SPT_Analytics {
 
         // Check default WooCommerce tabs
         $default_tabs = array(
-            'description' => __('Description', 'smart-product-tabs-for-woocommerce'),
-            'additional_information' => __('Additional Information', 'smart-product-tabs-for-woocommerce'),
-            'reviews' => __('Reviews', 'smart-product-tabs-for-woocommerce')
+            'description' => esc_html__('Description', 'smart-product-tabs-for-woocommerce'),
+            'additional_information' => esc_html__('Additional Information', 'smart-product-tabs-for-woocommerce'),
+            'reviews' => esc_html__('Reviews', 'smart-product-tabs-for-woocommerce')
         );
 
         if (isset($default_tabs[$tab_key])) {
@@ -418,7 +418,7 @@ class SPT_Analytics {
                 $result->product_price = $product->get_price();
                 $result->product_status = $product->get_status();
             } else {
-                $result->product_name = __('Product Not Found', 'smart-product-tabs-for-woocommerce');
+                $result->product_name = esc_html__('Product Not Found', 'smart-product-tabs-for-woocommerce');
                 $result->product_url = '';
                 $result->product_price = 0;
                 $result->product_status = 'not_found';
@@ -586,7 +586,7 @@ class SPT_Analytics {
         ));
         
         if ($deleted > 0) {
-            error_log("SPT Analytics: Cleaned up {$deleted} old records older than {$cutoff_date}");
+            debug_log("SPT Analytics: Cleaned up {$deleted} old records older than {$cutoff_date}");
         }
         
         return $deleted;
@@ -675,12 +675,12 @@ class SPT_Analytics {
      * Debug method to test analytics directly
      */
     public function debug_test_tracking() {
-        error_log('SPT Analytics: Starting debug test');
+        debug_log('SPT Analytics: Starting debug test');
         
         // Test with simple data
         $result = $this->track_tab_view('debug_test', 1);
         
-        error_log('SPT Analytics: Debug test result: ' . ($result ? 'SUCCESS' : 'FAILED'));
+        debug_log('SPT Analytics: Debug test result: ' . ($result ? 'SUCCESS' : 'FAILED'));
         
         return $result;
     }
@@ -729,7 +729,7 @@ class SPT_Analytics {
         }
 
         return $results;
-    }    
+    }        
     
     
 }

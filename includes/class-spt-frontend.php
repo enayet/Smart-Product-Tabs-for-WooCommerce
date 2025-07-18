@@ -67,7 +67,7 @@ class SPT_Frontend {
         
         // Debug logging
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('SPT Frontend: Dependencies initialized - Analytics: ' . ($this->analytics ? 'YES' : 'NO') . ', Rules: ' . ($this->rules_engine ? 'YES' : 'NO'));
+            debug_log('SPT Frontend: Dependencies initialized - Analytics: ' . ($this->analytics ? 'YES' : 'NO') . ', Rules: ' . ($this->rules_engine ? 'YES' : 'NO'));
         }
     }
     
@@ -210,7 +210,7 @@ class SPT_Frontend {
         
         if (!$product) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('SPT Frontend: No product found for custom tabs');
+                debug_log('SPT Frontend: No product found for custom tabs');
             }
             return $tabs;
         }
@@ -219,24 +219,24 @@ class SPT_Frontend {
         
         if (empty($rules)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('SPT Frontend: No active rules found');
+                debug_log('SPT Frontend: No active rules found');
             }
             return $tabs;
         }
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('SPT Frontend: Processing ' . count($rules) . ' rules for product ID: ' . $product->get_id());
+            debug_log('SPT Frontend: Processing ' . count($rules) . ' rules for product ID: ' . $product->get_id());
         }
         
         foreach ($rules as $rule) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('SPT Frontend: Checking rule: ' . $rule->rule_name . ' (ID: ' . $rule->id . ')');
+                debug_log('SPT Frontend: Checking rule: ' . $rule->rule_name . ' (ID: ' . $rule->id . ')');
             }
             
             // Check conditions using rules engine
             if (!$this->check_rule_conditions($product->get_id(), $rule)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('SPT Frontend: Rule conditions not met for rule: ' . $rule->rule_name);
+                    debug_log('SPT Frontend: Rule conditions not met for rule: ' . $rule->rule_name);
                 }
                 continue;
             }
@@ -244,7 +244,7 @@ class SPT_Frontend {
             // Check user role permissions
             if (!$this->check_user_role_permissions($rule)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('SPT Frontend: User role permissions not met for rule: ' . $rule->rule_name);
+                    debug_log('SPT Frontend: User role permissions not met for rule: ' . $rule->rule_name);
                 }
                 continue;
             }
@@ -252,7 +252,7 @@ class SPT_Frontend {
             // Check mobile display
             if ($this->is_mobile() && $rule->mobile_hidden) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('SPT Frontend: Rule hidden on mobile: ' . $rule->rule_name);
+                    debug_log('SPT Frontend: Rule hidden on mobile: ' . $rule->rule_name);
                 }
                 continue;
             }
@@ -270,7 +270,7 @@ class SPT_Frontend {
             );
             
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('SPT Frontend: Added tab: ' . $processed_title . ' (Key: ' . $tab_key . ', Priority: ' . $rule->priority . ')');
+                debug_log('SPT Frontend: Added tab: ' . $processed_title . ' (Key: ' . $tab_key . ', Priority: ' . $rule->priority . ')');
             }
         }
         
@@ -278,7 +278,7 @@ class SPT_Frontend {
         $tabs = $this->apply_tab_ordering($tabs);
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('SPT Frontend: Final tabs count: ' . count($tabs));
+            debug_log('SPT Frontend: Final tabs count: ' . count($tabs));
         }
         
         return $tabs;
@@ -322,14 +322,14 @@ class SPT_Frontend {
         global $product;
         
         if (!isset($tab['rule'])) {
-            echo '<p>' . __('Tab content not available.', 'smart-product-tabs-for-woocommerce') . '</p>';
+            echo '<p>' . esc_html__('Tab content not available.', 'smart-product-tabs-for-woocommerce') . '</p>';
             return;
         }
         
         $rule = $tab['rule'];
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('SPT Frontend: Rendering content for tab: ' . $rule->tab_title . ' (Rule ID: ' . $rule->id . ')');
+            debug_log('SPT Frontend: Rendering content for tab: ' . $rule->tab_title . ' (Rule ID: ' . $rule->id . ')');
         }
         
         // Process content with merge tags
@@ -347,7 +347,7 @@ class SPT_Frontend {
         if (!empty($content)) {
             echo wp_kses_post($content);
         } else {
-            echo '<p>' . __('No content available for this tab.', 'smart-product-tabs-for-woocommerce') . '</p>';
+            echo '<p>' . esc_html__('No content available for this tab.', 'smart-product-tabs-for-woocommerce') . '</p>';
         }
         
         echo '</div>';
@@ -359,7 +359,7 @@ class SPT_Frontend {
     private function check_rule_conditions($product_id, $rule) {
         if (!$this->rules_engine) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('SPT Frontend: Rules engine not available, allowing all rules');
+                debug_log('SPT Frontend: Rules engine not available, allowing all rules');
             }
             return true; // If no rules engine, allow all rules
         }
@@ -368,19 +368,19 @@ class SPT_Frontend {
             $result = $this->rules_engine->check_conditions($product_id, $rule);
             
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('SPT Frontend: Rule condition check for rule "' . $rule->rule_name . '": ' . ($result ? 'PASS' : 'FAIL'));
+                debug_log('SPT Frontend: Rule condition check for rule "' . $rule->rule_name . '": ' . ($result ? 'PASS' : 'FAIL'));
                 
                 // Debug the conditions
                 $conditions = json_decode($rule->conditions, true);
                 if ($conditions) {
-                    error_log('SPT Frontend: Conditions: ' . print_r($conditions, true));
+                    debug_log('SPT Frontend: Conditions: ' . print_r($conditions, true));
                 }
             }
             
             return $result;
         } catch (Exception $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('SPT Frontend: Error checking conditions for rule "' . $rule->rule_name . '": ' . $e->getMessage());
+                debug_log('SPT Frontend: Error checking conditions for rule "' . $rule->rule_name . '": ' . $e->getMessage());
             }
             return false;
         }
@@ -442,7 +442,7 @@ class SPT_Frontend {
             
             if ($wpdb->last_error) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('SPT Frontend: Database error getting rules: ' . $wpdb->last_error);
+                    debug_log('SPT Frontend: Database error getting rules: ' . $wpdb->last_error);
                 }
                 $rules = array();
             }
@@ -453,7 +453,7 @@ class SPT_Frontend {
         self::$rules_cache = $rules;
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('SPT Frontend: Retrieved ' . count($rules) . ' active rules from database');
+            debug_log('SPT Frontend: Retrieved ' . count($rules) . ' active rules from database');
         }
         
         return $rules;
@@ -478,7 +478,7 @@ class SPT_Frontend {
             
             if ($wpdb->last_error) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('SPT Frontend: Database error getting tab settings: ' . $wpdb->last_error);
+                    debug_log('SPT Frontend: Database error getting tab settings: ' . $wpdb->last_error);
                 }
                 $settings = array();
             }
@@ -551,8 +551,8 @@ class SPT_Frontend {
             '{product_stock_status}' => $product->get_stock_status(),
             '{product_stock_quantity}' => $product->get_stock_quantity(),
             '{product_type}' => $product->get_type(),
-            '{product_featured}' => $product->is_featured() ? __('Yes', 'smart-product-tabs-for-woocommerce') : __('No', 'smart-product-tabs-for-woocommerce'),
-            '{product_on_sale}' => $product->is_on_sale() ? __('Yes', 'smart-product-tabs-for-woocommerce') : __('No', 'smart-product-tabs-for-woocommerce'),
+            '{product_featured}' => $product->is_featured() ? esc_html__('Yes', 'smart-product-tabs-for-woocommerce') : esc_html__('No', 'smart-product-tabs-for-woocommerce'),
+            '{product_on_sale}' => $product->is_on_sale() ? esc_html__('Yes', 'smart-product-tabs-for-woocommerce') : esc_html__('No', 'smart-product-tabs-for-woocommerce'),
             '{product_permalink}' => $product->get_permalink(),
             '{product_rating}' => $product->get_average_rating(),
             '{product_review_count}' => $product->get_review_count(),
@@ -795,5 +795,7 @@ class SPT_Frontend {
         wp_cache_delete('spt_active_rules_v3');
         wp_cache_delete('spt_tab_settings_v3');
     }
+    
+    
 }
 ?>
