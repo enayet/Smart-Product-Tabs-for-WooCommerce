@@ -87,7 +87,6 @@ class SPT_Frontend {
         ?>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
-            console.log('SPT: Click tracking initialized for product:', <?php echo $product->get_id(); ?>);
             
             // Define default WooCommerce tabs to exclude from analytics
             var defaultTabs = ['#description', '#additional_information', '#reviews'];
@@ -144,12 +143,12 @@ class SPT_Frontend {
      */
     public function ajax_track_tab_view() {
         // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'spt_frontend_nonce')) {
+        if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'] ?? '')), 'spt_frontend_nonce')) {
             wp_send_json_error('Invalid nonce');
             return;
         }
         
-        $tab_key = sanitize_text_field($_POST['tab_key'] ?? '');
+        $tab_key = sanitize_text_field(wp_unslash($_POST['tab_key'] ?? ''));
         $product_id = intval($_POST['product_id'] ?? 0);
         $user_click = isset($_POST['user_click']) ? intval($_POST['user_click']) : 0;
         $is_custom_tab = isset($_POST['is_custom_tab']) ? intval($_POST['is_custom_tab']) : 0;
@@ -373,6 +372,8 @@ class SPT_Frontend {
                 // Debug the conditions
                 $conditions = json_decode($rule->conditions, true);
                 if ($conditions) {
+                    
+                    // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
                     debug_log('SPT Frontend: Conditions: ' . print_r($conditions, true));
                 }
             }
@@ -436,9 +437,8 @@ class SPT_Frontend {
         $rules = wp_cache_get($cache_key);
         
         if (false === $rules) {
-            $rules = $wpdb->get_results(
-                "SELECT * FROM $table WHERE is_active = 1 ORDER BY priority ASC, created_at DESC"
-            );
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $rules = $wpdb->get_results("SELECT * FROM $table WHERE is_active = 1 ORDER BY priority ASC, created_at DESC");
             
             if ($wpdb->last_error) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -474,6 +474,7 @@ class SPT_Frontend {
         $settings = wp_cache_get($cache_key);
         
         if (false === $settings) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $settings = $wpdb->get_results("SELECT * FROM $table ORDER BY sort_order ASC");
             
             if ($wpdb->last_error) {
@@ -783,6 +784,7 @@ class SPT_Frontend {
     private function get_rule_by_id($rule_id) {
         global $wpdb;
         $table = $wpdb->prefix . 'spt_rules';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $rule_id));
     }
     

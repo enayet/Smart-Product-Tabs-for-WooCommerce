@@ -44,7 +44,7 @@ class SPT_Analytics {
      */
     private function maybe_create_table() {
         global $wpdb;
-        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
         
         if ($table_exists != $this->table_name) {
@@ -77,6 +77,7 @@ class SPT_Analytics {
         dbDelta($sql);
         
         // Verify table was created
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
         if ($table_exists != $this->table_name) {
             debug_log('SPT Analytics: Failed to create table ' . $this->table_name);
@@ -113,6 +114,7 @@ class SPT_Analytics {
         global $wpdb;
         
         // Check if table exists
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
         if ($table_exists != $this->table_name) {
             debug_log('SPT Analytics: Table does not exist: ' . $this->table_name);
@@ -120,6 +122,7 @@ class SPT_Analytics {
             $this->create_analytics_table();
             
             // Check again
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'");
             if ($table_exists != $this->table_name) {
                 debug_log('SPT Analytics: Failed to create table after retry');
@@ -135,8 +138,8 @@ class SPT_Analytics {
         debug_log("SPT Analytics: Attempting to track - Tab: {$tab_key}, Product: {$product_id}, Date: {$today}");
         
         // Try to insert or update using INSERT ... ON DUPLICATE KEY UPDATE
-        $sql = $wpdb->prepare(
-            "INSERT INTO {$this->table_name} (tab_key, product_id, views, date) 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $sql = $wpdb->prepare("INSERT INTO {$this->table_name} (tab_key, product_id, views, date) 
              VALUES (%s, %d, 1, %s) 
              ON DUPLICATE KEY UPDATE views = views + 1",
             $tab_key,
@@ -145,7 +148,7 @@ class SPT_Analytics {
         );
         
         debug_log('SPT Analytics: SQL Query: ' . $sql);
-        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
         $result = $wpdb->query($sql);
         
         if ($result === false) {
@@ -153,8 +156,8 @@ class SPT_Analytics {
             debug_log('SPT Analytics: Last query: ' . $wpdb->last_query);
             
             // Try alternative approach - check if record exists first
-            $existing = $wpdb->get_row($wpdb->prepare(
-                "SELECT id, views FROM {$this->table_name} WHERE tab_key = %s AND product_id = %d AND date = %s",
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $existing = $wpdb->get_row($wpdb->prepare( "SELECT id, views FROM {$this->table_name} WHERE tab_key = %s AND product_id = %d AND date = %s",
                 $tab_key,
                 intval($product_id),
                 $today
@@ -162,6 +165,7 @@ class SPT_Analytics {
             
             if ($existing) {
                 // Update existing record
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 $update_result = $wpdb->update(
                     $this->table_name,
                     array('views' => $existing->views + 1),
@@ -179,6 +183,7 @@ class SPT_Analytics {
                 }
             } else {
                 // Insert new record
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 $insert_result = $wpdb->insert(
                     $this->table_name,
                     array(
@@ -203,8 +208,8 @@ class SPT_Analytics {
             debug_log("SPT Analytics: Successfully tracked view for tab: {$tab_key} (affected rows: {$result})");
             
             // Verify the data was actually saved
-            $verification = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM {$this->table_name} WHERE tab_key = %s AND product_id = %d AND date = %s",
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $verification = $wpdb->get_row($wpdb->prepare( "SELECT * FROM {$this->table_name} WHERE tab_key = %s AND product_id = %d AND date = %s",
                 $tab_key,
                 intval($product_id),
                 $today
@@ -226,18 +231,17 @@ class SPT_Analytics {
     public function get_popular_tabs($limit = 10, $days = 30) {
         global $wpdb;
 
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
 
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT tab_key, SUM(views) as total_views, COUNT(DISTINCT product_id) as products_count
+        $sql = "SELECT tab_key, SUM(views) as total_views, COUNT(DISTINCT product_id) as products_count
              FROM {$this->table_name}
              WHERE date >= %s
              GROUP BY tab_key
              ORDER BY total_views DESC
-             LIMIT %d",
-            $date_from,
-            $limit
-        ));
+             LIMIT %d";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared    
+        $results = $wpdb->get_results($wpdb->prepare($sql,$date_from,$limit));
 
         // Enhance results with tab titles
         foreach ($results as &$result) {
@@ -259,11 +263,9 @@ class SPT_Analytics {
         if (preg_match('/^spt_(\d+)$/', $tab_key, $matches)) {
             $rule_id = $matches[1];
             $rules_table = $wpdb->prefix . 'spt_rules';
-
-            $rule_title = $wpdb->get_var($wpdb->prepare(
-                "SELECT tab_title FROM $rules_table WHERE id = %d",
-                $rule_id
-            ));
+            
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $rule_title = $wpdb->get_var($wpdb->prepare("SELECT tab_title FROM $rules_table WHERE id = %d",$rule_id));
 
             if ($rule_title) {
                 return $rule_title . ' (' . $tab_key . ')';
@@ -308,17 +310,16 @@ class SPT_Analytics {
     public function get_tab_performance($tab_key, $days = 30) {
         global $wpdb;
         
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
         
-        return $wpdb->get_results($wpdb->prepare(
-            "SELECT date, SUM(views) as daily_views, COUNT(DISTINCT product_id) as products_viewed
+        $sql = "SELECT date, SUM(views) as daily_views, COUNT(DISTINCT product_id) as products_viewed
              FROM {$this->table_name}
              WHERE tab_key = %s AND date >= %s
              GROUP BY date
-             ORDER BY date ASC",
-            $tab_key,
-            $date_from
-        ));
+             ORDER BY date ASC";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        return $wpdb->get_results($wpdb->prepare($sql,$tab_key,$date_from));
     }
     
     /**
@@ -327,19 +328,18 @@ class SPT_Analytics {
     public function get_product_tab_stats($product_id, $days = 30) {
         global $wpdb;
         
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
         
-        return $wpdb->get_results($wpdb->prepare(
-            "SELECT tab_key, SUM(views) as total_views, 
+        $sql = "SELECT tab_key, SUM(views) as total_views, 
                     MAX(date) as last_viewed,
                     COUNT(DISTINCT date) as active_days
              FROM {$this->table_name}
              WHERE product_id = %d AND date >= %s
              GROUP BY tab_key
-             ORDER BY total_views DESC",
-            $product_id,
-            $date_from
-        ));
+             ORDER BY total_views DESC";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        return $wpdb->get_results($wpdb->prepare($sql,$product_id,$date_from));
     }
     
     /**
@@ -348,36 +348,31 @@ class SPT_Analytics {
     public function get_analytics_summary($days = 30) {
         global $wpdb;
         
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
         
         // Total views
-        $total_views = $wpdb->get_var($wpdb->prepare(
-            "SELECT COALESCE(SUM(views), 0) FROM {$this->table_name} WHERE date >= %s",
-            $date_from
-        ));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $total_views = $wpdb->get_var($wpdb->prepare("SELECT COALESCE(SUM(views), 0) FROM {$this->table_name} WHERE date >= %s",$date_from));
         
         // Unique products viewed
-        $unique_products = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name} WHERE date >= %s",
-            $date_from
-        ));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $unique_products = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT product_id) FROM {$this->table_name} WHERE date >= %s",$date_from));
         
         // Total active tabs
-        $active_tabs = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(DISTINCT tab_key) FROM {$this->table_name} WHERE date >= %s",
-            $date_from
-        ));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $active_tabs = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT tab_key) FROM {$this->table_name} WHERE date >= %s",$date_from));
         
         // Average views per day
-        $avg_daily_views = $wpdb->get_var($wpdb->prepare(
-            "SELECT COALESCE(AVG(daily_views), 0) FROM (
+        
+        $sql = "SELECT COALESCE(AVG(daily_views), 0) FROM (
                 SELECT date, SUM(views) as daily_views 
                 FROM {$this->table_name} 
                 WHERE date >= %s 
                 GROUP BY date
-             ) as daily_stats",
-            $date_from
-        ));
+             ) as daily_stats";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        $avg_daily_views = $wpdb->get_var($wpdb->prepare($sql,$date_from));
         
         return array(
             'total_views' => intval($total_views ?: 0),
@@ -394,20 +389,19 @@ class SPT_Analytics {
     public function get_top_products($limit = 10, $days = 30) {
         global $wpdb;
 
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
-
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT product_id, SUM(views) as total_views, 
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
+        
+        $sql = "SELECT product_id, SUM(views) as total_views, 
                     COUNT(DISTINCT tab_key) as tabs_viewed,
                     COUNT(DISTINCT date) as active_days
              FROM {$this->table_name}
              WHERE date >= %s
              GROUP BY product_id
              ORDER BY total_views DESC
-             LIMIT %d",
-            $date_from,
-            $limit
-        ));
+             LIMIT %d";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        $results = $wpdb->get_results($wpdb->prepare($sql,$date_from,$limit));
 
         // Enhance with product data
         foreach ($results as &$result) {
@@ -434,41 +428,39 @@ class SPT_Analytics {
     public function get_engagement_metrics($days = 30) {
         global $wpdb;
         
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
         
         // Tab engagement rate
-        $products_with_views = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name} WHERE date >= %s",
-            $date_from
-        ));
-        
-        $total_products = $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status = 'publish'"
-        );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $products_with_views = $wpdb->get_var($wpdb->prepare( "SELECT COUNT(DISTINCT product_id) FROM {$this->table_name} WHERE date >= %s", $date_from));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $total_products = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status = 'publish'");
         
         $engagement_rate = $total_products > 0 ? ($products_with_views / $total_products) * 100 : 0;
         
         // Average tabs per product view
-        $avg_tabs_per_product = $wpdb->get_var($wpdb->prepare(
-            "SELECT COALESCE(AVG(tabs_count), 0) FROM (
+        
+        $sql = "SELECT COALESCE(AVG(tabs_count), 0) FROM (
                 SELECT product_id, COUNT(DISTINCT tab_key) as tabs_count
                 FROM {$this->table_name}
                 WHERE date >= %s
                 GROUP BY product_id
-             ) as product_stats",
-            $date_from
-        ));
+             ) as product_stats";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        $avg_tabs_per_product = $wpdb->get_var($wpdb->prepare($sql,$date_from));
         
         // Most active day
-        $most_active_day = $wpdb->get_row($wpdb->prepare(
-            "SELECT date, SUM(views) as total_views
+        
+        $sql = "SELECT date, SUM(views) as total_views
              FROM {$this->table_name}
              WHERE date >= %s
              GROUP BY date
              ORDER BY total_views DESC
-             LIMIT 1",
-            $date_from
-        ));
+             LIMIT 1";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        $most_active_day = $wpdb->get_row($wpdb->prepare($sql, $date_from));
         
         return array(
             'engagement_rate' => round($engagement_rate, 2),
@@ -484,26 +476,26 @@ class SPT_Analytics {
     public function get_daily_analytics($days = 30) {
         global $wpdb;
         
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
         
-        return $wpdb->get_results($wpdb->prepare(
-            "SELECT date, 
+        $sql = "SELECT date, 
                     SUM(views) as total_views,
                     COUNT(DISTINCT tab_key) as unique_tabs,
                     COUNT(DISTINCT product_id) as unique_products
              FROM {$this->table_name}
              WHERE date >= %s
              GROUP BY date
-             ORDER BY date ASC",
-            $date_from
-        ));
+             ORDER BY date ASC";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        return $wpdb->get_results($wpdb->prepare($sql, $date_from ));
     }
     
     /**
      * Check if current request is from a bot
      */
     private function is_bot() {
-        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         
         $bot_patterns = array(
             'bot', 'crawler', 'spider', 'crawling', 'facebook', 'google',
@@ -526,17 +518,17 @@ class SPT_Analytics {
     public function export_analytics($format = 'csv', $days = 30) {
         global $wpdb;
         
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
         
-        $data = $wpdb->get_results($wpdb->prepare(
-            "SELECT a.date, a.tab_key, a.product_id, a.views,
+        $sql = "SELECT a.date, a.tab_key, a.product_id, a.views,
                     p.post_title as product_name
              FROM {$this->table_name} a
              LEFT JOIN {$wpdb->posts} p ON a.product_id = p.ID
              WHERE a.date >= %s
-             ORDER BY a.date DESC, a.views DESC",
-            $date_from
-        ), ARRAY_A);
+             ORDER BY a.date DESC, a.views DESC";
+        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        $data = $wpdb->get_results($wpdb->prepare( $sql, $date_from), ARRAY_A);
         
         if ($format === 'csv') {
             return $this->convert_to_csv($data);
@@ -578,12 +570,9 @@ class SPT_Analytics {
         global $wpdb;
         
         $retention_days = apply_filters('spt_analytics_retention_days', 90);
-        $cutoff_date = date('Y-m-d', strtotime("-{$retention_days} days"));
-        
-        $deleted = $wpdb->query($wpdb->prepare(
-            "DELETE FROM {$this->table_name} WHERE date < %s",
-            $cutoff_date
-        ));
+        $cutoff_date = gmdate('Y-m-d', strtotime("-{$retention_days} days"));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $deleted = $wpdb->query($wpdb->prepare( "DELETE FROM {$this->table_name} WHERE date < %s", $cutoff_date ));
         
         if ($deleted > 0) {
             debug_log("SPT Analytics: Cleaned up {$deleted} old records older than {$cutoff_date}");
@@ -603,7 +592,7 @@ class SPT_Analytics {
             return;
         }
         
-        $type = sanitize_text_field($_POST['type'] ?? 'summary');
+        $type = sanitize_text_field(wp_unslash($_POST['type'] ?? 'summary'));
         $days = intval($_POST['days'] ?? 30);
         
         switch ($type) {
@@ -640,7 +629,7 @@ class SPT_Analytics {
      */
     public function reset_analytics() {
         global $wpdb;
-        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $result = $wpdb->query("TRUNCATE TABLE {$this->table_name}");
         
         if ($result !== false) {
@@ -656,7 +645,7 @@ class SPT_Analytics {
      */
     public function get_table_size() {
         global $wpdb;
-        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $result = $wpdb->get_row($wpdb->prepare(
             "SELECT 
                 COUNT(*) as record_count,
@@ -690,8 +679,9 @@ class SPT_Analytics {
      */
     public function get_table_status() {
         global $wpdb;
-        
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$this->table_name}'") === $this->table_name;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $record_count = $table_exists ? $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name}") : 0;
         
         return array(
@@ -707,25 +697,29 @@ class SPT_Analytics {
     public function get_daily_analytics_enhanced($days = 30) {
         global $wpdb;
 
-        $date_from = date('Y-m-d', strtotime("-{$days} days"));
+        $date_from = gmdate('Y-m-d', strtotime("-{$days} days"));
+        
+        // Build query with validated table name
+        $table_name = esc_sql($this->table_name);
+        $sql = "SELECT date, 
+                       SUM(views) as total_views,
+                       COUNT(DISTINCT tab_key) as unique_tabs,
+                       COUNT(DISTINCT product_id) as unique_products,
+                       GROUP_CONCAT(DISTINCT tab_key ORDER BY tab_key) as active_tabs
+                FROM {$table_name}
+                WHERE date >= %s
+                GROUP BY date
+                ORDER BY date ASC";
 
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT date, 
-                    SUM(views) as total_views,
-                    COUNT(DISTINCT tab_key) as unique_tabs,
-                    COUNT(DISTINCT product_id) as unique_products,
-                    GROUP_CONCAT(DISTINCT tab_key ORDER BY tab_key) as active_tabs
-             FROM {$this->table_name}
-             WHERE date >= %s
-             GROUP BY date
-             ORDER BY date ASC",
-            $date_from
-        ));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+        $results = $wpdb->get_results($wpdb->prepare($sql, $date_from));        
+        
+        
 
         // Format dates for better display
         foreach ($results as &$result) {
-            $result->formatted_date = date('M j, Y', strtotime($result->date));
-            $result->day_of_week = date('l', strtotime($result->date));
+            $result->formatted_date = gmdate('M j, Y', strtotime($result->date));
+            $result->day_of_week = gmdate('l', strtotime($result->date));
         }
 
         return $results;
